@@ -18,11 +18,24 @@ const DICE_TIMEOUT_TICKS = 15
 const DRAW_DBG = false
 
 const DOT_THRESHOLD = 0.9
-const APPROX_ZERO = 0.25
+const APPROX_ZERO_PHYS = 2.5
+const REROLL_LIMIT = 3
 
 const dice = []
 
 let phys_ready = false
+
+function splitmix32(a) {
+  return function () {
+    a |= 0
+    a = (a + 0x9e3779b9) | 0
+    var t = a ^ (a >>> 16)
+    t = Math.imul(t, 0x21f0aaad)
+    t = t ^ (t >>> 15)
+    t = Math.imul(t, 0x735a2d97)
+    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296
+  }
+}
 
 let rng
 function seed_rng(s) {
@@ -43,18 +56,6 @@ function rng_range_pn(min, max) {
   return rng_sign() * rng_range(min, max)
 }
 
-function splitmix32(a) {
-  return function () {
-    a |= 0
-    a = (a + 0x9e3779b9) | 0
-    var t = a ^ (a >>> 16)
-    t = Math.imul(t, 0x21f0aaad)
-    t = t ^ (t >>> 15)
-    t = Math.imul(t, 0x735a2d97)
-    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296
-  }
-}
-
 export function is_ready() {
   return phys_ready
 }
@@ -72,12 +73,12 @@ function _on_die_finished() {
   }
 }
 
-function _is_zero_approx(f) {
-  return Math.abs(f) < APPROX_ZERO
+function _is_phys_zero_approx(f) {
+  return Math.abs(f) < APPROX_ZERO_PHYS
 }
 
-function _is_xyz_zero_approx(xyz) {
-  return _is_zero_approx(xyz.x) && _is_zero_approx(xyz.y) && _is_zero_approx(xyz.z)
+function _is_xyz_phys_zero_approx(xyz) {
+  return _is_phys_zero_approx(xyz.x) && _is_phys_zero_approx(xyz.y) && _is_phys_zero_approx(xyz.z)
 }
 
 function _create_dice_geom(length) {
@@ -163,11 +164,16 @@ RAPIER.init().then(() => {
 
   class Dice3D {
     owner_id
+    offscreen = true
+
     mesh
     body
+    dbg_mat
+
     final_value = -1
+
     timeout_ticks = DICE_TIMEOUT_TICKS
-    offscreen = true
+    num_rerolls = 0
 
     constructor(owner_id) {
       this.owner_id = owner_id
@@ -179,7 +185,9 @@ RAPIER.init().then(() => {
         COL_LAYER_DICE_OFFSCREEN
       )
 
-      this.mesh = new THREE.Mesh(DICE_GEOM, [DICE_MAT_BASE, DICE_MAT_PIPS])
+      this.dbg_mat = DICE_MAT_PIPS.clone()
+      this.dbg_mat.color.setHex(0xff0000)
+      this.mesh = new THREE.Mesh(DICE_GEOM, [DICE_MAT_BASE, this.dbg_mat])
       this.sync_mesh_to_body()
       RENDER_SCENE.add(this.mesh)
 
@@ -204,7 +212,10 @@ RAPIER.init().then(() => {
     }
 
     is_moving() {
-      return !_is_xyz_zero_approx(this.body.linvel()) || !_is_xyz_zero_approx(this.body.angvel())
+      return (
+        !_is_xyz_phys_zero_approx(this.body.linvel()) ||
+        !_is_xyz_phys_zero_approx(this.body.angvel())
+      )
     }
 
     _parse_result(force = false) {
@@ -257,6 +268,7 @@ RAPIER.init().then(() => {
         },
         true
       )
+      this.num_rerolls++
     }
 
     end_roll(force) {
@@ -264,6 +276,7 @@ RAPIER.init().then(() => {
       if (this.final_value <= 0) {
         this.reroll_cocked()
       } else {
+        this.dbg_mat.color.setHex(0x0000ff)
         this.body.lockTranslations(true, true)
         this.body.lockRotations(true, true)
         this.body.sleep()
@@ -290,6 +303,17 @@ RAPIER.init().then(() => {
         if (pos.y > -TRAY_BUFFER_SIZE && pos.y < TRAY_BUFFER_SIZE) {
           this.offscreen = false
           this.body.collider(0).setCollisionGroups(COL_LAYER_DICE_ONSCREEN)
+          this.dbg_mat.color.setHex(0x00ff00)
+          this.body.resetForces()
+        } else {
+          this.body.addForce(
+            {
+              x: -pos.x / TRAY_SIDE,
+              y: -pos.y,
+              z: 0.0,
+            },
+            true
+          )
         }
       } else {
         if (this.is_moving()) {
@@ -297,10 +321,14 @@ RAPIER.init().then(() => {
         } else if (this.timeout_ticks > 0) {
           this.timeout_ticks--
           if (this.timeout_ticks <= 0) {
-            this.end_roll()
+            this.end_roll(this.num_rerolls >= REROLL_LIMIT)
           }
         }
       }
+    }
+
+    cleanup() {
+      this.dbg_mat.dispose()
     }
   }
 
@@ -351,7 +379,7 @@ RAPIER.init().then(() => {
   let phys_tick = () => {
     PHYS_WORLD.step()
 
-    if (dice.length < 4) {
+    if (dice.length < 40) {
       new Dice3D(1)
     }
     for (let d of dice) {
