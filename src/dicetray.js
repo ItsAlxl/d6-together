@@ -19,8 +19,9 @@ const GRAVITY = -80
 const PHYS_TICK_PERIOD_MS = 1000 / 60
 const DICE_TIMEOUT_TICKS = 15
 
-const DOT_THRESHOLD = 0.9
-const APPROX_ZERO_PHYS = 1.5
+const UP_DOT_THRESHOLD = 0.875
+const APPROX_ZERO_LINEAR = 5.0
+const APPROX_ZERO_ANGULAR = 0.1
 const REROLL_LIMIT = 3
 
 const ARRANGE_SPACING = 2 * 1.5 * DICE_SIDE
@@ -143,12 +144,16 @@ function rng_range_pn(min, max) {
   return rng_sign() * rng_range(min, max)
 }
 
-function _is_phys_zero_approx(f) {
-  return Math.abs(f) < APPROX_ZERO_PHYS
+function _is_phys_zero_approx(f, against) {
+  return Math.abs(f) < against
 }
 
-function _is_xyz_phys_zero_approx(xyz) {
-  return _is_phys_zero_approx(xyz.x) && _is_phys_zero_approx(xyz.y) && _is_phys_zero_approx(xyz.z)
+function _is_xyz_phys_zero_approx(xyz, against = 0.001) {
+  return (
+    _is_phys_zero_approx(xyz.x, against) &&
+    _is_phys_zero_approx(xyz.y, against) &&
+    _is_phys_zero_approx(xyz.z, against)
+  )
 }
 
 const dice = []
@@ -209,7 +214,8 @@ class Dice3D {
 
   is_moving() {
     return (
-      !_is_xyz_phys_zero_approx(this.body.linvel()) || !_is_xyz_phys_zero_approx(this.body.angvel())
+      !_is_xyz_phys_zero_approx(this.body.linvel(), APPROX_ZERO_LINEAR) ||
+      !_is_xyz_phys_zero_approx(this.body.angvel(), APPROX_ZERO_ANGULAR)
     )
   }
 
@@ -223,7 +229,7 @@ class Dice3D {
     let best_abs = Math.max(abs_x, abs_y, abs_z)
     let i = best_abs == abs_x ? ix : best_abs == abs_y ? iy : iz
 
-    if (!force && best_abs < DOT_THRESHOLD) {
+    if (!force && best_abs < UP_DOT_THRESHOLD) {
       return -1
     }
     if (this.mesh.matrix.elements[i] > 0) {
@@ -289,12 +295,13 @@ class Dice3D {
 
   move_to_final_spot(x, y, z) {
     let q = VALUE_TO_QUAT[this.final_value]
-    let qdot =
+    if (
       q.x * this.mesh.quaternion.x +
-      q.y * this.mesh.quaternion.y +
-      q.z * this.mesh.quaternion.z +
-      q.w * this.mesh.quaternion.w
-    if (qdot < 0) {
+        q.y * this.mesh.quaternion.y +
+        q.z * this.mesh.quaternion.z +
+        q.w * this.mesh.quaternion.w <
+      0
+    ) {
       q.x *= -1
       q.y *= -1
       q.z *= -1
