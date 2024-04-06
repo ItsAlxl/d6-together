@@ -28,6 +28,16 @@ const ARRANGE_START_Y = ARRANGE_SPACING - TRAY_SIDE
 const ARRANGE_Z = DICE_SIDE
 const ARRANGE_MS = 250
 
+const VALUE_TO_QUAT = {
+  [-1]: { x: 0.35, y: 0.35, z: 0.85, w: 0.15 },
+  [1]: { x: 0, y: 0, z: 0, w: 1 },
+  [2]: { x: -0.5, y: -0.5, z: -0.5, w: 0.5 },
+  [3]: { x: 0.5, y: 0.5, z: 0.5, w: 0.5 },
+  [4]: { x: -0.5, y: -0.5, z: 0.5, w: 0.5 },
+  [5]: { x: 0.5, y: -0.5, z: -0.5, w: -0.5 },
+  [6]: { x: 0, y: -1, z: 0, w: 0 },
+}
+
 const dice = []
 
 let phys_ready = false
@@ -104,10 +114,10 @@ function _on_die_finished() {
 
     for (let i = 0; i < num_result_dice; i++) {
       dice[num_dice - i - 1].move_to_final_spot(
-          (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
-          top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
-          ARRANGE_Z
-        )
+        (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
+        top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
+        ARRANGE_Z
+      )
     }
 
     var col = -1
@@ -355,7 +365,11 @@ RAPIER.init().then(() => {
 
     move_to_final_spot(x, y, z) {
       this.mesh.position.set(x, y, z)
-      this.body.setTranslation({x: x, y: y, z: z}, false)
+      this.body.setTranslation({ x: x, y: y, z: z }, false)
+
+      let q = VALUE_TO_QUAT[this.final_value]
+      this.mesh.quaternion.set(q.x, q.y, q.z, q.w)
+      this.body.setRotation(q, false)
     }
 
     reset_timeout() {
