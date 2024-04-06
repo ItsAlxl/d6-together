@@ -7,13 +7,13 @@ const COL_LAYER_WORLD_WEAK = 0x0002_0100
 const COL_LAYER_WORLD_STRONG = 0x0001_1100
 
 const DICE_SIDE = 1.25
-const TRAY_SIDE = 10.0
-const TRAY_HALF_HEIGHT = 5.0
-const TRAY_BUMPER_SIZE = 500.0
+const TRAY_SIDE = 10
+const TRAY_HALF_HEIGHT = 5
+const TRAY_BUMPER_SIZE = 500
 const TRAY_BUFFER_SIZE = TRAY_SIDE - DICE_SIDE * Math.SQRT2
 
-const GRAVITY = -80.0
-const PHYS_TICK_PERIOD_MS = 1000.0 / 60.0
+const GRAVITY = -80
+const PHYS_TICK_PERIOD_MS = 1000 / 60
 const DICE_TIMEOUT_TICKS = 15
 const DRAW_DBG = false
 
@@ -96,8 +96,8 @@ function _create_dice_geom(length) {
 
   function append_face(xx, yy, zz, zl) {
     let vert_data = []
-    let uv_left = xx == "x" ? 0.0 : xx == "y" ? 0.333 : 0.666
-    let uv_top = zl < 0.0 ? 0.0 : 0.5
+    let uv_left = xx == "x" ? 0 : xx == "y" ? 0.333 : 0.666
+    let uv_top = zl < 0 ? 0 : 0.5
     for (let fv = 0; fv < 4; fv++) {
       let left = fv % 3 == 0
       let top = fv <= 1
@@ -105,12 +105,12 @@ function _create_dice_geom(length) {
         [xx]: left ? -length : length,
         [yy]: top ? -length : length,
         [zz]: zl,
-        u: uv_left + ((zl > 0.0 ? left : !left) ? 0.0 : 0.333),
-        v: uv_top + (top ? 0.0 : 0.5),
+        u: uv_left + ((zl > 0 ? left : !left) ? 0 : 0.333),
+        v: uv_top + (top ? 0 : 0.5),
       })
     }
-    let wind_a = zl > 0.0 ? 1 : 3
-    let wind_b = zl > 0.0 ? 3 : 1
+    let wind_a = zl > 0 ? 1 : 3
+    let wind_b = zl > 0 ? 3 : 1
     append_vert_data(vert_data[0])
     append_vert_data(vert_data[wind_a])
     append_vert_data(vert_data[wind_b])
@@ -134,8 +134,8 @@ function _create_dice_geom(length) {
 RAPIER.init().then(() => {
   const RENDER_SCENE = new THREE.Scene()
   const PHYS_WORLD = new RAPIER.World({
-    x: 0.0,
-    y: 0.0,
+    x: 0,
+    y: 0,
     z: GRAVITY,
   })
   const TEXTURE_LOADER = new THREE.TextureLoader()
@@ -151,7 +151,7 @@ RAPIER.init().then(() => {
   })
   const DICE_MAT_PIPS = new THREE.MeshPhongMaterial({
     color: "#000",
-    map: TEXTURE_LOADER.load("fallback_dice/pips_outlined.png"),
+    map: TEXTURE_LOADER.load("fallback_dice/numerals_outlined.png"),
     alphaTest: 0.5,
   })
   const DICE_GEOM = _create_dice_geom(DICE_SIDE)
@@ -179,7 +179,7 @@ RAPIER.init().then(() => {
       this.owner_id = owner_id
 
       this.body = PHYS_WORLD.createRigidBody(
-        DICE_BODY_PARAMS.setTranslation(TRAY_BUFFER_SIZE, -TRAY_SIDE - DICE_SIDE, 0.0)
+        DICE_BODY_PARAMS.setTranslation(TRAY_BUFFER_SIZE, -TRAY_SIDE - DICE_SIDE, 0)
       )
       PHYS_WORLD.createCollider(DICE_COL_SHAPE, this.body).setCollisionGroups(
         COL_LAYER_DICE_OFFSCREEN
@@ -193,17 +193,17 @@ RAPIER.init().then(() => {
 
       this.body.applyImpulse(
         {
-          x: rng_range_pn(500.0, 1500.0),
-          y: rng_range(500.0, 1500.0),
-          z: 5.0,
+          x: rng_range_pn(500, 1500),
+          y: rng_range(500, 1500),
+          z: 5,
         },
         true
       )
       this.body.applyTorqueImpulse(
         {
-          x: rng_range_pn(1000.0, 2000.0),
-          y: rng_range_pn(1000.0, 2000.0),
-          z: rng_range_pn(1000.0, 2000.0),
+          x: rng_range_pn(1000, 2000),
+          y: rng_range_pn(1000, 2000),
+          z: rng_range_pn(1000, 2000),
         },
         true
       )
@@ -231,7 +231,7 @@ RAPIER.init().then(() => {
       if (!force && best_abs < DOT_THRESHOLD) {
         return -1
       }
-      if (this.mesh.matrix.elements[i] > 0.0) {
+      if (this.mesh.matrix.elements[i] > 0) {
         if (i == ix) {
           return 2
         }
@@ -256,15 +256,15 @@ RAPIER.init().then(() => {
         {
           x: 250 * (pos.x == 0 ? rng_sign() : pos.x < 0 ? 1 : -1),
           y: 250 * (pos.y == 0 ? rng_sign() : pos.y < 0 ? 1 : -1),
-          z: 150.0,
+          z: 150,
         },
         true
       )
       this.body.applyTorqueImpulse(
         {
-          x: rng_range_pn(50.0, 150.0),
-          y: rng_range_pn(50.0, 150.0),
-          z: rng_range_pn(50.0, 150.0),
+          x: rng_range_pn(50, 150),
+          y: rng_range_pn(50, 150),
+          z: rng_range_pn(50, 150),
         },
         true
       )
@@ -310,7 +310,7 @@ RAPIER.init().then(() => {
             {
               x: -pos.x / TRAY_SIDE,
               y: -pos.y,
-              z: 0.0,
+              z: 0,
             },
             true
           )
@@ -332,7 +332,7 @@ RAPIER.init().then(() => {
     }
   }
 
-  const frustumSize = 2 * (TRAY_SIDE - 1.0)
+  const frustumSize = 2 * (TRAY_SIDE - 1)
   const camera = new THREE.OrthographicCamera(
     frustumSize / -2,
     frustumSize / 2,
@@ -349,22 +349,22 @@ RAPIER.init().then(() => {
   camera.position.z = TRAY_HALF_HEIGHT
 
   // create the box
-  const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1.0)
-  const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1.0, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
-  const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1.0, TRAY_HALF_HEIGHT * 2)
-  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0.0, 0.0, -TRAY_HALF_HEIGHT))
-  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0.0, 0.0, TRAY_HALF_HEIGHT))
+  const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
+  const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
+  const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
+  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
+  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
   PHYS_WORLD.createCollider(
-    WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0.0, 0.0)
+    WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)
   ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
   PHYS_WORLD.createCollider(
-    WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0.0, 0.0)
+    WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)
   ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
   PHYS_WORLD.createCollider(
-    WALL_TB_COL_SHAPE.setTranslation(0.0, TRAY_SIDE, 0.0)
+    WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)
   ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
   PHYS_WORLD.createCollider(
-    WALL_TB_COL_SHAPE.setTranslation(0.0, -TRAY_SIDE, 0.0)
+    WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)
   ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
 
   let dbg_lines = new THREE.LineSegments(
