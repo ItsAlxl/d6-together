@@ -1,0 +1,27 @@
+{
+  "name": "d6-together",
+  "version": "0.0.1",
+  "author": "alxl",
+  "description": "Play Forged in the Dark games online",
+  "license": "MIT",
+  "scripts": {
+    "start": "node d6-together.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d": "^0.12.0",
+    "connect": "^3.7.0",
+    "serve-static": "^1.15.0",
+    "three": "^0.163.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "daisyui": "^4.10.1",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.2.0"
+  }
+}

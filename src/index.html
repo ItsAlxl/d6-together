@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>d6 Together</title>
+    <meta name="Description" content="Play Forged in the Dark games online" />
+
+    <meta property="og:title" content="d6 Together" />
+    <meta
+      property="og:description"
+      content="Play Forged in the Dark games online"
+    />
+
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="style.css" type="text/css" rel="stylesheet" />
+  </head>
+
+  <script type="module" src="dicetray.js"></script>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:6462")
+    function ws_send(key, data) {
+      ws.send(JSON.stringify({ k: key, d: data }))
+    }
+
+    ws.onopen = (event) => {
+      ws_send("hi", { ding: "dong" })
+    }
+    ws.onmessage = (event) => {
+      console.log(JSON.parse(event.data))
+    }
+  </script>
+  <body>
+    <p>hi there :)</p>
+  </body>
+</html>
