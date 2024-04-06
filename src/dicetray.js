@@ -15,11 +15,18 @@ const TRAY_BUFFER_SIZE = TRAY_SIDE - DICE_SIDE * Math.SQRT2
 const GRAVITY = -80
 const PHYS_TICK_PERIOD_MS = 1000 / 60
 const DICE_TIMEOUT_TICKS = 15
-const DRAW_DBG = false
+const DRAW_DBG = true
 
 const DOT_THRESHOLD = 0.9
-const APPROX_ZERO_PHYS = 2.5
+const APPROX_ZERO_PHYS = 1.5
 const REROLL_LIMIT = 3
+
+const ARRANGE_SPACING = 2 * 1.5 * DICE_SIDE
+const ARRANGE_RESULT_SPACING = 1.2 * ARRANGE_SPACING
+const ARRANGE_MAX_COLS = Math.ceil(TRAY_SIDE / ARRANGE_SPACING) + 1
+const ARRANGE_START_Y = ARRANGE_SPACING - TRAY_SIDE
+const ARRANGE_Z = DICE_SIDE
+const ARRANGE_MS = 250
 
 const dice = []
 
@@ -63,13 +70,64 @@ export function is_ready() {
 let num_finished = 0
 function _on_die_finished() {
   num_finished++
+
   if (num_finished == dice.length) {
-    const results = []
-    for (let d of dice) {
-      results.push(d.final_value)
+    let take_lowest = false
+    let toss_boss = 1
+
+    dice.sort((a, b) => {
+      if (a.final_value == b.final_value) {
+        if (a.owner_id == b.owner_id) {
+          return a.idx < b.idx
+        }
+        if (a.owner_id == toss_boss || b.owner_id == toss_boss) {
+          return a.owner_id == toss_boss
+        }
+        return a.owner_id < b.owner_id
+      }
+      return take_lowest ? a.final_value < b.final_value : a.final_value > b.final_value
+    })
+
+    let num_dice = dice.length
+    let num_result_dice =
+      !take_lowest &&
+      num_dice > 1 &&
+      dice[num_dice - 1].final_value == 6 &&
+      dice[num_dice - 2].final_value == 6
+        ? 2
+        : 1
+    let num_extra_dice = num_dice - num_result_dice
+    let top_y = Math.min(
+      TRAY_SIDE - ARRANGE_RESULT_SPACING - ARRANGE_SPACING,
+      ARRANGE_START_Y + (Math.ceil(num_extra_dice / ARRANGE_MAX_COLS) - 1.0) * ARRANGE_SPACING
+    )
+
+    for (let i = 0; i < num_result_dice; i++) {
+      dice[num_dice - i - 1].move_to_final_spot(
+          (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
+          top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
+          ARRANGE_Z
+        )
     }
-    results.sort()
-    console.log(results)
+
+    var col = -1
+    var row = -1
+    var row_size = -1
+    var left_x = -1
+    for (let i = num_extra_dice - 1; i >= 0; i--) {
+      if (col >= row_size) {
+        col = 0
+        row += 1
+        row_size = Math.min(ARRANGE_MAX_COLS, i + 1)
+        left_x = -0.5 * ARRANGE_SPACING * (row_size - 1)
+      }
+      dice[i].move_to_final_spot(
+        left_x + ARRANGE_SPACING * col,
+        top_y - ARRANGE_SPACING * row,
+        ARRANGE_Z
+      )
+      col += 1
+    }
   }
 }
 
@@ -164,7 +222,9 @@ RAPIER.init().then(() => {
 
   class Dice3D {
     owner_id
+    idx = -1
     offscreen = true
+    finished = false
 
     mesh
     body
@@ -188,7 +248,7 @@ RAPIER.init().then(() => {
       this.dbg_mat = DICE_MAT_PIPS.clone()
       this.dbg_mat.color.setHex(0xff0000)
       this.mesh = new THREE.Mesh(DICE_GEOM, [DICE_MAT_BASE, this.dbg_mat])
-      this.sync_mesh_to_body()
+      this.move_mesh_to_body()
       RENDER_SCENE.add(this.mesh)
 
       this.body.applyImpulse(
@@ -208,6 +268,7 @@ RAPIER.init().then(() => {
         true
       )
 
+      this.idx = dice.length
       dice.push(this)
     }
 
@@ -276,6 +337,7 @@ RAPIER.init().then(() => {
       if (this.final_value <= 0) {
         this.reroll_cocked()
       } else {
+        this.finished = true
         this.dbg_mat.color.setHex(0x0000ff)
         this.body.lockTranslations(true, true)
         this.body.lockRotations(true, true)
@@ -284,11 +346,16 @@ RAPIER.init().then(() => {
       }
     }
 
-    sync_mesh_to_body() {
+    move_mesh_to_body() {
       let pos = this.body.translation()
       let rot = this.body.rotation()
       this.mesh.position.set(pos.x, pos.y, pos.z)
       this.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w)
+    }
+
+    move_to_final_spot(x, y, z) {
+      this.mesh.position.set(x, y, z)
+      this.body.setTranslation({x: x, y: y, z: z}, false)
     }
 
     reset_timeout() {
@@ -296,7 +363,10 @@ RAPIER.init().then(() => {
     }
 
     phys_tick() {
-      this.sync_mesh_to_body()
+      if (this.finished) {
+        return
+      }
+      this.move_mesh_to_body()
 
       if (this.offscreen) {
         let pos = this.body.translation()
@@ -354,18 +424,18 @@ RAPIER.init().then(() => {
   const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
   PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
   PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
-  PHYS_WORLD.createCollider(
-    WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)
-  ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
-  PHYS_WORLD.createCollider(
-    WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)
-  ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
-  PHYS_WORLD.createCollider(
-    WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)
-  ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
-  PHYS_WORLD.createCollider(
-    WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)
-  ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
+  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_STRONG
+  )
+  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_STRONG
+  )
+  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_WEAK
+  )
+  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_WEAK
+  )
 
   let dbg_lines = new THREE.LineSegments(
     new THREE.BufferGeometry(),
@@ -379,7 +449,7 @@ RAPIER.init().then(() => {
   let phys_tick = () => {
     PHYS_WORLD.step()
 
-    if (dice.length < 40) {
+    if (dice.length < 4) {
       new Dice3D(1)
     }
     for (let d of dice) {
