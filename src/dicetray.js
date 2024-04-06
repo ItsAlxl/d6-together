@@ -1,6 +1,5 @@
 import * as THREE from "three"
 import RAPIER from "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
-import { randFloat } from "three/src/math/MathUtils.js"
 
 const COL_LAYER_DICE_OFFSCREEN = 0x1000_0001
 const COL_LAYER_DICE_ONSCREEN = 0x0100_1103
@@ -18,11 +17,31 @@ const PHYS_TICK_PERIOD_MS = 1000.0 / 60.0
 const DICE_TIMEOUT_TICKS = 15
 const DRAW_DBG = false
 
+const DOT_THRESHOLD = 0.9
 const APPROX_ZERO = 0.25
 
 const dice = []
 
 let phys_ready = false
+
+let rng
+function seed_rng(s) {
+  console.log(s)
+  rng = splitmix32(s)
+}
+seed_rng(Date.now() * Math.random())
+
+function rng_range(min, max) {
+  return rng() * (max - min) + min
+}
+
+function rng_sign() {
+  return rng() > 0.5 ? 1 : -1
+}
+
+function rng_range_pn(min, max) {
+  return rng_sign() * rng_range(min, max)
+}
 
 function splitmix32(a) {
   return function () {
@@ -135,7 +154,7 @@ RAPIER.init().then(() => {
     alphaTest: 0.5,
   })
   const DICE_GEOM = _create_dice_geom(DICE_SIDE)
-  DICE_GEOM.clearGroups();
+  DICE_GEOM.clearGroups()
   DICE_GEOM.addGroup(0, Infinity, 0)
   DICE_GEOM.addGroup(0, Infinity, 1)
 
@@ -166,17 +185,17 @@ RAPIER.init().then(() => {
 
       this.body.applyImpulse(
         {
-          x: 1000.0,
-          y: 750.0,
-          z: 10.0,
+          x: rng_range_pn(500.0, 1500.0),
+          y: rng_range(500.0, 1500.0),
+          z: 5.0,
         },
         true
       )
       this.body.applyTorqueImpulse(
         {
-          x: randFloat(1000.0, 2000.0),
-          y: randFloat(1000.0, 2000.0),
-          z: randFloat(1000.0, 2000.0),
+          x: rng_range_pn(1000.0, 2000.0),
+          y: rng_range_pn(1000.0, 2000.0),
+          z: rng_range_pn(1000.0, 2000.0),
         },
         true
       )
@@ -184,19 +203,23 @@ RAPIER.init().then(() => {
       dice.push(this)
     }
 
-    is_still() {
-      return _is_xyz_zero_approx(this.body.linvel()) && _is_xyz_zero_approx(this.body.angvel())
+    is_moving() {
+      return !_is_xyz_zero_approx(this.body.linvel()) || !_is_xyz_zero_approx(this.body.angvel())
     }
 
-    _parse_result() {
+    _parse_result(force = false) {
       let ix = 2,
         iy = 6,
         iz = 10
       let abs_x = Math.abs(this.mesh.matrix.elements[ix])
       let abs_y = Math.abs(this.mesh.matrix.elements[iy])
       let abs_z = Math.abs(this.mesh.matrix.elements[iz])
-      let i = abs_x > abs_y && abs_x > abs_z ? ix : abs_z > abs_x && abs_z > abs_y ? iz : iy
+      let best_abs = Math.max(abs_x, abs_y, abs_z)
+      let i = best_abs == abs_x ? ix : best_abs == abs_y ? iy : iz
 
+      if (!force && best_abs < DOT_THRESHOLD) {
+        return -1
+      }
       if (this.mesh.matrix.elements[i] > 0.0) {
         if (i == ix) {
           return 2
@@ -215,12 +238,37 @@ RAPIER.init().then(() => {
       return 4
     }
 
-    end_roll() {
-      this.body.lockTranslations(true, true)
-      this.body.lockRotations(true, true)
-      this.body.sleep()
-      this.final_value = this._parse_result()
-      _on_die_finished()
+    reroll_cocked() {
+      this.reset_timeout()
+      let pos = this.body.translation()
+      this.body.applyImpulse(
+        {
+          x: 250 * (pos.x == 0 ? rng_sign() : pos.x < 0 ? 1 : -1),
+          y: 250 * (pos.y == 0 ? rng_sign() : pos.y < 0 ? 1 : -1),
+          z: 150.0,
+        },
+        true
+      )
+      this.body.applyTorqueImpulse(
+        {
+          x: rng_range_pn(50.0, 150.0),
+          y: rng_range_pn(50.0, 150.0),
+          z: rng_range_pn(50.0, 150.0),
+        },
+        true
+      )
+    }
+
+    end_roll(force) {
+      this.final_value = this._parse_result(force)
+      if (this.final_value <= 0) {
+        this.reroll_cocked()
+      } else {
+        this.body.lockTranslations(true, true)
+        this.body.lockRotations(true, true)
+        this.body.sleep()
+        _on_die_finished()
+      }
     }
 
     sync_mesh_to_body() {
@@ -230,19 +278,22 @@ RAPIER.init().then(() => {
       this.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w)
     }
 
+    reset_timeout() {
+      this.timeout_ticks = DICE_TIMEOUT_TICKS
+    }
+
     phys_tick() {
       this.sync_mesh_to_body()
 
       if (this.offscreen) {
         let pos = this.body.translation()
-        this.offscreen = pos.y < -TRAY_BUFFER_SIZE || pos.y > TRAY_BUFFER_SIZE
-        if (!this.offscreen) {
+        if (pos.y > -TRAY_BUFFER_SIZE && pos.y < TRAY_BUFFER_SIZE) {
           this.offscreen = false
           this.body.collider(0).setCollisionGroups(COL_LAYER_DICE_ONSCREEN)
         }
       } else {
-        if (!this.is_still()) {
-          this.timeout_ticks = DICE_TIMEOUT_TICKS
+        if (this.is_moving()) {
+          this.reset_timeout()
         } else if (this.timeout_ticks > 0) {
           this.timeout_ticks--
           if (this.timeout_ticks <= 0) {
