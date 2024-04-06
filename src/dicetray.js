@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import * as TWEEN from "@tweenjs/tween.js"
 import RAPIER from "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
 
 const DBG_MODE = true
@@ -27,16 +28,16 @@ const ARRANGE_RESULT_SPACING = 1.2 * ARRANGE_SPACING
 const ARRANGE_MAX_COLS = Math.ceil(TRAY_SIDE / ARRANGE_SPACING) + 1
 const ARRANGE_START_Y = ARRANGE_SPACING - TRAY_SIDE
 const ARRANGE_Z = DICE_SIDE - TRAY_HALF_HEIGHT
-const ARRANGE_MS = 250
+const ARRANGE_MS = 500
 
 const VALUE_TO_QUAT = {
   [-1]: { x: 0.35, y: 0.35, z: 0.85, w: 0.15 },
   [1]: { x: 0, y: 0, z: 0, w: 1 },
-  [2]: { x: -0.5, y: -0.5, z: -0.5, w: 0.5 },
+  [2]: { x: 0.5, y: 0.5, z: 0.5, w: -0.5 },
   [3]: { x: 0.5, y: 0.5, z: 0.5, w: 0.5 },
   [4]: { x: -0.5, y: -0.5, z: 0.5, w: 0.5 },
-  [5]: { x: 0.5, y: -0.5, z: -0.5, w: -0.5 },
-  [6]: { x: 0, y: -1, z: 0, w: 0 },
+  [5]: { x: -0.5, y: 0.5, z: 0.5, w: 0.5 },
+  [6]: { x: 0, y: 1, z: 0, w: 0 },
 }
 
 let phys_ready = false
@@ -287,12 +288,49 @@ class Dice3D {
   }
 
   move_to_final_spot(x, y, z) {
-    this.mesh.position.set(x, y, z)
+    let q = VALUE_TO_QUAT[this.final_value]
+    let qdot =
+      q.x * this.mesh.quaternion.x +
+      q.y * this.mesh.quaternion.y +
+      q.z * this.mesh.quaternion.z +
+      q.w * this.mesh.quaternion.w
+    if (qdot < 0) {
+      q.x *= -1
+      q.y *= -1
+      q.z *= -1
+      q.w *= -1
+    }
+    this.body.setRotation(q, false)
     this.body.setTranslation({ x: x, y: y, z: z }, false)
 
-    let q = VALUE_TO_QUAT[this.final_value]
-    this.mesh.quaternion.set(q.x, q.y, q.z, q.w)
-    this.body.setRotation(q, false)
+    new TWEEN.Tween({
+      px: this.mesh.position.x,
+      py: this.mesh.position.y,
+      pz: this.mesh.position.z,
+      rx: this.mesh.quaternion.x,
+      ry: this.mesh.quaternion.y,
+      rz: this.mesh.quaternion.z,
+      rw: this.mesh.quaternion.w,
+    })
+      .to(
+        {
+          px: x,
+          py: y,
+          pz: z,
+          rx: q.x,
+          ry: q.y,
+          rz: q.z,
+          rw: q.w,
+        },
+        ARRANGE_MS
+      )
+      .easing(TWEEN.Easing.Quadratic.InOut)
+      .onUpdate((o) => {
+        this.mesh.position.set(o.px, o.py, o.pz)
+        this.mesh.quaternion.set(o.rx, o.ry, o.rz, o.rw)
+        this.mesh.quaternion.normalize()
+      })
+      .start()
   }
 
   reset_timeout() {
@@ -523,6 +561,7 @@ RAPIER.init().then(() => {
     }
     dbg_lines.visible = DBG_MODE
 
+    TWEEN.update()
     renderer.render(RENDER_SCENE, camera)
   }
   render_tick()
