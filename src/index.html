@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="night">
   <head>
     <title>d6 Together</title>
     <meta name="Description" content="Play Forged in the Dark games online" />
@@ -52,8 +52,10 @@
         <input type="number" min="1" max="5" value="1" id="pool_mine" />
       </div>
       <div class="cursor-col-resize bg-base-300" id="data_dice_split"></div>
-      <div class="m-auto max-w-[90vh] p-4">
-        <button class="btn btn-primary" id="btn" onclick="makePoolRequest()">Roll!</button>
+      <div class="m-auto max-w-[90vh] p-2">
+        <div class="pb-2">
+          <button class="btn btn-primary" id="btn" onclick="makePoolRequest()">Roll!</button>
+        </div>
         <div class="w-full h-full" id="dice_par"></div>
       </div>
     </div>
