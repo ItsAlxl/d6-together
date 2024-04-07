@@ -62,12 +62,12 @@ const DICE_MAT_PIPS = new THREE.MeshPhongMaterial({
   alphaTest: 0.5,
 })
 
-function _create_dice_geom(length) {
+function createDiceGeom(length) {
   const geometry = new THREE.BufferGeometry()
 
   const verts = []
   const uvs = []
-  function append_vert_data(v) {
+  function appendVertData(v) {
     verts.push(v.x)
     verts.push(v.y)
     verts.push(v.z)
@@ -75,7 +75,7 @@ function _create_dice_geom(length) {
     uvs.push(v.v)
   }
 
-  function append_face(xx, yy, zz, zl) {
+  function appendFace(xx, yy, zz, zl) {
     let vert_data = []
     let uv_left = xx == "x" ? 0 : xx == "y" ? 0.333 : 0.666
     let uv_top = zl < 0 ? 0 : 0.5
@@ -92,19 +92,19 @@ function _create_dice_geom(length) {
     }
     let wind_a = zl > 0 ? 1 : 3
     let wind_b = zl > 0 ? 3 : 1
-    append_vert_data(vert_data[0])
-    append_vert_data(vert_data[wind_a])
-    append_vert_data(vert_data[wind_b])
-    append_vert_data(vert_data[wind_b])
-    append_vert_data(vert_data[wind_a])
-    append_vert_data(vert_data[2])
+    appendVertData(vert_data[0])
+    appendVertData(vert_data[wind_a])
+    appendVertData(vert_data[wind_b])
+    appendVertData(vert_data[wind_b])
+    appendVertData(vert_data[wind_a])
+    appendVertData(vert_data[2])
   }
-  append_face("x", "y", "z", length)
-  append_face("x", "y", "z", -length)
-  append_face("y", "z", "x", length)
-  append_face("y", "z", "x", -length)
-  append_face("z", "x", "y", length)
-  append_face("z", "x", "y", -length)
+  appendFace("x", "y", "z", length)
+  appendFace("x", "y", "z", -length)
+  appendFace("y", "z", "x", length)
+  appendFace("y", "z", "x", -length)
+  appendFace("z", "x", "y", length)
+  appendFace("z", "x", "y", -length)
 
   geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts), 3))
   geometry.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(uvs), 2))
@@ -112,7 +112,7 @@ function _create_dice_geom(length) {
   return geometry
 }
 
-const DICE_GEOM = _create_dice_geom(DICE_SIDE)
+const DICE_GEOM = createDiceGeom(DICE_SIDE)
 DICE_GEOM.clearGroups()
 DICE_GEOM.addGroup(0, Infinity, 0)
 DICE_GEOM.addGroup(0, Infinity, 1)
@@ -130,32 +130,32 @@ function splitmix32(a) {
 }
 
 let rng
-function seed_rng(s) {
+function seedRNG(s) {
   console.log(s)
   rng = splitmix32(s)
 }
 
-function rng_range(min, max) {
+function rngRange(min, max) {
   return rng() * (max - min) + min
 }
 
-function rng_sign() {
+function rngSign() {
   return rng() > 0.5 ? 1 : -1
 }
 
-function rng_range_pn(min, max) {
-  return rng_sign() * rng_range(min, max)
+function rngRangePn(min, max) {
+  return rngSign() * rngRange(min, max)
 }
 
-function _is_phys_zero_approx(f, against) {
+function isPhysZeroApprox(f, against) {
   return Math.abs(f) < against
 }
 
-function _is_xyz_phys_zero_approx(xyz, against = 0.001) {
+function isXyzPhysZeroApprox(xyz, against = 0.001) {
   return (
-    _is_phys_zero_approx(xyz.x, against) &&
-    _is_phys_zero_approx(xyz.y, against) &&
-    _is_phys_zero_approx(xyz.z, against)
+    isPhysZeroApprox(xyz.x, against) &&
+    isPhysZeroApprox(xyz.y, against) &&
+    isPhysZeroApprox(xyz.z, against)
   )
 }
 
@@ -205,22 +205,22 @@ class Dice3D {
     this.dbg_mat = DICE_MAT_PIPS.clone()
     this.dbg_mat.color.setHex(0xff0000)
     this.mesh = new THREE.Mesh(DICE_GEOM, [DICE_MAT_BASE, this.dbg_mat])
-    this.move_mesh_to_body()
+    this.moveMeshToBody()
     RENDER_SCENE.add(this.mesh)
 
     this.body.applyImpulse(
       {
-        x: rng_range_pn(50, 150),
-        y: side_sign * rng_range(500, 750),
+        x: rngRangePn(50, 150),
+        y: side_sign * rngRange(500, 750),
         z: 5,
       },
       true
     )
     this.body.applyTorqueImpulse(
       {
-        x: rng_range_pn(250, 400),
-        y: rng_range_pn(250, 400),
-        z: rng_range_pn(250, 400),
+        x: rngRangePn(250, 400),
+        y: rngRangePn(250, 400),
+        z: rngRangePn(250, 400),
       },
       true
     )
@@ -229,14 +229,14 @@ class Dice3D {
     dice.push(this)
   }
 
-  is_moving() {
+  isMoving() {
     return (
-      !_is_xyz_phys_zero_approx(this.body.linvel(), APPROX_ZERO_LINEAR) ||
-      !_is_xyz_phys_zero_approx(this.body.angvel(), APPROX_ZERO_ANGULAR)
+      !isXyzPhysZeroApprox(this.body.linvel(), APPROX_ZERO_LINEAR) ||
+      !isXyzPhysZeroApprox(this.body.angvel(), APPROX_ZERO_ANGULAR)
     )
   }
 
-  _parse_result(force = false) {
+  parseResult(force = false) {
     let ix = 2,
       iy = 6,
       iz = 10
@@ -268,30 +268,30 @@ class Dice3D {
   }
 
   reroll_cocked() {
-    this.reset_timeout()
+    this.resetTimeout()
     let pos = this.body.translation()
     this.body.applyImpulse(
       {
-        x: 250 * (pos.x == 0 ? rng_sign() : pos.x < 0 ? 1 : -1),
-        y: 250 * (pos.y == 0 ? rng_sign() : pos.y < 0 ? 1 : -1),
+        x: 250 * (pos.x == 0 ? rngSign() : pos.x < 0 ? 1 : -1),
+        y: 250 * (pos.y == 0 ? rngSign() : pos.y < 0 ? 1 : -1),
         z: 150,
       },
       true
     )
     this.body.applyTorqueImpulse(
       {
-        x: rng_range_pn(50, 150),
-        y: rng_range_pn(50, 150),
-        z: rng_range_pn(50, 150),
+        x: rngRangePn(50, 150),
+        y: rngRangePn(50, 150),
+        z: rngRangePn(50, 150),
       },
       true
     )
-    _reset_soft_timeout()
+    resetSoftTimeout()
     this.num_rerolls++
   }
 
-  end_roll(force) {
-    this.final_value = this._parse_result(force)
+  endRoll(force) {
+    this.final_value = this.parseResult(force)
     if (this.final_value <= 0) {
       this.reroll_cocked()
     } else {
@@ -300,18 +300,18 @@ class Dice3D {
       this.body.lockTranslations(true, true)
       this.body.lockRotations(true, true)
       this.body.sleep()
-      _on_die_finished()
+      dieFinished()
     }
   }
 
-  move_mesh_to_body() {
+  moveMeshToBody() {
     let pos = this.body.translation()
     let rot = this.body.rotation()
     this.mesh.position.set(pos.x, pos.y, pos.z)
     this.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w)
   }
 
-  move_to_final_spot(x, y, z) {
+  moveToFinalSpot(x, y, z) {
     let q = VALUE_TO_QUAT[this.final_value]
     if (
       q.x * this.mesh.quaternion.x +
@@ -358,15 +358,15 @@ class Dice3D {
       .start()
   }
 
-  reset_timeout() {
+  resetTimeout() {
     this.timeout_ticks = DICE_TIMEOUT_TICKS
   }
 
-  phys_tick() {
+  tickPhys() {
     if (this.finished) {
       return
     }
-    this.move_mesh_to_body()
+    this.moveMeshToBody()
 
     if (this.offscreen) {
       let pos = this.body.translation()
@@ -386,12 +386,12 @@ class Dice3D {
         )
       }
     } else {
-      if (this.is_moving()) {
-        this.reset_timeout()
+      if (this.isMoving()) {
+        this.resetTimeout()
       } else if (this.timeout_ticks > 0) {
         this.timeout_ticks--
         if (this.timeout_ticks <= 0) {
-          this.end_roll(this.num_rerolls >= REROLL_LIMIT)
+          this.endRoll(this.num_rerolls >= REROLL_LIMIT)
         }
       }
     }
@@ -404,24 +404,24 @@ class Dice3D {
   }
 }
 
-function _reset_soft_timeout() {
+function resetSoftTimeout() {
   roll_soft_target = roll_ticks + ROLL_SOFT_TIMEOUT_TICKS
 }
 
-function roll_dice_from_ids(plr_ids, seed) {
-  if (!is_ready()) {
+function rollDiceFromIds(plr_ids, seed) {
+  if (!isReady()) {
     return
   }
-  seed_rng(seed)
+  seedRNG(seed)
   roll_ticks = 0
-  _reset_soft_timeout()
+  resetSoftTimeout()
 
   for (let id of plr_ids) {
     new Dice3D(id)
   }
 }
 
-export function action_roll(boss_id, plr_ids, seed) {
+function actionRoll(boss_id, plr_ids, seed) {
   roll_take_lowest = plr_ids.length == 0
   if (roll_take_lowest) {
     plr_ids.push(boss_id)
@@ -429,14 +429,14 @@ export function action_roll(boss_id, plr_ids, seed) {
   }
   clear()
   roll_boss_id = boss_id
-  roll_dice_from_ids(plr_ids, seed)
+  rollDiceFromIds(plr_ids, seed)
 }
 
-export function add_dice(plr_ids, seed) {
-  roll_dice_from_ids(plr_ids, seed)
+function addDice(plr_ids, seed) {
+  rollDiceFromIds(plr_ids, seed)
 }
 
-export function clear() {
+function clear() {
   for (let d of dice) {
     d.cleanup()
   }
@@ -444,17 +444,12 @@ export function clear() {
   num_finished = 0
 }
 
-if (DBG_MODE) {
-  window.action_roll = action_roll
-  window.add_dice = add_dice
-}
-
-export function is_ready() {
+function isReady() {
   return phys_ready
 }
 
 let num_finished = 0
-function _on_die_finished() {
+function dieFinished() {
   num_finished++
 
   if (num_finished == dice.length) {
@@ -486,7 +481,7 @@ function _on_die_finished() {
     )
 
     for (let i = 0; i < num_result_dice; i++) {
-      dice[num_dice - i - 1].move_to_final_spot(
+      dice[num_dice - i - 1].moveToFinalSpot(
         (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
         top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
         ARRANGE_Z
@@ -504,7 +499,7 @@ function _on_die_finished() {
         row_size = Math.min(ARRANGE_MAX_COLS, i + 1)
         left_x = -0.5 * ARRANGE_SPACING * (row_size - 1)
       }
-      dice[i].move_to_final_spot(
+      dice[i].moveToFinalSpot(
         left_x + ARRANGE_SPACING * col,
         top_y - ARRANGE_SPACING * row,
         ARRANGE_Z
@@ -514,95 +509,103 @@ function _on_die_finished() {
   }
 }
 
-RAPIER.init().then(() => {
-  RENDER_SCENE = new THREE.Scene()
-  RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
-  const sun = new THREE.DirectionalLight(0xffffff, 2.5)
-  sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
-  RENDER_SCENE.add(sun)
+function create(dom_parent) {
+  RAPIER.init().then(() => {
+    RENDER_SCENE = new THREE.Scene()
+    RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
+    const sun = new THREE.DirectionalLight(0xffffff, 2.5)
+    sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
+    RENDER_SCENE.add(sun)
 
-  PHYS_WORLD = new RAPIER.World({
-    x: 0,
-    y: 0,
-    z: GRAVITY,
-  })
-  DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
-  DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
-
-  const frustumSize = 2 * (TRAY_SIDE - 1)
-  const camera = new THREE.OrthographicCamera(
-    frustumSize / -2,
-    frustumSize / 2,
-    frustumSize / 2,
-    frustumSize / -2,
-    0,
-    20
-  )
-
-  const renderer = new THREE.WebGLRenderer()
-  renderer.setSize(500, 500)
-
-  camera.position.z = TRAY_HALF_HEIGHT
-
-  // create the dicetray
-  const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
-  const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
-  const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
-  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
-  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
-  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
-    COL_LAYER_WORLD_STRONG
-  )
-  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)).setCollisionGroups(
-    COL_LAYER_WORLD_STRONG
-  )
-  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)).setCollisionGroups(
-    COL_LAYER_WORLD_WEAK
-  )
-  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)).setCollisionGroups(
-    COL_LAYER_WORLD_WEAK
-  )
-
-  let dbg_lines = new THREE.LineSegments(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({
-      color: 0xffffff,
-      vertexColors: true,
+    PHYS_WORLD = new RAPIER.World({
+      x: 0,
+      y: 0,
+      z: GRAVITY,
     })
-  )
-  RENDER_SCENE.add(dbg_lines)
+    DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
+    DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
 
-  let phys_tick = () => {
-    PHYS_WORLD.step()
-    for (let d of dice) {
-      d.phys_tick()
-    }
-    roll_ticks++
-    if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
+    const frustumSize = 2 * (TRAY_SIDE - 1)
+    const camera = new THREE.OrthographicCamera(
+      frustumSize / -2,
+      frustumSize / 2,
+      frustumSize / 2,
+      frustumSize / -2,
+      0,
+      20
+    )
+
+    const renderer = new THREE.WebGLRenderer()
+    renderer.setSize(500, 500)
+
+    camera.position.z = TRAY_HALF_HEIGHT
+
+    // create the dicetray
+    const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
+    const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
+    const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
+    PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
+    PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
+    PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
+      COL_LAYER_WORLD_STRONG
+    )
+    PHYS_WORLD.createCollider(
+      WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)
+    ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
+    PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)).setCollisionGroups(
+      COL_LAYER_WORLD_WEAK
+    )
+    PHYS_WORLD.createCollider(
+      WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)
+    ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
+
+    let dbg_lines = new THREE.LineSegments(
+      new THREE.BufferGeometry(),
+      new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        vertexColors: true,
+      })
+    )
+    RENDER_SCENE.add(dbg_lines)
+
+    let tickPhys = () => {
+      PHYS_WORLD.step()
       for (let d of dice) {
-        d.end_roll(true)
+        d.tickPhys()
       }
+      roll_ticks++
+      if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
+        for (let d of dice) {
+          d.endRoll(true)
+        }
+      }
+      setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
     }
-    setTimeout(phys_tick, PHYS_TICK_PERIOD_MS)
-  }
-  phys_tick()
-  phys_ready = true
+    tickPhys()
+    phys_ready = true
 
-  function render_tick() {
-    requestAnimationFrame(render_tick)
+    function tickRender() {
+      requestAnimationFrame(tickRender)
 
-    if (DBG_MODE) {
-      let buffers = PHYS_WORLD.debugRender()
-      dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
-      dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
+      if (DBG_MODE) {
+        let buffers = PHYS_WORLD.debugRender()
+        dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
+        dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
+      }
+      dbg_lines.visible = DBG_MODE
+
+      TWEEN.update()
+      renderer.render(RENDER_SCENE, camera)
     }
-    dbg_lines.visible = DBG_MODE
+    tickRender()
 
-    TWEEN.update()
-    renderer.render(RENDER_SCENE, camera)
-  }
-  render_tick()
+    dom_parent.appendChild(renderer.domElement)
+    actionRoll(1, [1, 1, 2], Date.now() * Math.random())
+  })
+}
 
-  document.body.appendChild(renderer.domElement)
-  action_roll(1, [1, 1, 2], Date.now() * Math.random())
-})
+if (DBG_MODE) {
+  window.actionRoll = actionRoll
+  window.addDice = addDice
+}
+export { create, isReady, actionRoll, addDice, clear }
