@@ -404,11 +404,16 @@ class Dice3D {
   }
 }
 
+function isPoolReqEmpty(pr) {
+  for (let _p in pr) return false
+  return true
+}
+
 function resetSoftTimeout() {
   roll_soft_target = roll_ticks + ROLL_SOFT_TIMEOUT_TICKS
 }
 
-function rollDiceFromIds(plr_ids, seed) {
+function rollDiceFromIds(plr_dice_counts, seed) {
   if (!isReady()) {
     return
   }
@@ -416,24 +421,25 @@ function rollDiceFromIds(plr_ids, seed) {
   roll_ticks = 0
   resetSoftTimeout()
 
-  for (let id of plr_ids) {
-    new Dice3D(id)
+  for (let pid in plr_dice_counts) {
+    for (let c = 0; c < plr_dice_counts[pid]; c++) {
+      new Dice3D(pid)
+    }
   }
 }
 
-function actionRoll(boss_id, plr_ids, seed) {
-  roll_take_lowest = plr_ids.length == 0
+function actionRoll(boss_id, plr_dice_counts, seed) {
+  roll_take_lowest = isPoolReqEmpty(plr_dice_counts)
   if (roll_take_lowest) {
-    plr_ids.push(boss_id)
-    plr_ids.push(boss_id)
+    plr_dice_counts[boss_id] = 2
   }
   clear()
   roll_boss_id = boss_id
-  rollDiceFromIds(plr_ids, seed)
+  rollDiceFromIds(plr_dice_counts, seed)
 }
 
-function addDice(plr_ids, seed) {
-  rollDiceFromIds(plr_ids, seed)
+function addDice(plr_dice_counts, seed) {
+  rollDiceFromIds(plr_dice_counts, seed)
 }
 
 function clear() {
@@ -600,7 +606,6 @@ function create(dom_parent) {
     tickRender()
 
     dom_parent.appendChild(renderer.domElement)
-    actionRoll(1, [1, 1, 2], Date.now() * Math.random())
   })
 }
 
