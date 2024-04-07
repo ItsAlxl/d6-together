@@ -178,8 +178,20 @@ class Dice3D {
   constructor(owner_id) {
     this.owner_id = owner_id
 
+    let side_sign = owner_id == roll_boss_id ? 1 : -1
+    let rand_q = { x: rng(), y: rng(), z: rng(), w: rng() }
+    let ndenom = Math.sqrt(rand_q.x ** 2 + rand_q.y ** 2 + rand_q.z ** 2 + rand_q.w ** 2)
+    rand_q.x /= ndenom
+    rand_q.y /= ndenom
+    rand_q.z /= ndenom
+    rand_q.w /= ndenom
+
     this.body = PHYS_WORLD.createRigidBody(
-      DICE_BODY_PARAMS.setTranslation(TRAY_BUFFER_SIZE, -TRAY_SIDE - DICE_SIDE, 0)
+      DICE_BODY_PARAMS.setTranslation(
+        TRAY_BUFFER_SIZE * (rng() - 0.5),
+        -side_sign * (TRAY_SIDE + DICE_SIDE),
+        TRAY_HALF_HEIGHT * 0.5
+      ).setRotation(rand_q)
     )
     PHYS_WORLD.createCollider(DICE_COL_SHAPE, this.body).setCollisionGroups(
       COL_LAYER_DICE_OFFSCREEN
@@ -193,17 +205,17 @@ class Dice3D {
 
     this.body.applyImpulse(
       {
-        x: rng_range_pn(500, 1500),
-        y: rng_range(500, 1500),
+        x: rng_range_pn(50, 150),
+        y: side_sign * rng_range(500, 750),
         z: 5,
       },
       true
     )
     this.body.applyTorqueImpulse(
       {
-        x: rng_range_pn(1000, 2000),
-        y: rng_range_pn(1000, 2000),
-        z: rng_range_pn(1000, 2000),
+        x: rng_range_pn(250, 400),
+        y: rng_range_pn(250, 400),
+        z: rng_range_pn(250, 400),
       },
       true
     )
