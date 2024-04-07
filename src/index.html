@@ -27,13 +27,35 @@
   -->
 
   <script type="module" src="game.js"></script>
+  <script type="module">
+    import Split from "split-grid"
+
+    Split({
+      columnGutters: [
+        {
+          track: 1,
+          element: document.getElementById("data_dice_split"),
+        },
+      ],
+    })
+  </script>
   <script>
+    MY_PLAYER_ID = 1
+
     function makePoolRequest() {
-      requestPoolRoll({ 1: document.getElementById("pool_mine").valueAsNumber })
+      requestPoolRoll({ [MY_PLAYER_ID]: document.getElementById("pool_mine").valueAsNumber })
     }
   </script>
-  <body>
-    <input type="number" min="1" max="5" value="1" id="pool_mine" />
-    <button id="btn" onclick="makePoolRequest()">Roll!</button>
+  <body class="h-screen">
+    <div class="h-full grid grid-cols-[1fr_4px_1fr]">
+      <div>
+        <input type="number" min="1" max="5" value="1" id="pool_mine" />
+      </div>
+      <div class="cursor-col-resize bg-base-300" id="data_dice_split"></div>
+      <div class="m-auto max-w-[90vh] p-4">
+        <button class="btn btn-primary" id="btn" onclick="makePoolRequest()">Roll!</button>
+        <div class="w-full h-full" id="dice_par"></div>
+      </div>
+    </div>
   </body>
 </html>

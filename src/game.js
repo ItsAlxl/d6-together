@@ -1,13 +1,11 @@
 import * as DiceTray from "./dicetray.js"
 
-let my_pid = 1
-
 function generateSeed() {
     return Date.now() * Math.random()
 }
 
-DiceTray.create(document.body)
+DiceTray.create(document.getElementById("dice_par"))
 
 window.requestPoolRoll = function(pool) {
-    DiceTray.poolRoll(my_pid, pool, generateSeed())
+    DiceTray.poolRoll(MY_PLAYER_ID, pool, generateSeed())
 }

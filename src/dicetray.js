@@ -543,7 +543,7 @@ function create(dom_parent) {
     )
 
     const renderer = new THREE.WebGLRenderer()
-    renderer.setSize(500, 500)
+    renderer.setSize(1000, 1000)
 
     camera.position.z = TRAY_HALF_HEIGHT
 
@@ -605,8 +605,11 @@ function create(dom_parent) {
       renderer.render(RENDER_SCENE, camera)
     }
     tickRender()
-
+    
     dom_parent.appendChild(renderer.domElement)
+    renderer.domElement.classList.add("h-full")
+    renderer.domElement.classList.add("w-full")
+    renderer.domElement.style = ""
   })
 }
 
