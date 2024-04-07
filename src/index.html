@@ -5,17 +5,12 @@
     <meta name="Description" content="Play Forged in the Dark games online" />
 
     <meta property="og:title" content="d6 Together" />
-    <meta
-      property="og:description"
-      content="Play Forged in the Dark games online"
-    />
+    <meta property="og:description" content="Play Forged in the Dark games online" />
 
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="style.css" type="text/css" rel="stylesheet" />
   </head>
-
-  <script type="module" src="dicetray.js"></script>
-
+  <!--
   <script>
     const ws = new WebSocket("ws://localhost:6462")
     function ws_send(key, data) {
@@ -29,7 +24,16 @@
       console.log(JSON.parse(event.data))
     }
   </script>
+  -->
+
+  <script type="module" src="game.js"></script>
+  <script>
+    function makePoolRequest() {
+      requestPoolRoll({ 1: document.getElementById("pool_mine").valueAsNumber })
+    }
+  </script>
   <body>
-    <p>hi there :)</p>
+    <input type="number" min="1" max="5" value="1" id="pool_mine" />
+    <button id="btn" onclick="makePoolRequest()">Roll!</button>
   </body>
 </html>

@@ -131,7 +131,6 @@ function splitmix32(a) {
 
 let rng
 function seedRNG(s) {
-  console.log(s)
   rng = splitmix32(s)
 }
 
@@ -413,7 +412,23 @@ function resetSoftTimeout() {
   roll_soft_target = roll_ticks + ROLL_SOFT_TIMEOUT_TICKS
 }
 
-function rollDiceFromIds(plr_dice_counts, seed) {
+function actionRoll(boss_id, plr_dice_counts, seed) {
+  roll_take_lowest = isPoolReqEmpty(plr_dice_counts)
+  if (roll_take_lowest) {
+    plr_dice_counts[boss_id] = 2
+  }
+  clear()
+  roll_boss_id = boss_id
+  addDice(plr_dice_counts, seed)
+}
+
+function poolRoll(boss_id, plr_dice_counts, seed) {
+  clear()
+  roll_boss_id = boss_id
+  addDice(plr_dice_counts, seed)
+}
+
+function addDice(plr_dice_counts, seed) {
   if (!isReady()) {
     return
   }
@@ -426,20 +441,6 @@ function rollDiceFromIds(plr_dice_counts, seed) {
       new Dice3D(pid)
     }
   }
-}
-
-function actionRoll(boss_id, plr_dice_counts, seed) {
-  roll_take_lowest = isPoolReqEmpty(plr_dice_counts)
-  if (roll_take_lowest) {
-    plr_dice_counts[boss_id] = 2
-  }
-  clear()
-  roll_boss_id = boss_id
-  rollDiceFromIds(plr_dice_counts, seed)
-}
-
-function addDice(plr_dice_counts, seed) {
-  rollDiceFromIds(plr_dice_counts, seed)
 }
 
 function clear() {
@@ -609,8 +610,4 @@ function create(dom_parent) {
   })
 }
 
-if (DBG_MODE) {
-  window.actionRoll = actionRoll
-  window.addDice = addDice
-}
-export { create, isReady, actionRoll, addDice, clear }
+export { create, isReady, actionRoll, poolRoll, addDice, clear }
