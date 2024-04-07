@@ -16,8 +16,11 @@ const TRAY_BUMPER_SIZE = 500
 const TRAY_BUFFER_SIZE = TRAY_SIDE - DICE_SIDE * Math.SQRT2
 
 const GRAVITY = -80
-const PHYS_TICK_PERIOD_MS = 1000 / 60
-const DICE_TIMEOUT_TICKS = 15
+const PHYS_FPS = 60
+const PHYS_TICK_PERIOD_MS = 1000 / PHYS_FPS
+const DICE_TIMEOUT_TICKS = PHYS_FPS * 0.2
+const ROLL_SOFT_TIMEOUT_TICKS = PHYS_FPS * 5
+const ROLL_HARD_TIMEOUT_TICKS = PHYS_FPS * 10
 
 const UP_DOT_THRESHOLD = 0.875
 const APPROX_ZERO_LINEAR = 5.0
@@ -159,6 +162,8 @@ function _is_xyz_phys_zero_approx(xyz, against = 0.001) {
 const dice = []
 let roll_boss_id = -1
 let roll_take_lowest = false
+let roll_ticks = 0
+let roll_soft_target = 0
 
 class Dice3D {
   owner_id
@@ -281,6 +286,7 @@ class Dice3D {
       },
       true
     )
+    _reset_soft_timeout()
     this.num_rerolls++
   }
 
@@ -398,11 +404,17 @@ class Dice3D {
   }
 }
 
+function _reset_soft_timeout() {
+  roll_soft_target = roll_ticks + ROLL_SOFT_TIMEOUT_TICKS
+}
+
 function roll_dice_from_ids(plr_ids, seed) {
   if (!is_ready()) {
     return
   }
   seed_rng(seed)
+  roll_ticks = 0
+  _reset_soft_timeout()
 
   for (let id of plr_ids) {
     new Dice3D(id)
@@ -564,6 +576,12 @@ RAPIER.init().then(() => {
     PHYS_WORLD.step()
     for (let d of dice) {
       d.phys_tick()
+    }
+    roll_ticks++
+    if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
+      for (let d of dice) {
+        d.end_roll(true)
+      }
     }
     setTimeout(phys_tick, PHYS_TICK_PERIOD_MS)
   }
