@@ -89,8 +89,12 @@ window.closePrompt = function () {
 }
 
 window.onActionClicked = function (value) {
-  action_value = parseInt(value)
-  openPrompt("pmt-action")
+  if (isPromptOpen("pmt-arbitrary")) {
+    document.getElementById("arb-mine").valueAsNumber = value
+  } else {
+    action_value = parseInt(value)
+    openPrompt("pmt-action")
+  }
 }
 
 DiceTray.create(document.getElementById("dice-parent"))
