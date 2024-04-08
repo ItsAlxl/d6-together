@@ -2,7 +2,7 @@ import * as DiceTray from "./dicetray.js"
 window.MY_PLAYER_ID = 1
 
 const PROMPT_MAP = {
-  pmt-arbitrary: {
+  "pmt-arbitrary": {
     cb: requestPoolRoll,
     title: "Build Pool",
     act: "Roll!",
