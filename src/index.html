@@ -39,24 +39,35 @@
       ],
     })
   </script>
-  <script>
-    MY_PLAYER_ID = 1
-
-    function makePoolRequest() {
-      requestPoolRoll({ [MY_PLAYER_ID]: document.getElementById("pool_mine").valueAsNumber })
-    }
-  </script>
   <body class="h-screen">
     <div class="h-full grid grid-cols-[1fr_5px_1fr]">
-      <div>
-        <input type="number" min="0" max="10" value="0" id="pool_mine" />
-      </div>
-      <div class="cursor-col-resize bg-neutral" id="data_dice_split"></div>
-      <div class="m-auto max-w-[90vh] p-2">
-        <div class="pb-2">
-          <button class="btn btn-primary" id="btn" onclick="makePoolRequest()">Roll!</button>
+      <div class="p-2"></div>
+      <div class="dragger-v" id="data_dice_split"></div>
+      <div class="m-auto max-w-[100vh] grid">
+        <div id="dicetray" class="overlap p-2 flex flex-col">
+          <div class="pb-2">
+            <button class="btn btn-primary" id="btn" onclick="openPrompt('prompt_arbitrary')">
+              Build Pool
+            </button>
+          </div>
+          <div class="" id="dice_par"></div>
         </div>
-        <div class="w-full h-full" id="dice_par"></div>
+        <div id="prompt_bg" class="hidden overlap p-4 bg-base-300/[.95]">
+          <div
+            class="w-full h-full flex flex-col gap-4 justify-center items-center"
+            id="prompt_arbitrary"
+          >
+            <input type="number" min="0" max="10" value="0" id="pool_mine" />
+            <div class="flex flex-col gap-2 justify-center">
+              <button class="shrink btn btn-outline btn-primary" id="btn" onclick="requestPoolRoll()">
+                This Button Has Much Longer Text
+              </button>
+              <button class="shrink btn btn-outline btn-error" id="btn" onclick="closePrompt()">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </body>

@@ -607,8 +607,7 @@ function create(dom_parent) {
     tickRender()
     
     dom_parent.appendChild(renderer.domElement)
-    renderer.domElement.classList.add("h-full")
-    renderer.domElement.classList.add("w-full")
+    renderer.domElement.classList.add("h-full", "w-full")
     renderer.domElement.style = ""
   })
 }

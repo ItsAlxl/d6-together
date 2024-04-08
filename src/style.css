@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .dragger {
+    @apply bg-neutral;
+  }
+  .dragger-v {
+    @apply dragger cursor-col-resize;
+  }
+  .dragger-h {
+    @apply dragger cursor-row-resize;
+  }
+}
+
+@layer utilities {
+  .overlap {
+    @apply row-span-full col-span-full;
+  }
+}
