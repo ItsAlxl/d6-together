@@ -55,11 +55,11 @@ const TEXTURE_LOADER = new THREE.TextureLoader()
 
 const DICE_MAT_BASE = new THREE.MeshPhongMaterial({
   color: "#fff",
-  map: TEXTURE_LOADER.load("fallback_dice/marble.png"),
+  map: TEXTURE_LOADER.load("/fallback_dice/marble.png"),
 })
 const DICE_MAT_PIPS = new THREE.MeshPhongMaterial({
   color: "#000",
-  map: TEXTURE_LOADER.load("fallback_dice/numerals_outlined.png"),
+  map: TEXTURE_LOADER.load("/fallback_dice/numerals_outlined.png"),
   alphaTest: 0.5,
 })
 

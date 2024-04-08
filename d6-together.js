@@ -3,7 +3,7 @@ const PORT = 6462
 let ws = require("ws")
 const wss = new ws.Server({
   server: require("connect")()
-    .use(require("serve-static")(__dirname + "/public"))
+    .use(require("serve-static")(__dirname + "/dist"))
     .listen(PORT, () => console.log("d6 Together open on port :" + PORT)),
 })
 

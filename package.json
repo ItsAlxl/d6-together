@@ -5,9 +5,9 @@
   "description": "Play Forged in the Dark games online",
   "license": "MIT",
   "scripts": {
-    "start": "node d6-together.js",
+    "start": "npm run build && node d6-together.js",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build --emptyOutDir",
     "preview": "vite preview"
   },
   "dependencies": {
