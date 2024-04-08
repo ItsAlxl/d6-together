@@ -34,7 +34,7 @@
       columnGutters: [
         {
           track: 1,
-          element: document.getElementById("data_dice_split"),
+          element: document.getElementById("dragger-dicetray"),
         },
       ],
     })
@@ -43,40 +43,38 @@
     <div class="h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2"></div>
       <div class="dragger-v" id="data_dice_split"></div>
+      <div class="dragger-v" id="dragger-dicetray"></div>
       <div class="m-auto max-w-[100vh] grid">
         <div id="dicetray" class="overlap p-2 flex flex-col">
           <div class="pb-2">
-            <button class="btn btn-primary" id="btn" onclick="openPrompt('prompt_arbitrary')">
+            <button class="btn btn-primary" onclick="openPrompt('pmt-arbitrary')">
               Build Pool
             </button>
           </div>
-          <div class="" id="dice_par"></div>
+          <div class="" id="dice-parent"></div>
         </div>
         <div
-          id="prompt_bg"
+          id="prompt-bg"
           class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
         >
-          <h1 id="prompt_title" class="text-xl"></h1>
-          <div id="prompt_list" class="w-full">
-            <div id="prompt_arbitrary" class="prompt-inputs">
+          <h1 id="prompt-title" class="text-xl"></h1>
+          <div id="prompt-list" class="w-full">
+            <div id="pmt-arbitrary" class="prompt-inputs">
               <input type="number" min="0" max="10" value="0" id="arb_mine" />
               <input type="number" min="0" max="10" value="0" id="arb_dbg" />
-              <input type="number" disabled="disabled" min="0" max="10" value="0" />
-              <input type="number" disabled="disabled" min="0" max="10" value="0" />
-              <input type="number" disabled="disabled" min="0" max="10" value="0" />
-              <input type="number" disabled="disabled" min="0" max="10" value="0" />
+              <input type="number" disabled min="0" max="10" value="0" />
+              <input type="number" disabled min="0" max="10" value="0" />
+              <input type="number" disabled min="0" max="10" value="0" />
+              <input type="number" disabled min="0" max="10" value="0" />
             </div>
           </div>
           <div class="flex flex-col gap-1 justify-center">
             <button
-              id="prompt_confirm_btn"
+              id="prompt-confirm-btn"
               class="shrink btn btn-outline btn-primary"
-              id="btn"
               onclick="applyPrompt()"
             ></button>
-            <button class="shrink btn btn-outline btn-error" id="btn" onclick="closePrompt()">
-              Cancel
-            </button>
+            <button class="shrink btn btn-outline btn-error" onclick="closePrompt()">Cancel</button>
           </div>
         </div>
       </div>
