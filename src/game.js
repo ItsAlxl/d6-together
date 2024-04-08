@@ -8,9 +8,16 @@ const PROMPT_MAP = {
     title: "Build Pool",
     act: "Roll!",
   },
+  "pmt-action": {
+    cb: requestActionRool,
+    title: "Action Roll",
+    act: "Roll!",
+  },
 }
 
 let current_prompt = ""
+let action_value = -1
+let action_assister = -1
 
 function generateSeed() {
   return Date.now() * Math.random()
@@ -24,15 +31,26 @@ function requestPoolRoll() {
   DiceTray.poolRoll(
     MY_PLAYER_ID,
     {
-      [MY_PLAYER_ID]: document.getElementById("arb_mine").valueAsNumber,
-      [2]: document.getElementById("arb_dbg").valueAsNumber,
+      [MY_PLAYER_ID]: document.getElementById("arb-mine").valueAsNumber,
+      [2]: document.getElementById("arb-dbg").valueAsNumber,
     },
     generateSeed()
   )
 }
 
-function requestActionRool(value) {
-  DiceTray.actionRoll(MY_PLAYER_ID, {[MY_PLAYER_ID]: value}, generateSeed())
+function requestActionRool() {
+  let pool = {
+    [MY_PLAYER_ID]: action_value + (document.getElementById("action-push").checked ? 1 : 0),
+  }
+  if (action_assister >= 0) {
+    pool[action_assister] = 1
+  }
+  DiceTray.actionRoll(MY_PLAYER_ID, pool, generateSeed())
+
+  action_assister = -1
+  action_value = -1
+  document.getElementById("action-push").checked = false
+  document.getElementById("action-assist").checked = false
 }
 
 window.applyPrompt = function () {
@@ -42,8 +60,12 @@ window.applyPrompt = function () {
   closePrompt()
 }
 
+function isPromptOpen(p) {
+  return p == current_prompt
+}
+
 window.openPrompt = function (id) {
-  if (id != current_prompt) {
+  if (!isPromptOpen(id)) {
     let prompts_par = document.getElementById("prompt-list")
     current_prompt = id
     for (let i = 0; i < prompts_par.children.length; i++) {
@@ -66,9 +88,12 @@ window.closePrompt = function () {
   setVisible(document.getElementById("prompt-bg"), false)
 }
 
-window.onActionClicked = function(value) {
-  requestActionRool(value)
+window.onActionClicked = function (value) {
+  action_value = parseInt(value)
+  openPrompt("pmt-action")
 }
 
 DiceTray.create(document.getElementById("dice-parent"))
-document.getElementById("char-sheet").insertAdjacentHTML("beforeend", Components.getActionHTML(0, 3))
+document
+  .getElementById("char-sheet")
+  .insertAdjacentHTML("beforeend", Components.getActionHTML(0, 3))

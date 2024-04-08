@@ -13,7 +13,7 @@
     @apply dragger cursor-row-resize;
   }
   .prompt-inputs {
-    @apply flex flex-col gap-2 justify-center items-center overflow-y-auto max-h-[50vh];
+    @apply flex flex-col gap-2 justify-center overflow-y-auto max-h-[50vh];
   }
 }
 

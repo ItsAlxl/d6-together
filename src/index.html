@@ -59,23 +59,38 @@
           class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
         >
           <h1 id="prompt-title" class="text-xl"></h1>
-          <div id="prompt-list" class="w-full">
+          <div id="prompt-list" class="">
             <div id="pmt-arbitrary" class="prompt-inputs">
-              <input type="number" min="0" max="10" value="0" id="arb_mine" />
-              <input type="number" min="0" max="10" value="0" id="arb_dbg" />
+              <input type="number" min="0" max="10" value="0" id="arb-mine" />
+              <input type="number" min="0" max="10" value="0" id="arb-dbg" />
               <input type="number" disabled min="0" max="10" value="0" />
               <input type="number" disabled min="0" max="10" value="0" />
               <input type="number" disabled min="0" max="10" value="0" />
               <input type="number" disabled min="0" max="10" value="0" />
             </div>
+            <div id="pmt-action" class="prompt-inputs">
+              <label class="label p-0 justify-normal cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" id="action-push" />
+                <span class="label-text pl-2 grow">Push Yourself</span>
+              </label>
+              <label class="label p-0 justify-normal cursor-not-allowed">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-secondary"
+                  id="action-assist"
+                  disabled
+                />
+                <span class="label-text pl-2 grow">Being Assisted</span>
+              </label>
+            </div>
           </div>
           <div class="flex flex-col gap-1 justify-center">
             <button
               id="prompt-confirm-btn"
-              class="shrink btn btn-outline btn-primary"
+              class="btn btn-outline btn-primary"
               onclick="applyPrompt()"
             ></button>
-            <button class="shrink btn btn-outline btn-error" onclick="closePrompt()">Cancel</button>
+            <button class="btn btn-outline btn-error" onclick="closePrompt()">Cancel</button>
           </div>
         </div>
       </div>

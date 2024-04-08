@@ -426,6 +426,7 @@ function resetSoftTimeout() {
 }
 
 function actionRoll(boss_id, plr_dice_counts, seed) {
+  console.log(plr_dice_counts)
   roll_take_lowest = isPoolReqEmpty(plr_dice_counts)
   if (roll_take_lowest) {
     plr_dice_counts[boss_id] = 2
