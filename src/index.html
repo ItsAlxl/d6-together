@@ -52,17 +52,31 @@
           </div>
           <div class="" id="dice_par"></div>
         </div>
-        <div id="prompt_bg" class="hidden overlap p-4 bg-base-300/[.95]">
-          <div class="prompt-menu" id="prompt_arbitrary">
-            <input type="number" min="0" max="10" value="0" id="arb_mine" />
-            <div id="prompt_controls" class="flex flex-col gap-1 justify-center">
-              <button class="shrink btn btn-outline btn-primary" id="btn" onclick="applyPrompt()">
-                Roll Pool
-              </button>
-              <button class="shrink btn btn-outline btn-error" id="btn" onclick="closePrompt()">
-                Cancel
-              </button>
+        <div
+          id="prompt_bg"
+          class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
+        >
+          <h1 id="prompt_title" class="text-xl"></h1>
+          <div id="prompt_list" class="w-full">
+            <div id="prompt_arbitrary" class="prompt-inputs">
+              <input type="number" min="0" max="10" value="0" id="arb_mine" />
+              <input type="number" disabled="disabled" min="0" max="10" value="0" />
+              <input type="number" disabled="disabled" min="0" max="10" value="0" />
+              <input type="number" disabled="disabled" min="0" max="10" value="0" />
+              <input type="number" disabled="disabled" min="0" max="10" value="0" />
+              <input type="number" disabled="disabled" min="0" max="10" value="0" />
             </div>
+          </div>
+          <div class="flex flex-col gap-1 justify-center">
+            <button
+              id="prompt_confirm_btn"
+              class="shrink btn btn-outline btn-primary"
+              id="btn"
+              onclick="applyPrompt()"
+            ></button>
+            <button class="shrink btn btn-outline btn-error" id="btn" onclick="closePrompt()">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
