@@ -32,4 +32,8 @@ component_helpers.getActionValue = function (act_id) {
   return document.querySelector("input[name='" + getActionName(act_id) + "']:checked").value
 }
 
+component_helpers.setActionValue = function (act_id, val) {
+  return document.querySelector("input[name='" + getActionName(act_id) + "'][value='" + val + "']").checked = true
+}
+
 window.d6tComp = component_helpers
