@@ -133,6 +133,7 @@ function splitmix32(a) {
 
 let rng
 function seedRNG(s) {
+  console.log(s)
   rng = splitmix32(s)
 }
 
