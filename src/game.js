@@ -1,4 +1,5 @@
 import * as DiceTray from "./dicetray.js"
+import * as Components from "./components.js"
 window.MY_PLAYER_ID = 1
 
 const PROMPT_MAP = {
@@ -19,8 +20,6 @@ function setVisible(e, v) {
   v ? e.classList.remove("hidden") : e.classList.add("hidden")
 }
 
-DiceTray.create(document.getElementById("dice-parent"))
-
 function requestPoolRoll() {
   DiceTray.poolRoll(
     MY_PLAYER_ID,
@@ -30,6 +29,10 @@ function requestPoolRoll() {
     },
     generateSeed()
   )
+}
+
+function requestActionRool(value) {
+  DiceTray.actionRoll(MY_PLAYER_ID, {[MY_PLAYER_ID]: value}, generateSeed())
 }
 
 window.applyPrompt = function () {
@@ -62,3 +65,10 @@ window.closePrompt = function () {
   current_prompt = ""
   setVisible(document.getElementById("prompt-bg"), false)
 }
+
+window.onActionClicked = function(value) {
+  requestActionRool(value)
+}
+
+DiceTray.create(document.getElementById("dice-parent"))
+document.getElementById("char-sheet").insertAdjacentHTML("beforeend", Components.getActionHTML(0, 3))
