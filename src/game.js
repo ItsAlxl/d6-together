@@ -24,7 +24,10 @@ DiceTray.create(document.getElementById("dice_par"))
 function requestPoolRoll() {
   DiceTray.poolRoll(
     MY_PLAYER_ID,
-    { [MY_PLAYER_ID]: document.getElementById("arb_mine").valueAsNumber },
+    {
+      [MY_PLAYER_ID]: document.getElementById("arb_mine").valueAsNumber,
+      [2]: document.getElementById("arb_dbg").valueAsNumber,
+    },
     generateSeed()
   )
 }

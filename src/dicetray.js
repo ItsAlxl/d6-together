@@ -21,6 +21,7 @@ const PHYS_TICK_PERIOD_MS = 1000 / PHYS_FPS
 const DICE_TIMEOUT_TICKS = PHYS_FPS * 0.2
 const ROLL_SOFT_TIMEOUT_TICKS = PHYS_FPS * 5
 const ROLL_HARD_TIMEOUT_TICKS = PHYS_FPS * 10
+const DICE_SPAWN_STAGGER_TICKS = 3
 
 const UP_DOT_THRESHOLD = 0.875
 const APPROX_ZERO_LINEAR = 5.0
@@ -163,6 +164,7 @@ let roll_boss_id = -1
 let roll_take_lowest = false
 let roll_ticks = 0
 let roll_soft_target = 0
+let roll_request = {}
 
 class Dice3D {
   owner_id
@@ -403,8 +405,17 @@ class Dice3D {
   }
 }
 
+function getNextIdFromReq(pr, exclude_id = null) {
+  for (let p in pr) {
+    if (p != exclude_id) return p
+  }
+  return null
+}
+
 function isPoolReqEmpty(pr) {
-  for (let _p in pr) return false
+  for (let p in pr) {
+    if (pr[p] > 0) return false
+  }
   return true
 }
 
@@ -437,8 +448,12 @@ function addDice(plr_dice_counts, seed) {
   resetSoftTimeout()
 
   for (let pid in plr_dice_counts) {
-    for (let c = 0; c < plr_dice_counts[pid]; c++) {
-      new Dice3D(pid)
+    if (plr_dice_counts[pid] > 0) {
+      if (roll_request.hasOwnProperty(pid)) {
+        roll_request[pid] += plr_dice_counts[pid]
+      } else {
+        roll_request[pid] = plr_dice_counts[pid]
+      }
     }
   }
 }
@@ -516,6 +531,14 @@ function dieFinished() {
   }
 }
 
+function popRequest(req_id) {
+  new Dice3D(req_id)
+  roll_request[req_id]--
+  if (roll_request[req_id] <= 0) {
+    delete roll_request[req_id]
+  }
+}
+
 function create(dom_parent) {
   RAPIER.init().then(() => {
     RENDER_SCENE = new THREE.Scene()
@@ -577,15 +600,28 @@ function create(dom_parent) {
 
     let tickPhys = () => {
       PHYS_WORLD.step()
+
+      if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
+        let req_id = getNextIdFromReq(roll_request, MY_PLAYER_ID)
+        if (req_id != null) {
+          popRequest(req_id)
+        }
+        if (roll_request.hasOwnProperty(MY_PLAYER_ID)) {
+          popRequest(MY_PLAYER_ID)
+        }
+      }
+
       for (let d of dice) {
         d.tickPhys()
       }
+
       roll_ticks++
       if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
         for (let d of dice) {
           d.endRoll(true)
         }
       }
+
       setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
     }
     tickPhys()
@@ -605,7 +641,7 @@ function create(dom_parent) {
       renderer.render(RENDER_SCENE, camera)
     }
     tickRender()
-    
+
     dom_parent.appendChild(renderer.domElement)
     renderer.domElement.classList.add("h-full", "w-full")
     renderer.domElement.style = ""
