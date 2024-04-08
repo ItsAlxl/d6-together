@@ -20,7 +20,7 @@ function getActionRatingHTML(act_id, max) {
 
 export function getActionHTML(act_id, max) {
   return `
-<div class="flex flex-col">
+<div class="flex flex-col" id="${getActionName(act_id)}">
   <button class="btn btn-sm" onclick="onActionClicked(d6tComp.getActionValue('${act_id}'))">Action</button>
   <div class="rating gap-1">
     ${getActionRatingHTML(act_id, max)}
