@@ -27,6 +27,7 @@ const UP_DOT_THRESHOLD = 0.875
 const APPROX_ZERO_LINEAR = 5.0
 const APPROX_ZERO_ANGULAR = 0.1
 const REROLL_LIMIT = 3
+const MAX_DICE_PER_PLAYER = 10
 
 const ARRANGE_SPACING = 2 * 1.5 * DICE_SIDE
 const ARRANGE_RESULT_SPACING = 1.2 * ARRANGE_SPACING
@@ -448,11 +449,12 @@ function addDice(plr_dice_counts, seed) {
   resetSoftTimeout()
 
   for (let pid in plr_dice_counts) {
-    if (plr_dice_counts[pid] > 0) {
+    let d = Math.min(MAX_DICE_PER_PLAYER, plr_dice_counts[pid])
+    if (d > 0) {
       if (roll_request.hasOwnProperty(pid)) {
-        roll_request[pid] += plr_dice_counts[pid]
+        roll_request[pid] += d
       } else {
-        roll_request[pid] = plr_dice_counts[pid]
+        roll_request[pid] = d
       }
     }
   }
