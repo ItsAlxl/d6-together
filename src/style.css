@@ -12,6 +12,9 @@
   .dragger-h {
     @apply dragger cursor-row-resize;
   }
+  .prompt-menu {
+    @apply w-full h-full flex flex-col gap-4 justify-center items-center;
+  }
 }
 
 @layer utilities {
