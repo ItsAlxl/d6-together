@@ -2,10 +2,7 @@ import * as DiceTray from "./dicetray.js"
 import * as Components from "./components.js"
 import * as Roster from "./roster.js"
 
-window.d6t = {
-  getActionDisplayedValue: Components.getActionDisplayedValue,
-  setActionDisplayedValue: Components.setActionDisplayedValue,
-}
+window.d6t = {}
 
 const PROMPT_MAP = {
   "pmt-arbitrary": {
@@ -94,7 +91,8 @@ window.d6t.closePrompt = function () {
   setVisible(document.getElementById("prompt-bg"), false)
 }
 
-window.d6t.onActionClicked = function (value) {
+window.d6t.onActionClicked = function (act_id) {
+  let value = Components.getActionDisplayedValue(act_id)
   if (isPromptOpen("pmt-arbitrary")) {
     document.getElementById("arb-mine").valueAsNumber = value
   } else {
@@ -121,6 +119,15 @@ window.d6t.newToon = function () {
   updateToonTabs()
 }
 
+function refreshToonSheet() {
+  let toon = Roster.toons[current_toon_id]
+  if (toon != null) {
+    for (let act_id in toon.acts) {
+      Components.setActionDisplayedValue(act_id, toon.acts[act_id])
+    }
+  }
+}
+
 window.d6t.selectToon = function (id, allow_collapse = true) {
   if (allow_collapse && id == current_toon_id) {
     id = -1
@@ -130,7 +137,16 @@ window.d6t.selectToon = function (id, allow_collapse = true) {
     Components.setTabDisplaySelected(current_toon_id, false)
   }
   current_toon_id = id
-  setVisible(document.getElementById("toon-sheet"), Components.setTabDisplaySelected(id, true))
+
+  let valid_toon = Components.setTabDisplaySelected(id, true)
+  if (valid_toon) {
+    refreshToonSheet()
+  }
+  setVisible(document.getElementById("toon-sheet"), valid_toon)
+}
+
+window.d6t.setActionValue = function(act_id, value) {
+  Roster.setToonAct(current_toon_id, parseInt(act_id), parseInt(value))
 }
 
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)

@@ -9,7 +9,9 @@ function getActionName(act_id) {
 function getActionValueHTML(act_id, value, hidden = false) {
   return `<input type="radio" name="${getActionName(act_id)}" class="${
     hidden ? "rating-hidden" : "mask mask-circle"
-  }" value=${value} ${value == 0 ? "checked" : ""} />`
+  }" value=${value} onclick="d6t.setActionValue('${act_id}', ${value})" ${
+    value == 0 ? "checked" : ""
+  } />`
 }
 
 function getActionRatingHTML(act_id, max) {
@@ -23,7 +25,7 @@ function getActionRatingHTML(act_id, max) {
 export function getActionHTML(act_id, act_text, max) {
   let space_idx = act_text.indexOf(" ")
   let button_text = `
-  <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked(d6t.getActionDisplayedValue('${act_id}'))">${
+  <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked('${act_id}')">${
     space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
   }</button>`
   if (space_idx >= 0) {
