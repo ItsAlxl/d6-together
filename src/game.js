@@ -19,6 +19,7 @@ const PROMPT_MAP = {
 
 let current_toon_id = -1
 let current_prompt = ""
+
 let action_value = -1
 let action_assister = -1
 
@@ -119,12 +120,34 @@ window.d6t.newToon = function () {
   updateToonTabs()
 }
 
+function updatePlayerList() {
+  let plist = ""
+  for (let p of Roster.players) {
+    if (p != null) {
+      plist += Components.getToonOwnerOptionHTML(p)
+    }
+  }
+  document.getElementById("toon-owner").innerHTML = plist
+  if (current_toon_id >= 0) {
+    d6t.selectToon(current_toon_id, false)
+  }
+}
+
+function refreshToonOwner() {
+  let toon = Roster.toons[current_toon_id]
+  if (toon != null) {
+    console.log(toon.plr_id)
+    document.getElementById("toon-owner").value = toon.plr_id
+  }
+}
+
 function refreshToonSheet() {
   let toon = Roster.toons[current_toon_id]
   if (toon != null) {
     for (let act_id in toon.acts) {
       Components.setActionDisplayedValue(act_id, toon.acts[act_id])
     }
+    refreshToonOwner()
   }
 }
 
@@ -145,8 +168,12 @@ window.d6t.selectToon = function (id, allow_collapse = true) {
   setVisible(document.getElementById("toon-sheet"), valid_toon)
 }
 
-window.d6t.setActionValue = function(act_id, value) {
+window.d6t.setActionValue = function (act_id, value) {
   Roster.setToonAct(current_toon_id, parseInt(act_id), parseInt(value))
+}
+
+d6t.applyToonOwner = function () {
+  Roster.setToonOwner(current_toon_id, parseInt(document.getElementById("toon-owner").value))
 }
 
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
@@ -157,3 +184,4 @@ for (let i = 0; i < Roster.game_config.act_list.length; i++) {
     .getElementById("toon-actions")
     .insertAdjacentHTML("beforeend", Components.getActionHTML(i, Roster.game_config.act_list[i], 3))
 }
+updatePlayerList()

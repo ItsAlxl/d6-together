@@ -83,6 +83,9 @@ function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
 
 function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
   tdata.id = idx
+  if (!tdata.hasOwnProperty("plr_id")) {
+    tdata.plr_id = MY_PLR_ID
+  }
   setAtRoster(new Toon(tdata), idx, toons)
 }
 
@@ -92,6 +95,10 @@ function setToonBio(id, key, value) {
 
 function setToonAct(id, key, value) {
   toons[id].acts[key] = value
+}
+
+function setToonOwner(id, plr_id) {
+  toons[id].plr_id = plr_id
 }
 
 function updateGameConfig() {
@@ -104,5 +111,9 @@ function updateGameConfig() {
 addPlayer(MY_NET_ID, {
   name: "me :)",
 })
+// TODO: add other players when they join
+addPlayer(2 * MY_NET_ID, {
+  name: "friend c:",
+})
 
-export { game_config, players, toons, addToon, addPlayer, setToonAct, setToonBio }
+export { game_config, players, toons, addToon, addPlayer, setToonOwner, setToonAct, setToonBio }

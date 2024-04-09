@@ -60,7 +60,7 @@ export function getToonTabHTML(toon) {
   return `<a role="tab" class="tab" data-d6t-toon-id="${toon.id}" onclick="d6t.selectToon('${toon.id}')">${toon.bio.name}</a>`
 }
 
-export function getToonTab(toon_id) {
+function getToonTab(toon_id) {
   return document.querySelector("#toon-tabs > .tab[data-d6t-toon-id='" + toon_id + "']")
 }
 
@@ -69,4 +69,12 @@ export function setTabDisplaySelected(toon_id, sel) {
   if (t == null) return false
   sel ? t.classList.add("tab-active") : t.classList.remove("tab-active")
   return true
+}
+
+/*
+  Toon Owner
+*/
+
+export function getToonOwnerOptionHTML(plr) {
+  return `<option value=${plr.id}>${plr.name}</option>`
 }

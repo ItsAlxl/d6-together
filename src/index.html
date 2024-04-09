@@ -52,7 +52,9 @@
             class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0"
           ></div>
           <div id="toon-sheet" class="hidden grid grid-cols-[0.3fr_0.7fr]">
-            <div id="toon-bio">Character Bio</div>
+            <div id="toon-bio">
+              <select id="toon-owner" class="select select-sm select-bordered w-full max-w-xs" onchange="d6t.applyToonOwner()"></select>
+            </div>
             <div id="toon-stats" class="grid grid-rows-[0.25fr_0.75fr]">
               <div id="toon-cond">Character Condition</div>
               <div id="toon-actions" class="grid grid-cols-3 gap-y-2 gap-x-8"></div>
