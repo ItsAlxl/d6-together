@@ -20,7 +20,6 @@
       })
 
       import Split from "split-grid"
-
       Split({
         columnGutters: [
           {
@@ -53,7 +52,11 @@
           ></div>
           <div id="toon-sheet" class="hidden grid grid-cols-[0.3fr_0.7fr]">
             <div id="toon-bio">
-              <select id="toon-owner" class="select select-sm select-bordered w-full max-w-xs" onchange="d6t.applyToonOwner()"></select>
+              <select
+                id="toon-owner"
+                class="select select-sm select-bordered w-full max-w-xs"
+                onchange="d6t.applyToonOwner()"
+              ></select>
             </div>
             <div id="toon-stats" class="grid grid-rows-[0.25fr_0.75fr]">
               <div id="toon-cond">Character Condition</div>

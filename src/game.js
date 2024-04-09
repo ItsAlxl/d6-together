@@ -182,6 +182,9 @@ DiceTray.create(document.getElementById("dice-parent"))
 for (let i = 0; i < Roster.game_config.act_list.length; i++) {
   document
     .getElementById("toon-actions")
-    .insertAdjacentHTML("beforeend", Components.getActionHTML(i, Roster.game_config.act_list[i], 3))
+    .insertAdjacentHTML(
+      "beforeend",
+      Components.getActionHTML(i, Roster.game_config.act_list[i], Roster.game_config.act_max)
+    )
 }
 updatePlayerList()

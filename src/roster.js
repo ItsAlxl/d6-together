@@ -18,6 +18,7 @@ class Toon {
   bio = {
     name: "Character",
   }
+  cond = {}
   acts = []
 
   constructor(tdata) {
@@ -39,13 +40,38 @@ class Toon {
 }
 
 let game_config = {
-  bio_extras: [],
+  bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
   act_max: 4,
-  act_list: ["MUSCLE with brute force", "HELM a vehicle", "COMMAND obedience"],
-  stress_push: 2,
-  stress_assist: 1,
-  stress_max: 9,
-  stress_up: true,
+  act_list: [
+    "HUNT a target",
+    "FINESSE with precision",
+    "ATTUNE your mind",
+    "STUDY the details",
+    "PROWL quietly",
+    "COMMAND obedience",
+    "SURVEY your surroundings",
+    "SKIRMISH with hostiles",
+    "CONSORT with acquaintances",
+    "TINKER with mechanisms",
+    "WRECK with brute force",
+    "SWAY someone's thinking",
+  ],
+  cond: {
+    harm: {
+      max: 5,
+      text: true,
+    },
+    trauma: {
+      max: 4,
+      text: true,
+    },
+    stres: {
+      max: 9,
+      cost_push: 2,
+      cost_assist: 1,
+      cost_sign: 1,
+    },
+  },
 }
 
 let players = []
