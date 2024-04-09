@@ -37,12 +37,35 @@
           element: document.getElementById("dragger-dicetray"),
         },
       ],
+      rowGutters: [
+        {
+          track: 1,
+          element: document.getElementById("dragger-data"),
+        },
+      ],
     })
   </script>
   <body class="h-screen">
     <div class="h-full grid grid-cols-[1fr_5px_1fr]">
-      <div class="p-2">
-        <div id="char-sheet" class="flex flex-col gap-4 justify-center items-center"></div>
+      <div class="p-2 min-w-96 grid grid-rows-[0.8fr_5px_0.2fr]">
+        <div>
+          <div role="tablist" class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0">
+            <a role="tab" class="tab">Character</a>
+            <a role="tab" class="tab tab-active">Character</a>
+            <a role="tab" class="tab">Character</a>
+            <a role="tab" class="tab">Character</a>
+            <a role="tab" class="tab">Character</a>
+          </div>
+          <div id="toon-sheet" class="grid grid-cols-[0.3fr_0.7fr]">
+            <div id="toon-bio">Character Bio</div>
+            <div id="toon-stats" class="grid grid-rows-[0.25fr_0.75fr]">
+              <div id="toon-cond">Character Condition</div>
+              <div id="toon-actions" class="grid grid-cols-3 gap-y-2 gap-x-8"></div>
+            </div>
+          </div>
+        </div>
+        <div class="dragger-h" id="dragger-data"></div>
+        <div>Clocks etc</div>
       </div>
       <div class="dragger-v" id="dragger-dicetray"></div>
       <div class="m-auto max-w-[100vh] grid">

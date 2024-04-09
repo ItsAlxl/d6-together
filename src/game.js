@@ -98,6 +98,9 @@ window.onActionClicked = function (value) {
 }
 
 DiceTray.create(document.getElementById("dice-parent"))
-document
-  .getElementById("char-sheet")
-  .insertAdjacentHTML("beforeend", Components.getActionHTML(0, 3))
+
+for (let i = 0; i < 12; i++) {
+  document
+    .getElementById("toon-actions")
+    .insertAdjacentHTML("beforeend", Components.getActionHTML(i, 3))
+}
