@@ -426,7 +426,6 @@ function resetSoftTimeout() {
 }
 
 function actionRoll(boss_id, plr_dice_counts, seed) {
-  console.log(plr_dice_counts)
   roll_take_lowest = isPoolReqEmpty(plr_dice_counts)
   if (roll_take_lowest) {
     plr_dice_counts[boss_id] = 2
@@ -606,12 +605,12 @@ function create(dom_parent) {
       PHYS_WORLD.step()
 
       if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
-        let req_id = getNextIdFromReq(roll_request, MY_PLAYER_ID)
+        let req_id = getNextIdFromReq(roll_request, MY_PLR_ID)
         if (req_id != null) {
           popRequest(req_id)
         }
-        if (roll_request.hasOwnProperty(MY_PLAYER_ID)) {
-          popRequest(MY_PLAYER_ID)
+        if (roll_request.hasOwnProperty(MY_PLR_ID)) {
+          popRequest(MY_PLR_ID)
         }
       }
 

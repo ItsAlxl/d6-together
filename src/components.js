@@ -1,4 +1,6 @@
-let component_helpers = {}
+/*
+  Action Values
+*/
 
 function getActionName(act_id) {
   return "act-rating-" + act_id
@@ -21,19 +23,37 @@ function getActionRatingHTML(act_id, max) {
 export function getActionHTML(act_id, max) {
   return `
 <div class="flex flex-col" id="${getActionName(act_id)}">
-  <button class="btn btn-neutral btn-sm" onclick="onActionClicked(d6tComp.getActionValue('${act_id}'))">Action</button>
+  <button class="btn btn-neutral btn-sm" onclick="d6t.onActionClicked(d6t.getActionValue('${act_id}'))">Action</button>
   <div class="rating gap-1 justify-center mt-1">
     ${getActionRatingHTML(act_id, max)}
   </div>
 </div>`
 }
 
-component_helpers.getActionValue = function (act_id) {
+export function getActionValue(act_id) {
   return document.querySelector("input[name='" + getActionName(act_id) + "']:checked").value
 }
 
-component_helpers.setActionValue = function (act_id, val) {
-  return document.querySelector("input[name='" + getActionName(act_id) + "'][value='" + val + "']").checked = true
+export function setActionValue(act_id, val) {
+  return (document.querySelector(
+    "input[name='" + getActionName(act_id) + "'][value='" + val + "']"
+  ).checked = true)
 }
 
-window.d6tComp = component_helpers
+/*
+  Toon Tabs
+*/
+
+export function getToonTabHTML(toon) {
+  return `<a role="tab" class="tab" data-d6t-toon-id="${toon.id}" onclick="d6t.selectToon('${toon.id}')">${toon.bio.name}</a>`
+}
+
+export function getToonTab(toon_id) {
+  return document.querySelector("#toon-tabs > .tab[data-d6t-toon-id='" + toon_id + "']")
+}
+
+export function setTabSelected(toon_id, sel) {
+  sel
+    ? getToonTab(toon_id).classList.add("tab-active")
+    : getToonTab(toon_id).classList.remove("tab-active")
+}

@@ -9,54 +9,49 @@
 
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="style.css" type="text/css" rel="stylesheet" />
+
+    <script type="module" src="game.js"></script>
+    <script type="module">
+      import { createIcons, UserPlus } from "lucide"
+      createIcons({
+        icons: {
+          UserPlus,
+        },
+      })
+
+      import Split from "split-grid"
+
+      Split({
+        columnGutters: [
+          {
+            track: 1,
+            element: document.getElementById("dragger-dicetray"),
+          },
+        ],
+        rowGutters: [
+          {
+            track: 1,
+            element: document.getElementById("dragger-data"),
+          },
+        ],
+      })
+    </script>
   </head>
-  <!--
-  <script>
-    const ws = new WebSocket("ws://localhost:6462")
-    function ws_send(key, data) {
-      ws.send(JSON.stringify({ k: key, d: data }))
-    }
-
-    ws.onopen = (event) => {
-      ws_send("hi", { ding: "dong" })
-    }
-    ws.onmessage = (event) => {
-      console.log(JSON.parse(event.data))
-    }
-  </script>
-  -->
-
-  <script type="module" src="game.js"></script>
-  <script type="module">
-    import Split from "split-grid"
-
-    Split({
-      columnGutters: [
-        {
-          track: 1,
-          element: document.getElementById("dragger-dicetray"),
-        },
-      ],
-      rowGutters: [
-        {
-          track: 1,
-          element: document.getElementById("dragger-data"),
-        },
-      ],
-    })
-  </script>
   <body class="h-screen">
     <div class="h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2 min-w-96 grid grid-rows-[0.8fr_5px_0.2fr]">
         <div>
-          <div role="tablist" class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0">
-            <a role="tab" class="tab">Character</a>
-            <a role="tab" class="tab tab-active">Character</a>
-            <a role="tab" class="tab">Character</a>
-            <a role="tab" class="tab">Character</a>
-            <a role="tab" class="tab">Character</a>
+          <div id="host-controls" class="hidden">
+            <button class="btn btn-square btn-lxs" onclick="d6t.newToon()">
+              <svg class="w-[75%] h-[75%]" data-lucide="user-plus"></svg>
+            </button>
           </div>
-          <div id="toon-sheet" class="grid grid-cols-[0.3fr_0.7fr]">
+          <div
+            id="toon-tabs"
+            role="tablist"
+            class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0"
+          ></div>
+          <div id="toon-sheet" class="hidden grid grid-cols-[0.3fr_0.7fr]">
             <div id="toon-bio">Character Bio</div>
             <div id="toon-stats" class="grid grid-rows-[0.25fr_0.75fr]">
               <div id="toon-cond">Character Condition</div>
@@ -72,7 +67,7 @@
         <div id="dicetray" class="overlap p-2 flex flex-col">
           <div class="" id="dice-parent"></div>
           <div class="pb-2">
-            <button class="btn btn-primary" onclick="openPrompt('pmt-arbitrary')">
+            <button class="btn btn-primary" onclick="d6t.openPrompt('pmt-arbitrary')">
               Build Pool
             </button>
           </div>
@@ -105,15 +100,16 @@
                 />
                 <span class="label-text pl-2 grow">Being Assisted</span>
               </label>
+              <!-- TODO: bonus dice NUD -->
             </div>
           </div>
           <div class="flex flex-col gap-1 justify-center">
             <button
               id="prompt-confirm-btn"
               class="btn btn-outline btn-primary"
-              onclick="applyPrompt()"
+              onclick="d6t.applyPrompt()"
             ></button>
-            <button class="btn btn-outline btn-error" onclick="closePrompt()">Cancel</button>
+            <button class="btn btn-outline btn-error" onclick="d6t.closePrompt()">Cancel</button>
           </div>
         </div>
       </div>
