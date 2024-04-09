@@ -20,14 +20,24 @@ function getActionRatingHTML(act_id, max) {
   return str + "\n" + getActionValueHTML(act_id, max, true)
 }
 
-export function getActionHTML(act_id, max) {
+export function getActionHTML(act_id, act_text, max) {
+  let space_idx = act_text.indexOf(" ")
+  let button_text = `
+  <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked(d6t.getActionValue('${act_id}'))">${
+    space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
+  }</button>`
+  if (space_idx >= 0) {
+    button_text = `
+    <div class="tooltip" data-tip="${act_text}">
+      ${button_text}
+    </div>`
+  }
   return `
-<div class="flex flex-col" id="${getActionName(act_id)}">
-  <button class="btn btn-neutral btn-sm" onclick="d6t.onActionClicked(d6t.getActionValue('${act_id}'))">Action</button>
-  <div class="rating gap-1 justify-center mt-1">
-    ${getActionRatingHTML(act_id, max)}
-  </div>
-</div>`
+  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}
+    <div class="rating gap-1 justify-center mt-1">
+      ${getActionRatingHTML(act_id, max)}
+    </div>
+  </div>`
 }
 
 export function getActionValue(act_id) {

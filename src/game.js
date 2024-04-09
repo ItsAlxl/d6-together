@@ -139,8 +139,8 @@ window.d6t.selectToon = function (id) {
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
 DiceTray.create(document.getElementById("dice-parent"))
 
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < Roster.game_config.act_list.length; i++) {
   document
     .getElementById("toon-actions")
-    .insertAdjacentHTML("beforeend", Components.getActionHTML(i, 3))
+    .insertAdjacentHTML("beforeend", Components.getActionHTML(i, Roster.game_config.act_list[i], 3))
 }

@@ -26,19 +26,26 @@ class Toon {
         this[key] = tdata[key]
       }
     }
+    this.applyGameConfig()
+  }
+
+  applyGameConfig() {
+    let prev_num_acts = this.acts.length
+    this.acts.length = game_config.act_list.length
+    if (prev_num_acts < this.acts.length) {
+      this.acts.fill(0, prev_num_acts)
+    }
   }
 }
 
-class GameConfig {
-  bio_extras = []
-
-  act_max = 4
-  act_list = []
-
-  stress_push = 2
-  stress_assist = 1
-  stress_max = 9
-  stress_up = true
+let game_config = {
+  bio_extras: [],
+  act_max: 4,
+  act_list: ["MUSCLE with brute force", "HELM a vehicle", "COMMAND obedience"],
+  stress_push: 2,
+  stress_assist: 1,
+  stress_max: 9,
+  stress_up: true,
 }
 
 let players = []
@@ -48,8 +55,10 @@ window.MY_PLR_ID = -1
 window.MY_NET_ID = 1 // TODO: relocate to mutliplayer.js
 
 function setAtRoster(value, idx, array) {
-  while (array.length < idx) {
-    array.push(null)
+  if (array.length < idx) {
+    let prev_length = array.length
+    array.length = idx
+    array.fill(null, prev_length)
   }
   if (array.length == idx) {
     array.push(value)
@@ -85,9 +94,15 @@ function setToonAct(id, key, value) {
   toons[id].acts[key] = value
 }
 
+function updateGameConfig() {
+  for (let p of players) {
+    p.applyGameConfig()
+  }
+}
+
 // TODO: add host player when they create a room
 addPlayer(MY_NET_ID, {
   name: "me :)",
 })
 
-export { players, toons, addToon, addPlayer, setToonAct, setToonBio }
+export { game_config, players, toons, addToon, addPlayer, setToonAct, setToonBio }
