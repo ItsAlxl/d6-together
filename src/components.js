@@ -23,7 +23,7 @@ function getActionRatingHTML(act_id, max) {
 export function getActionHTML(act_id, act_text, max) {
   let space_idx = act_text.indexOf(" ")
   let button_text = `
-  <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked(d6t.getActionValue('${act_id}'))">${
+  <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked(d6t.getActionDisplayedValue('${act_id}'))">${
     space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
   }</button>`
   if (space_idx >= 0) {
@@ -40,11 +40,11 @@ export function getActionHTML(act_id, act_text, max) {
   </div>`
 }
 
-export function getActionValue(act_id) {
+export function getActionDisplayedValue(act_id) {
   return document.querySelector("input[name='" + getActionName(act_id) + "']:checked").value
 }
 
-export function setActionValue(act_id, val) {
+export function setActionDisplayedValue(act_id, val) {
   return (document.querySelector(
     "input[name='" + getActionName(act_id) + "'][value='" + val + "']"
   ).checked = true)
@@ -62,8 +62,9 @@ export function getToonTab(toon_id) {
   return document.querySelector("#toon-tabs > .tab[data-d6t-toon-id='" + toon_id + "']")
 }
 
-export function setTabSelected(toon_id, sel) {
-  sel
-    ? getToonTab(toon_id).classList.add("tab-active")
-    : getToonTab(toon_id).classList.remove("tab-active")
+export function setTabDisplaySelected(toon_id, sel) {
+  let t = toon_id >= 0 ? getToonTab(toon_id) : null
+  if (t == null) return false
+  sel ? t.classList.add("tab-active") : t.classList.remove("tab-active")
+  return true
 }

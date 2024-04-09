@@ -3,8 +3,8 @@ import * as Components from "./components.js"
 import * as Roster from "./roster.js"
 
 window.d6t = {
-  getActionValue: Components.getActionValue,
-  setActionValue: Components.setActionValue,
+  getActionDisplayedValue: Components.getActionDisplayedValue,
+  setActionDisplayedValue: Components.setActionDisplayedValue,
 }
 
 const PROMPT_MAP = {
@@ -112,7 +112,7 @@ function updateToonTabs() {
   }
   document.getElementById("toon-tabs").innerHTML = tabs
   if (current_toon_id >= 0) {
-    Components.setTabSelected(current_toon_id, true)
+    d6t.selectToon(current_toon_id, false)
   }
 }
 
@@ -121,19 +121,16 @@ window.d6t.newToon = function () {
   updateToonTabs()
 }
 
-window.d6t.selectToon = function (id) {
-  if (id == current_toon_id) {
+window.d6t.selectToon = function (id, allow_collapse = true) {
+  if (allow_collapse && id == current_toon_id) {
     id = -1
   }
 
-  if (current_toon_id >= 0) {
-    Components.setTabSelected(current_toon_id, false)
-  }
-  if (id >= 0) {
-    Components.setTabSelected(id, true)
+  if (id != current_toon_id && current_toon_id >= 0) {
+    Components.setTabDisplaySelected(current_toon_id, false)
   }
   current_toon_id = id
-  setVisible(document.getElementById("toon-sheet"), id >= 0)
+  setVisible(document.getElementById("toon-sheet"), Components.setTabDisplaySelected(id, true))
 }
 
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
