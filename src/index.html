@@ -12,9 +12,10 @@
 
     <script type="module" src="game.js"></script>
     <script type="module">
-      import { createIcons, UserPlus, UserX } from "lucide"
+      import { createIcons, PencilRuler, UserPlus, UserX } from "lucide"
       createIcons({
         icons: {
+          PencilRuler,
           UserPlus,
           UserX,
         },
@@ -32,7 +33,7 @@
     </script>
   </head>
   <body class="h-screen">
-    <div class="h-full grid grid-cols-[1fr_5px_1fr]">
+    <div id="view-tabletop" class="h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
           <div id="host-controls" class="hidden flex flex-row justify-center">
@@ -41,6 +42,9 @@
             </button>
             <button class="btn btn-square btn-lxs" onclick="d6t.deleteToon()">
               <svg class="w-[75%] h-[75%]" data-lucide="user-x"></svg>
+            </button>
+            <button class="btn btn-square btn-lxs" onclick="d6t.openConfig()">
+              <svg class="w-[75%] h-[75%]" data-lucide="pencil-ruler"></svg>
             </button>
           </div>
           <div
@@ -125,6 +129,11 @@
           </div>
         </div>
       </div>
+    </div>
+    <div id="view-config" class="hidden">
+      config the game :)
+      <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
+      <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
     </div>
   </body>
 </html>

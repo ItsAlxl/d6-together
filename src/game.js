@@ -235,8 +235,25 @@ window.d6t.setActionValue = function (act_id, value) {
   Roster.setToonAct(current_toon_id, parseInt(act_id), parseInt(value))
 }
 
-d6t.applyToonOwner = function () {
+window.d6t.applyToonOwner = function () {
   Roster.setToonOwner(current_toon_id, parseInt(document.getElementById("toon-owner").value))
+}
+
+function showConfig(s) {
+  setVisible(document.getElementById("view-tabletop"), !s)
+  setVisible(document.getElementById("view-config"), s)
+}
+
+window.d6t.openConfig = function () {
+  showConfig(true)
+}
+
+window.d6t.applyConfig = function () {
+  showConfig(false)
+}
+
+window.d6t.cancelConfig = function () {
+  showConfig(false)
 }
 
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
