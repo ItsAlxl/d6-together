@@ -206,6 +206,18 @@ function refreshToonBio(bio_id, toon = Roster.toons[current_toon_id]) {
   }
 }
 
+function refreshToonCondValue(cond_id, toon = Roster.toons[current_toon_id]) {
+  if (toon != null) {
+    Components.ToonCond.setValue(cond_id, toon.cond[cond_id].v ?? 0)
+  }
+}
+
+function refreshToonCondText(cond_id, toon = Roster.toons[current_toon_id]) {
+  if (toon != null) {
+    Components.ToonCond.setText(cond_id, toon.cond[cond_id].t ?? "")
+  }
+}
+
 function refreshToonSheet() {
   let toon = Roster.toons[current_toon_id]
   if (toon != null) {
@@ -214,6 +226,11 @@ function refreshToonSheet() {
     }
     for (let bio_id in toon.bio_extras) {
       refreshToonBio(bio_id, toon)
+    }
+    console.log(toon.cond)
+    for (let cond_id in toon.cond) {
+      refreshToonCondValue(cond_id, toon)
+      refreshToonCondText(cond_id, toon)
     }
     refreshToonOwner(toon)
     refreshToonName(toon)
@@ -243,6 +260,14 @@ window.d6t.setActionValue = function (act_id, value) {
 
 window.d6t.applyToonOwner = function () {
   Roster.setToonOwner(current_toon_id, parseInt(document.getElementById("toon-owner").value))
+}
+
+window.d6t.applyCondValue = function (cond_id) {
+  Roster.setToonCondValue(current_toon_id, cond_id, Components.ToonCond.getValue(cond_id))
+}
+
+window.d6t.applyCondText = function (cond_id) {
+  Roster.setToonCondText(current_toon_id, cond_id, Components.ToonCond.getText(cond_id))
 }
 
 function showConfig(s) {

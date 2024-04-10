@@ -17,7 +17,7 @@ class Toon {
   plr_id
   bio_name = "Character"
   bio_extras = []
-  cond = {}
+  cond = []
   acts = []
 
   constructor(tdata) {
@@ -32,6 +32,11 @@ class Toon {
   applyGameConfig() {
     resizeArray(this.acts, game_config.act_list.length, 0)
     resizeArray(this.bio_extras, game_config.bio_extras.length, "")
+
+    while (this.cond.length < game_config.cond.length) {
+      this.cond.push({})
+    }
+    this.cond.length = game_config.cond.length
   }
 }
 
@@ -137,6 +142,16 @@ export function deleteToon(id) {
 
 export function setToonBio(id, key, value) {
   toons[id].bio_extras[key] = value
+}
+
+export function setToonCondValue(id, key, value) {
+  console.log("%d %d %d", id, key, value)
+  toons[id].cond[key].v = value
+  console.log(toons[id].cond)
+}
+
+export function setToonCondText(id, key, text) {
+  toons[id].cond[key].t = text
 }
 
 export function setToonAct(id, key, value) {

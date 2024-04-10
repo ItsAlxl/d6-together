@@ -12,12 +12,11 @@ function getPipsHTML(id, max, pip_create_func = getPipHTML) {
     inner += "\n" + pip_create_func(id, i + 1)
   }
   inner += "\n" + pip_create_func(id, max, true)
-  
+
   return `
 <div class="rating gap-1 justify-center mt-1">
   ${inner}
-</div>
-  `
+</div>`
 }
 
 function getPipsValue(name) {
@@ -58,7 +57,10 @@ Action.getHTML = function (act_id, act_text, max) {
     </div>`
   }
   return `
-  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}${getActionRatingHTML(act_id, max)}
+  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}${getActionRatingHTML(
+    act_id,
+    max
+  )}
   </div>`
 }
 
@@ -126,16 +128,46 @@ ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
 */
 export const ToonCond = {}
 
-function getCondName(act_id) {
-  return "cond-" + act_id
+function getCondValueName(cond_id) {
+  return "cond-" + cond_id
+}
+
+function getCondTextName(cond_id) {
+  return getCondValueName(cond_id) + "-text"
 }
 
 function getCondValueHTML(cond_id, value, hidden = false) {
-  return getPipHTML(getCondName(cond_id), value, hidden, `d6t.applyCondValue(${cond_id})`)
+  return getPipHTML(getCondValueName(cond_id), value, hidden, `d6t.applyCondValue(${cond_id})`)
 }
 
 function getCondRatingHTML(cond_id, max) {
   return getPipsHTML(cond_id, max, getCondValueHTML)
+}
+
+function getCondNumberElement(cond_id) {
+  return document.getElementById(getCondValueName(cond_id))
+}
+
+ToonCond.getValue = function (cond_id) {
+  let number_elm = getCondNumberElement(cond_id)
+  return (number_elm && number_elm.value) ?? getPipsValue(getCondValueName(cond_id))
+}
+
+ToonCond.setValue = function (cond_id, value) {
+  let number_elm = getCondNumberElement(cond_id)
+  number_elm ? (number_elm.value = value) : setPipsValue(getCondValueName(cond_id), value)
+}
+
+ToonCond.getText = function (cond_id) {
+  let elm = document.getElementById(getCondTextName(cond_id))
+  return (elm && elm.value) ?? ""
+}
+
+ToonCond.setText = function (cond_id, text) {
+  let elm = document.getElementById(getCondTextName(cond_id))
+  if (elm) {
+    elm.value = text
+  }
 }
 
 ToonCond.getHTML = function (cond_id, cond_data) {
@@ -148,14 +180,15 @@ ToonCond.getHTML = function (cond_id, cond_data) {
       : `
       <input type="number" onchange="d6t.applyCondValue(${cond_id})" min="0" max="${
           cond_data.max
-        }" value="0" id="${getCondName(cond_id)}" class="w-full" />
+        }" value="0" id="${getCondValueName(cond_id)}" class="w-full" />
       `
   }
   </div>${
     cond_data.text
       ? `
   <textarea
-    id="toon-cond-${cond_id}-text"
+    id="${getCondTextName(cond_id)}"
+    onchange="d6t.applyCondText('${cond_id}')"
     class="textarea textarea-bordered leading-none min-h-10 h-10 p-0 w-full"
     placeholder="${cond_data.text_default}"
   ></textarea>`
