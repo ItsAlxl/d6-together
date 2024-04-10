@@ -61,13 +61,11 @@ export let game_config = {
     {
       name: "Harm",
       max: 5,
-      text: true,
       text_default: "Unharmed.",
     },
     {
       name: "Trauma",
       max: 4,
-      text: true,
       text_default: "Unscarred.",
     },
     {

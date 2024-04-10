@@ -173,7 +173,7 @@ ToonCond.setText = function (cond_id, text) {
 ToonCond.getHTML = function (cond_id, cond_data) {
   return `
 <div id="toon-cond-${cond_id}-par" class="grow">
-  <div class="flex flex-${cond_data.text ? "row" : "col"} justify-center w-full">
+  <div class="flex flex-${cond_data.text_default ? "row" : "col"} justify-center w-full">
     <div class="text-center">${cond_data.name}</div>${
     cond_data.max < 6
       ? getCondRatingHTML(cond_id, cond_data.max)
@@ -184,7 +184,7 @@ ToonCond.getHTML = function (cond_id, cond_data) {
       `
   }
   </div>${
-    cond_data.text
+    cond_data.text_default
       ? `
   <textarea
     spellcheck="false"
