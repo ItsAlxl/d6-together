@@ -15,9 +15,8 @@ class Player {
 class Toon {
   id
   plr_id
-  bio = {
-    name: "Character",
-  }
+  bio_name = "Character"
+  bio_extras = []
   cond = {}
   acts = []
 
@@ -31,15 +30,12 @@ class Toon {
   }
 
   applyGameConfig() {
-    let prev_num_acts = this.acts.length
-    this.acts.length = game_config.act_list.length
-    if (prev_num_acts < this.acts.length) {
-      this.acts.fill(0, prev_num_acts)
-    }
+    resizeArray(this.acts, game_config.act_list.length, 0)
+    resizeArray(this.bio_extras, game_config.bio_extras.length, "")
   }
 }
 
-let game_config = {
+export let game_config = {
   bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
   act_max: 4,
   act_list: [
@@ -74,17 +70,23 @@ let game_config = {
   },
 }
 
-let players = []
-let toons = []
+export let players = []
+export let toons = []
 
 window.MY_PLR_ID = -1
 window.MY_NET_ID = 1 // TODO: relocate to mutliplayer.js
 
+function resizeArray(array, new_length, fill_value) {
+  let prev_length = array.length
+  array.length = new_length
+  if (prev_length < new_length) {
+    array.fill(fill_value, prev_length)
+  }
+}
+
 function setAtRoster(value, idx, array) {
   if (array.length < idx) {
-    let prev_length = array.length
-    array.length = idx
-    array.fill(null, prev_length)
+    resizeArray(array, idx, null)
   }
   if (array.length == idx) {
     array.push(value)
@@ -98,7 +100,7 @@ function getFirstFreeIdx(array) {
   return array.length
 }
 
-function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
+export function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
   pdata.id = idx
   pdata.net_owner = net_id
   setAtRoster(new Player(pdata), idx, players)
@@ -107,7 +109,7 @@ function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
   }
 }
 
-function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
+export function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
   tdata.id = idx
   if (!tdata.hasOwnProperty("plr_id")) {
     tdata.plr_id = MY_PLR_ID
@@ -115,21 +117,25 @@ function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
   setAtRoster(new Toon(tdata), idx, toons)
 }
 
-function setToonBio(id, key, value) {
-  toons[id].bio[key] = value
+export function setToonBio(id, key, value) {
+  toons[id].bio_extras[key] = value
 }
 
-function setToonAct(id, key, value) {
+export function setToonAct(id, key, value) {
   toons[id].acts[key] = value
 }
 
-function setToonOwner(id, plr_id) {
+export function setToonOwner(id, plr_id) {
   toons[id].plr_id = plr_id
 }
 
-function updateGameConfig() {
-  for (let p of players) {
-    p.applyGameConfig()
+export function setToonName(id, name) {
+  toons[id].bio_name = name
+}
+
+export function updateGameConfig() {
+  for (let t of toons) {
+    t.applyGameConfig()
   }
 }
 
@@ -141,5 +147,3 @@ addPlayer(MY_NET_ID, {
 addPlayer(2 * MY_NET_ID, {
   name: "friend c:",
 })
-
-export { game_config, players, toons, addToon, addPlayer, setToonOwner, setToonAct, setToonBio }

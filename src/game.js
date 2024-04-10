@@ -93,7 +93,7 @@ window.d6t.closePrompt = function () {
 }
 
 window.d6t.onActionClicked = function (act_id) {
-  let value = Components.getActionDisplayedValue(act_id)
+  let value = Components.Action.getValue(act_id)
   if (isPromptOpen("pmt-arbitrary")) {
     document.getElementById("arb-mine").valueAsNumber = value
   } else {
@@ -102,16 +102,29 @@ window.d6t.onActionClicked = function (act_id) {
   }
 }
 
+function setToonName(toon, name) {
+  Roster.setToonName(toon.id, name)
+  Components.ToonTab.applyName(Roster.toons[current_toon_id])
+}
+
+window.d6t.applyToonName = function () {
+  setToonName(Roster.toons[current_toon_id], document.getElementById("toon-name").value)
+}
+
+window.d6t.applyToonBio = function (bio_id) {
+  Roster.setToonBio(current_toon_id, bio_id, Components.ToonSheet.getBioExtraElement(bio_id).value)
+}
+
 function updateToonTabs() {
   let tabs = ""
   for (let t of Roster.toons) {
     if (t != null) {
-      tabs += Components.getToonTabHTML(t)
+      tabs += Components.ToonTab.getHTML(t)
     }
   }
-  document.getElementById("toon-tabs").innerHTML = tabs
+  replaceChildHTML(document.getElementById("toon-tabs"), tabs)
   if (current_toon_id >= 0) {
-    d6t.selectToon(current_toon_id, false)
+    d6t.selectToon(current_toon_id, true)
   }
 }
 
@@ -120,24 +133,63 @@ window.d6t.newToon = function () {
   updateToonTabs()
 }
 
+function replaceChildHTML(elm, replacement) {
+  elm.replaceChildren()
+  elm.insertAdjacentHTML("beforeend", replacement)
+}
+
 function updatePlayerList() {
   let plist = ""
   for (let p of Roster.players) {
     if (p != null) {
-      plist += Components.getToonOwnerOptionHTML(p)
+      plist += Components.ToonSheet.getPlrOptionHTML(p)
     }
   }
-  document.getElementById("toon-owner").innerHTML = plist
-  if (current_toon_id >= 0) {
-    d6t.selectToon(current_toon_id, false)
+  replaceChildHTML(document.getElementById("toon-owner"), plist)
+  refreshToonOwner()
+}
+
+function updateGameConfig() {
+  Roster.updateGameConfig()
+
+  let acts_html = ""
+  for (let i = 0; i < Roster.game_config.act_list.length; i++) {
+    acts_html += Components.Action.getHTML(
+      i,
+      Roster.game_config.act_list[i],
+      Roster.game_config.act_max
+    )
+  }
+  replaceChildHTML(document.getElementById("toon-actions"), acts_html)
+
+  let bio_extras_html = ""
+  for (let i = 0; i < Roster.game_config.bio_extras.length; i++) {
+    bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
+  }
+  replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
+}
+
+function refreshToonOwner(toon = Roster.toons[current_toon_id]) {
+  if (toon != null) {
+    document.getElementById("toon-owner").value = toon.plr_id
   }
 }
 
-function refreshToonOwner() {
-  let toon = Roster.toons[current_toon_id]
+function refreshToonName(toon = Roster.toons[current_toon_id]) {
   if (toon != null) {
-    console.log(toon.plr_id)
-    document.getElementById("toon-owner").value = toon.plr_id
+    document.getElementById("toon-name").value = toon.bio_name
+  }
+}
+
+function refreshToonAction(act_id, toon = Roster.toons[current_toon_id]) {
+  if (toon != null) {
+    Components.Action.setValue(act_id, toon.acts[act_id])
+  }
+}
+
+function refreshToonBio(bio_id, toon = Roster.toons[current_toon_id]) {
+  if (toon != null) {
+    Components.ToonSheet.getBioExtraElement(bio_id).value = toon.bio_extras[bio_id]
   }
 }
 
@@ -145,24 +197,28 @@ function refreshToonSheet() {
   let toon = Roster.toons[current_toon_id]
   if (toon != null) {
     for (let act_id in toon.acts) {
-      Components.setActionDisplayedValue(act_id, toon.acts[act_id])
+      refreshToonAction(act_id, toon)
     }
-    refreshToonOwner()
+    for (let bio_id in toon.bio_extras) {
+      refreshToonBio(bio_id, toon)
+    }
+    refreshToonOwner(toon)
+    refreshToonName(toon)
   }
 }
 
-window.d6t.selectToon = function (id, allow_collapse = true) {
-  if (allow_collapse && id == current_toon_id) {
+window.d6t.selectToon = function (id, visual_reapply = false) {
+  if (!visual_reapply && id == current_toon_id) {
     id = -1
   }
 
   if (id != current_toon_id && current_toon_id >= 0) {
-    Components.setTabDisplaySelected(current_toon_id, false)
+    Components.ToonTab.setSelected(current_toon_id, false)
   }
   current_toon_id = id
 
-  let valid_toon = Components.setTabDisplaySelected(id, true)
-  if (valid_toon) {
+  let valid_toon = Components.ToonTab.setSelected(id, true)
+  if (!visual_reapply && valid_toon) {
     refreshToonSheet()
   }
   setVisible(document.getElementById("toon-sheet"), valid_toon)
@@ -179,12 +235,5 @@ d6t.applyToonOwner = function () {
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
 DiceTray.create(document.getElementById("dice-parent"))
 
-for (let i = 0; i < Roster.game_config.act_list.length; i++) {
-  document
-    .getElementById("toon-actions")
-    .insertAdjacentHTML(
-      "beforeend",
-      Components.getActionHTML(i, Roster.game_config.act_list[i], Roster.game_config.act_max)
-    )
-}
+updateGameConfig()
 updatePlayerList()

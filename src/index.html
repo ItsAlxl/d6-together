@@ -27,18 +27,12 @@
             element: document.getElementById("dragger-dicetray"),
           },
         ],
-        rowGutters: [
-          {
-            track: 1,
-            element: document.getElementById("dragger-data"),
-          },
-        ],
       })
     </script>
   </head>
   <body class="h-screen">
     <div class="h-full grid grid-cols-[1fr_5px_1fr]">
-      <div class="p-2 min-w-96 grid grid-rows-[0.8fr_5px_0.2fr]">
+      <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
           <div id="host-controls" class="hidden flex flex-row justify-center">
             <button class="btn btn-square btn-lxs" onclick="d6t.newToon()">
@@ -50,21 +44,30 @@
             role="tablist"
             class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0"
           ></div>
-          <div id="toon-sheet" class="hidden grid grid-cols-[0.3fr_0.7fr]">
-            <div id="toon-bio">
+          <div id="toon-sheet" class="hidden flex flex-row items-start">
+            <div id="toon-bio" class="flex flex-col w-40">
               <select
                 id="toon-owner"
-                class="select select-sm select-bordered w-full max-w-xs"
+                class="select select-sm select-bordered max-w-xs w-full"
                 onchange="d6t.applyToonOwner()"
               ></select>
+              <input
+                id="toon-name"
+                type="text"
+                placeholder="Name"
+                class="input input-bordered max-w-xs w-full"
+                maxlength="25"
+                onchange="d6t.applyToonName()"
+              />
+              <div id="toon-bio-extras" class="flex flex-col w-full"></div>
             </div>
-            <div id="toon-stats" class="grid grid-rows-[0.25fr_0.75fr]">
+            <div id="toon-stats" class="flex flex-col grow">
               <div id="toon-cond">Character Condition</div>
-              <div id="toon-actions" class="grid grid-cols-3 gap-y-2 gap-x-8"></div>
+              <div id="toon-actions" class="grow grid grid-cols-3 gap-y-2 gap-x-8"></div>
             </div>
           </div>
         </div>
-        <div class="dragger-h" id="dragger-data"></div>
+        <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
         <div>Clocks etc</div>
       </div>
       <div class="dragger-v" id="dragger-dicetray"></div>

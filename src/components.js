@@ -1,6 +1,7 @@
 /*
   Action Values
 */
+export let Action = {}
 
 function getActionName(act_id) {
   return "act-rating-" + act_id
@@ -22,7 +23,7 @@ function getActionRatingHTML(act_id, max) {
   return str + "\n" + getActionValueHTML(act_id, max, true)
 }
 
-export function getActionHTML(act_id, act_text, max) {
+Action.getHTML = function (act_id, act_text, max) {
   let space_idx = act_text.indexOf(" ")
   let button_text = `
   <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked('${act_id}')">${
@@ -42,11 +43,11 @@ export function getActionHTML(act_id, act_text, max) {
   </div>`
 }
 
-export function getActionDisplayedValue(act_id) {
+Action.getValue = function (act_id) {
   return document.querySelector("input[name='" + getActionName(act_id) + "']:checked").value
 }
 
-export function setActionDisplayedValue(act_id, val) {
+Action.setValue = function (act_id, val) {
   return (document.querySelector(
     "input[name='" + getActionName(act_id) + "'][value='" + val + "']"
   ).checked = true)
@@ -55,26 +56,50 @@ export function setActionDisplayedValue(act_id, val) {
 /*
   Toon Tabs
 */
+export let ToonTab = {}
 
-export function getToonTabHTML(toon) {
-  return `<a role="tab" class="tab" data-d6t-toon-id="${toon.id}" onclick="d6t.selectToon('${toon.id}')">${toon.bio.name}</a>`
+ToonTab.getHTML = function (toon) {
+  return `<a role="tab" class="tab" data-d6t-toon-id="${toon.id}" onclick="d6t.selectToon('${toon.id}')">${toon.bio_name}</a>`
 }
 
 function getToonTab(toon_id) {
   return document.querySelector("#toon-tabs > .tab[data-d6t-toon-id='" + toon_id + "']")
 }
 
-export function setTabDisplaySelected(toon_id, sel) {
+ToonTab.setSelected = function (toon_id, sel) {
   let t = toon_id >= 0 ? getToonTab(toon_id) : null
   if (t == null) return false
   sel ? t.classList.add("tab-active") : t.classList.remove("tab-active")
   return true
 }
 
-/*
-  Toon Owner
-*/
+ToonTab.applyName = function (toon) {
+  getToonTab(toon.id).innerText = toon.bio_name
+}
 
-export function getToonOwnerOptionHTML(plr) {
+/*
+  Toon Sheet
+*/
+export let ToonSheet = {}
+
+ToonSheet.getPlrOptionHTML = function (plr) {
   return `<option value=${plr.id}>${plr.name}</option>`
+}
+
+function getBioExtraID(extra_id) {
+  return "toon-bio-" + extra_id
+}
+
+ToonSheet.getBioExtraElement = function (extra_id) {
+  return document.getElementById(getBioExtraID(extra_id))
+}
+
+ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
+  return `
+<div class="label pb-1 pt-2 w-full">
+  <span class="label-text w-full">${extra_lbl}</span>
+</div>
+<textarea onchange="d6t.applyToonBio('${extra_id}')" id="${getBioExtraID(
+    extra_id
+  )}" class="textarea textarea-bordered h-24 p-0 w-full" placeholder="${extra_lbl}"></textarea>`
 }
