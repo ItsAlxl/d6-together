@@ -52,26 +52,31 @@ export let game_config = {
     "WRECK with brute force",
     "SWAY someone's thinking",
   ],
-  cond: {
-    harm: {
+  cond: [
+    {
+      name: "Harm",
       max: 5,
       text: true,
+      text_default: "Unharmed.",
     },
-    trauma: {
+    {
+      name: "Trauma",
       max: 4,
       text: true,
+      text_default: "Unscarred.",
     },
-    stres: {
+    {
+      name: "Stress",
       max: 9,
       cost_push: 2,
       cost_assist: 1,
       cost_sign: 1,
     },
-  },
+  ],
 }
 
-export let players = []
-export let toons = []
+export const players = []
+export const toons = []
 
 window.MY_PLR_ID = -1
 window.MY_NET_ID = 1 // TODO: relocate to mutliplayer.js

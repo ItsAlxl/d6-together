@@ -174,6 +174,12 @@ function updateGameConfig() {
     bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
   }
   replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
+
+  let conds_html = ""
+  for (let i = 0; i < Roster.game_config.cond.length; i++) {
+    conds_html += Components.ToonCond.getHTML(i, Roster.game_config.cond[i])
+  }
+  replaceChildHTML(document.getElementById("toon-cond"), conds_html)
 }
 
 function refreshToonOwner(toon = Roster.toons[current_toon_id]) {

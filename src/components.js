@@ -7,11 +7,17 @@ function getPipHTML(name, value, hidden, cb_text = "") {
 }
 
 function getPipsHTML(id, max, pip_create_func = getPipHTML) {
-  let str = pip_create_func(id, 0, true)
+  let inner = pip_create_func(id, 0, true)
   for (let i = 0; i < max; i++) {
-    str += "\n" + pip_create_func(id, i + 1)
+    inner += "\n" + pip_create_func(id, i + 1)
   }
-  return str + "\n" + pip_create_func(id, max, true)
+  inner += "\n" + pip_create_func(id, max, true)
+  
+  return `
+<div class="rating gap-1 justify-center mt-1">
+  ${inner}
+</div>
+  `
 }
 
 function getPipsValue(name) {
@@ -25,7 +31,7 @@ function setPipsValue(name, val) {
 /*
   Action Values
 */
-export let Action = {}
+export const Action = {}
 
 function getActionName(act_id) {
   return "act-rating-" + act_id
@@ -52,10 +58,7 @@ Action.getHTML = function (act_id, act_text, max) {
     </div>`
   }
   return `
-  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}
-    <div class="rating gap-1 justify-center mt-1">
-      ${getActionRatingHTML(act_id, max)}
-    </div>
+  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}${getActionRatingHTML(act_id, max)}
   </div>`
 }
 
@@ -70,7 +73,7 @@ Action.setValue = function (act_id, val) {
 /*
   Toon Tabs
 */
-export let ToonTab = {}
+export const ToonTab = {}
 
 ToonTab.getHTML = function (toon) {
   return `<a role="tab" class="tab" data-d6t-toon-id="${toon.id}" onclick="d6t.selectToon('${toon.id}')">${toon.bio_name}</a>`
@@ -94,7 +97,7 @@ ToonTab.applyName = function (toon) {
 /*
   Toon Sheet
 */
-export let ToonSheet = {}
+export const ToonSheet = {}
 
 ToonSheet.getPlrOptionHTML = function (plr) {
   return `<option value=${plr.id}>${plr.name}</option>`
@@ -115,5 +118,48 @@ ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
 </div>
 <textarea onchange="d6t.applyToonBio('${extra_id}')" id="${getBioExtraID(
     extra_id
-  )}" class="textarea textarea-bordered h-24 p-0 w-full" placeholder="${extra_lbl}"></textarea>`
+  )}" class="textarea textarea-bordered leading-normal h-24 p-0 w-full" placeholder="${extra_lbl}"></textarea>`
+}
+
+/*
+  Toon Cond
+*/
+export const ToonCond = {}
+
+function getCondName(act_id) {
+  return "cond-" + act_id
+}
+
+function getCondValueHTML(cond_id, value, hidden = false) {
+  return getPipHTML(getCondName(cond_id), value, hidden, `d6t.applyCondValue(${cond_id})`)
+}
+
+function getCondRatingHTML(cond_id, max) {
+  return getPipsHTML(cond_id, max, getCondValueHTML)
+}
+
+ToonCond.getHTML = function (cond_id, cond_data) {
+  return `
+<div id="toon-cond-${cond_id}-par" class="grow">
+  <div class="flex flex-${cond_data.text ? "row" : "col"} justify-center w-full">
+    <div class="text-center">${cond_data.name}</div>${
+    cond_data.max < 6
+      ? getCondRatingHTML(cond_id, cond_data.max)
+      : `
+      <input type="number" onchange="d6t.applyCondValue(${cond_id})" min="0" max="${
+          cond_data.max
+        }" value="0" id="${getCondName(cond_id)}" class="w-full" />
+      `
+  }
+  </div>${
+    cond_data.text
+      ? `
+  <textarea
+    id="toon-cond-${cond_id}-text"
+    class="textarea textarea-bordered leading-none min-h-10 h-10 p-0 w-full"
+    placeholder="${cond_data.text_default}"
+  ></textarea>`
+      : ""
+  }
+</div>`
 }
