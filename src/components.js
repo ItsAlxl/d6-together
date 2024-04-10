@@ -1,3 +1,27 @@
+function getPipHTML(name, value, hidden, cb_text = "") {
+  return `<input type="radio" name="${name}" class="${
+    hidden ? "rating-hidden" : "mask mask-circle"
+  }" value=${value} ${cb_text.length == 0 ? "" : `onclick="${cb_text}"`} ${
+    value == 0 ? "checked" : ""
+  } />`
+}
+
+function getPipsHTML(id, max, pip_create_func = getPipHTML) {
+  let str = pip_create_func(id, 0, true)
+  for (let i = 0; i < max; i++) {
+    str += "\n" + pip_create_func(id, i + 1)
+  }
+  return str + "\n" + pip_create_func(id, max, true)
+}
+
+function getPipsValue(name) {
+  return document.querySelector("input[name='" + name + "']:checked").value
+}
+
+function setPipsValue(name, val) {
+  return (document.querySelector("input[name='" + name + "'][value='" + val + "']").checked = true)
+}
+
 /*
   Action Values
 */
@@ -8,19 +32,11 @@ function getActionName(act_id) {
 }
 
 function getActionValueHTML(act_id, value, hidden = false) {
-  return `<input type="radio" name="${getActionName(act_id)}" class="${
-    hidden ? "rating-hidden" : "mask mask-circle"
-  }" value=${value} onclick="d6t.setActionValue('${act_id}', ${value})" ${
-    value == 0 ? "checked" : ""
-  } />`
+  return getPipHTML(getActionName(act_id), value, hidden, `d6t.setActionValue(${act_id}, ${value})`)
 }
 
 function getActionRatingHTML(act_id, max) {
-  let str = getActionValueHTML(act_id, 0, true)
-  for (let i = 0; i < max; i++) {
-    str += "\n" + getActionValueHTML(act_id, i + 1)
-  }
-  return str + "\n" + getActionValueHTML(act_id, max, true)
+  return getPipsHTML(act_id, max, getActionValueHTML)
 }
 
 Action.getHTML = function (act_id, act_text, max) {
@@ -44,13 +60,11 @@ Action.getHTML = function (act_id, act_text, max) {
 }
 
 Action.getValue = function (act_id) {
-  return document.querySelector("input[name='" + getActionName(act_id) + "']:checked").value
+  return getPipsValue(getActionName(act_id))
 }
 
 Action.setValue = function (act_id, val) {
-  return (document.querySelector(
-    "input[name='" + getActionName(act_id) + "'][value='" + val + "']"
-  ).checked = true)
+  setPipsValue(getActionName(act_id), val)
 }
 
 /*
