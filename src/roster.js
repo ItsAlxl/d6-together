@@ -173,7 +173,9 @@ export function setToonName(id, name) {
 export function applyGameConfig(gc) {
   game_config = gc
   for (let t of toons) {
-    t.applyGameConfig()
+    if (t != null) {
+      t.applyGameConfig()
+    }
   }
 }
 
