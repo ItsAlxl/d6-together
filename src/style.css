@@ -18,6 +18,12 @@
   .btn-lxs {
     @apply btn-xs w-9 h-9;
   }
+  .scrollable-x {
+    @apply min-w-full max-w-0 overflow-x-auto overflow-y-hidden;
+  }
+  .scrollable-y {
+    @apply min-h-full max-h-0 overflow-y-auto overflow-x-hidden;
+  }
 }
 
 @layer utilities {

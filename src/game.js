@@ -290,5 +290,6 @@ window.d6t.cancelConfig = function () {
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
 DiceTray.create(document.getElementById("dice-parent"))
 
-updateGameConfig()
 updatePlayerList()
+showConfig(true)
+updateGameConfig()

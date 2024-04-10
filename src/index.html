@@ -12,12 +12,14 @@
 
     <script type="module" src="game.js"></script>
     <script type="module">
-      import { createIcons, PencilRuler, UserPlus, UserX } from "lucide"
+      import { createIcons, PencilRuler, UserPlus, UserX, CirclePlus, Trash } from "lucide"
       createIcons({
         icons: {
           PencilRuler,
           UserPlus,
           UserX,
+          CirclePlus,
+          Trash,
         },
       })
 
@@ -33,9 +35,10 @@
     </script>
   </head>
   <body class="h-screen">
-    <div id="view-tabletop" class="h-full grid grid-cols-[1fr_5px_1fr]">
+    <div id="view-tabletop" class="hidden h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
+          <!-- replace with DaisyUI Menu -->
           <div id="host-controls" class="hidden flex flex-row justify-center">
             <button class="btn btn-square btn-lxs" onclick="d6t.newToon()">
               <svg class="w-[75%] h-[75%]" data-lucide="user-plus"></svg>
@@ -47,11 +50,7 @@
               <svg class="w-[75%] h-[75%]" data-lucide="pencil-ruler"></svg>
             </button>
           </div>
-          <div
-            id="toon-tabs"
-            role="tablist"
-            class="tabs tabs-bordered overflow-x-scroll min-w-full max-w-0"
-          ></div>
+          <div id="toon-tabs" role="tablist" class="tabs tabs-bordered scrollable-x"></div>
           <div id="toon-sheet" class="hidden flex flex-row items-start">
             <div id="toon-bio" class="flex flex-col w-40">
               <select
@@ -70,7 +69,7 @@
               <div id="toon-bio-extras" class="flex flex-col w-full"></div>
             </div>
             <div id="toon-stats" class="flex flex-col grow">
-              <div id="toon-cond" class="flex flex-row overflow-x-scroll min-w-full max-w-0 gap-2"></div>
+              <div id="toon-cond" class="flex flex-row scrollable-x gap-2"></div>
               <div class="bg-base-300 min-h-1 mt-1 mb-1"></div>
               <div id="toon-actions" class="grow grid grid-cols-3 gap-y-2 gap-x-8"></div>
             </div>
@@ -131,10 +130,82 @@
         </div>
       </div>
     </div>
-    <div id="view-config" class="hidden">
-      config the game :)
-      <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
-      <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
+    <div id="view-config" class="hidden h-full p-2 flex flex-col overflow-y-hidden">
+      <div class="flex flex-row">
+        <div class="grow flex flex-row gap-2 justify-end">
+          <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
+          <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
+        </div>
+      </div>
+      <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
+      <div class="grow grid grid-cols-[6fr_1.2rem_4fr_1.2rem_3fr]">
+        <div class="flex flex-col items-center gap-3">
+          Actions
+          <div class="flex flex-row items-center gap-8">
+            <div># of Actions <input type="number" min="1" max="48" class="w-14" /></div>
+            <div>Max Rating <input type="number" min="1" max="5" class="w-14" /></div>
+          </div>
+          <div
+            id="config-acts"
+            class="grid grid-cols-3 content-start gap-3 scrollable-y min-h-[85%]"
+          >
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+            <input type="text" class="input input-bordered" />
+          </div>
+        </div>
+        <div class="bg-base-300 ml-2 mr-2"></div>
+        <div class="flex flex-col items-center gap-3">
+          Condition
+          <button class="btn btn-square btn-lxs" onclick="">
+            <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
+          </button>
+          <div id="config-cond" class="flex flex-col w-full gap-3 scrollable-y min-h-[85%]">
+            <div id="config-cond-0" class="grid grid-cols-3 gap-1">
+              <div class="flex flex-row col-span-3 w-full">
+                <input type="text" class="input input-bordered grow" />
+                <button class="btn btn-square btn-lxs" onclick="">
+                  <svg class="w-[75%] h-[75%]" data-lucide="trash"></svg>
+                </button>
+              </div>
+              <textarea
+                spellcheck="false"
+                class="textarea textarea-bordered resize-none col-span-2 leading-relaxed"
+                placeholder="<condition has no player description>"
+              ></textarea>
+              <div class="flex flex-col items-end gap-1">
+                <div>Max <input type="number" min="-100" max="100" class="w-14" /></div>
+                <div>Push <input type="number" min="-100" max="100" class="w-14" /></div>
+                <div>Assist <input type="number" min="-100" max="100" class="w-14" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-base-300 ml-2 mr-2"></div>
+        <div class="flex flex-col items-center gap-3">
+          Biography
+          <textarea
+            spellcheck="false"
+            class="textarea textarea-bordered resize-none w-full h-full leading-relaxed"
+            placeholder="Each section goes on its own line"
+          ></textarea>
+        </div>
+      </div>
     </div>
   </body>
 </html>

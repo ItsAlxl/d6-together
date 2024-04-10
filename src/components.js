@@ -118,7 +118,7 @@ ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
 <div class="label pb-1 pt-2 w-full">
   <span class="label-text w-full">${extra_lbl}</span>
 </div>
-<textarea onchange="d6t.applyToonBio('${extra_id}')" id="${getBioExtraID(
+<textarea spellcheck="false" onchange="d6t.applyToonBio('${extra_id}')" id="${getBioExtraID(
     extra_id
   )}" class="textarea textarea-bordered leading-normal h-24 p-0 w-full" placeholder="${extra_lbl}"></textarea>`
 }
@@ -187,6 +187,7 @@ ToonCond.getHTML = function (cond_id, cond_data) {
     cond_data.text
       ? `
   <textarea
+    spellcheck="false"
     id="${getCondTextName(cond_id)}"
     onchange="d6t.applyCondText('${cond_id}')"
     class="textarea textarea-bordered leading-none min-h-10 h-10 p-0 w-full"

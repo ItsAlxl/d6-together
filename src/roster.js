@@ -73,9 +73,8 @@ export let game_config = {
     {
       name: "Stress",
       max: 9,
-      cost_push: 2,
-      cost_assist: 1,
-      cost_sign: 1,
+      d_push: 2,
+      d_assist: 1,
     },
   ],
 }
