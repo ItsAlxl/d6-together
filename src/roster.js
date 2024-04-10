@@ -109,12 +109,25 @@ export function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
   }
 }
 
+export function deletePlayer(id) {
+  for (let t of toons) {
+    if (t.plr_id == id) {
+      t.plr_id = 0
+    }
+  }
+  players[id] = null
+}
+
 export function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
   tdata.id = idx
   if (!tdata.hasOwnProperty("plr_id")) {
-    tdata.plr_id = MY_PLR_ID
+    tdata.plr_id = 0
   }
   setAtRoster(new Toon(tdata), idx, toons)
+}
+
+export function deleteToon(id) {
+  toons[id] = null
 }
 
 export function setToonBio(id, key, value) {

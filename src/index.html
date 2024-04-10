@@ -12,10 +12,11 @@
 
     <script type="module" src="game.js"></script>
     <script type="module">
-      import { createIcons, UserPlus } from "lucide"
+      import { createIcons, UserPlus, UserX } from "lucide"
       createIcons({
         icons: {
           UserPlus,
+          UserX,
         },
       })
 
@@ -37,6 +38,9 @@
           <div id="host-controls" class="hidden flex flex-row justify-center">
             <button class="btn btn-square btn-lxs" onclick="d6t.newToon()">
               <svg class="w-[75%] h-[75%]" data-lucide="user-plus"></svg>
+            </button>
+            <button class="btn btn-square btn-lxs" onclick="d6t.deleteToon()">
+              <svg class="w-[75%] h-[75%]" data-lucide="user-x"></svg>
             </button>
           </div>
           <div

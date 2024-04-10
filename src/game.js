@@ -133,6 +133,13 @@ window.d6t.newToon = function () {
   updateToonTabs()
 }
 
+window.d6t.deleteToon = function () {
+  if (current_toon_id >= 0) {
+    Roster.deleteToon(current_toon_id)
+    updateToonTabs()
+  }
+}
+
 function replaceChildHTML(elm, replacement) {
   elm.replaceChildren()
   elm.insertAdjacentHTML("beforeend", replacement)
