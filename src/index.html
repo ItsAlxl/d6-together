@@ -11,9 +11,18 @@
     <link href="style.css" type="text/css" rel="stylesheet" />
 
     <script type="module">
-      import { createIcons, PencilRuler, UserPlus, UserX, CirclePlus, Trash } from "lucide"
+      import {
+        createIcons,
+        PencilRuler,
+        UserPlus,
+        UserX,
+        CirclePlus,
+        Trash,
+        Upload,
+        Download,
+      } from "lucide"
       window.lucide = {
-        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash },
+        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash, Upload, Download },
         refresh: function (late = true) {
           createIcons({
             icons: window.lucide.icons,
@@ -140,7 +149,51 @@
       </div>
     </div>
     <div id="view-config" class="hidden h-full p-2 flex flex-col overflow-y-hidden">
+      <dialog id="modal-import" class="modal">
+        <div class="io-modal">
+          <h3 class="font-bold text-lg pb-2">Import</h3>
+          <textarea
+            id="import-text"
+            spellcheck="false"
+            class="textarea textarea-bordered resize-none leading-snug grow"
+          ></textarea>
+          <div class="modal-action">
+            <button class="btn" onclick="d6t.showImportDlg(false)">Cancel</button>
+            <button class="btn" onclick="d6t.processImport()">Import</button>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop cursor-default">
+          <button class="cursor-default">Cancel</button>
+        </form>
+      </dialog>
+      <dialog id="modal-export" class="modal">
+        <div class="io-modal">
+          <h3 class="font-bold text-lg pb-2">Export</h3>
+          <p>Save this somewhere for you to import later.</p>
+          <p class="pb-2">You must first apply changes for them to be exported.</p>
+          <textarea
+            id="export-text"
+            readonly
+            spellcheck="false"
+            class="textarea textarea-bordered resize-none leading-snug grow"
+          ></textarea>
+          <div class="modal-action">
+            <button class="btn" onclick="d6t.showExportDlg(false)">Close</button>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button class="cursor-default">Close</button>
+        </form>
+      </dialog>
       <div class="flex flex-row">
+        <div class="grow flex flex-row gap-2 justify-start">
+          <button class="btn btn-square btn-lxs" onclick="d6t.showImportDlg(true)">
+            <svg class="w-[75%] h-[75%]" data-lucide="download"></svg>
+          </button>
+          <button class="btn btn-square btn-lxs" onclick="d6t.showExportDlg(true)">
+            <svg class="w-[75%] h-[75%]" data-lucide="upload"></svg>
+          </button>
+        </div>
         <div class="grow flex flex-row gap-2 justify-end">
           <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
           <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
@@ -149,7 +202,7 @@
       <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
       <div class="grow grid grid-cols-[6fr_1.2rem_4fr_1.2rem_3fr]">
         <div class="flex flex-col items-center gap-3">
-          Actions
+          <div class="font-bold text-lg">Actions</div>
           <div class="flex flex-row items-center gap-8">
             <div>
               Count
@@ -173,7 +226,7 @@
         </div>
         <div class="bg-base-300 ml-2 mr-2"></div>
         <div class="flex flex-col items-center gap-3">
-          Condition
+          <div class="font-bold text-lg">Condition</div>
           <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddCond()">
             <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
           </button>
@@ -181,7 +234,7 @@
         </div>
         <div class="bg-base-300 ml-2 mr-2"></div>
         <div class="flex flex-col items-center gap-3">
-          Biography
+          <div class="font-bold text-lg">Biography</div>
           <textarea
             id="config-bio"
             spellcheck="false"

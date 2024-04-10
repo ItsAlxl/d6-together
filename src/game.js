@@ -227,7 +227,6 @@ function refreshToonSheet() {
     for (let bio_id in toon.bio_extras) {
       refreshToonBio(bio_id, toon)
     }
-    console.log(toon.cond)
     for (let cond_id in toon.cond) {
       refreshToonCondValue(cond_id, toon)
       refreshToonCondText(cond_id, toon)
@@ -288,16 +287,62 @@ window.d6t.cancelConfig = function () {
   showConfig(false)
 }
 
-window.d6t.cfgUpdateNumActs = function(nud) {
+window.d6t.cfgUpdateNumActs = function (nud) {
   Components.CfgMenu.setActionCount(nud.value)
 }
 
-window.d6t.cfgAddCond = function() {
+window.d6t.cfgAddCond = function () {
   Components.CfgMenu.addCond()
 }
 
-window.d6t.cfgDeleteCond = function(button) {
+window.d6t.cfgDeleteCond = function (button) {
   Components.CfgMenu.deleteCond(button)
+}
+
+function importJson(json_text) {
+  let json_obj = JSON.parse(json_text)
+  applyConfig(json_obj.cfg)
+
+  for (let i = 0; i < json_obj.toons.length; i++) {
+    Roster.addToon(json_obj.toons[i])
+  }
+  updateToonTabs()
+}
+
+function getExportJson() {
+  let toon_data = []
+  for (let t of Roster.toons) {
+    if (t != null) {
+      toon_data.push(t.getExportData())
+    }
+  }
+  return JSON.stringify({
+    cfg: Roster.game_config,
+    toons: toon_data,
+  })
+}
+
+function showModalDlg(dlg, s) {
+  s ? dlg.showModal() : dlg.close()
+}
+
+window.d6t.showImportDlg = function (s) {
+  showModalDlg(document.getElementById("modal-import"), s)
+  if (s) {
+    document.getElementById("import-text").value = ""
+  }
+}
+
+window.d6t.processImport = function () {
+  importJson(document.getElementById("import-text").value)
+  window.d6t.showImportDlg(false)
+}
+
+window.d6t.showExportDlg = function (s) {
+  showModalDlg(document.getElementById("modal-export"), s)
+  if (s) {
+    document.getElementById("export-text").value = getExportJson()
+  }
 }
 
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)

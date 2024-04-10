@@ -38,6 +38,15 @@ class Toon {
     }
     this.cond.length = game_config.cond.length
   }
+
+  getExportData() {
+    return {
+      bio_name: this.bio_name,
+      bio_extras: this.bio_extras,
+      cond: this.cond,
+      acts: this.acts,
+    }
+  }
 }
 
 export let game_config = {
@@ -142,9 +151,7 @@ export function setToonBio(id, key, value) {
 }
 
 export function setToonCondValue(id, key, value) {
-  console.log("%d %d %d", id, key, value)
   toons[id].cond[key].v = value
-  console.log(toons[id].cond)
 }
 
 export function setToonCondText(id, key, text) {

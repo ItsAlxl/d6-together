@@ -24,6 +24,9 @@
   .scrollable-y {
     @apply min-h-full max-h-0 overflow-y-auto overflow-x-hidden;
   }
+  .io-modal {
+    @apply modal-box flex flex-col max-h-[80%] h-[80%] max-w-[80%] w-[80%];
+  }
 }
 
 @layer utilities {

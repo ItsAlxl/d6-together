@@ -295,7 +295,7 @@ CfgMenu.getCondHTML = function () {
   <textarea
     spellcheck="false"
     class="textarea textarea-bordered resize-none col-span-2 leading-relaxed"
-    placeholder="<condition has no player description>"
+    placeholder="<no player description>"
     ${getCfgTagEq("cond-text")}
   ></textarea>
   <div class="flex flex-col items-end gap-1">
