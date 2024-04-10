@@ -141,8 +141,7 @@ window.d6t.deleteToon = function () {
 }
 
 function replaceChildHTML(elm, replacement) {
-  elm.replaceChildren()
-  elm.insertAdjacentHTML("beforeend", replacement)
+  elm.innerHTML = replacement
 }
 
 function updatePlayerList() {
@@ -156,8 +155,9 @@ function updatePlayerList() {
   refreshToonOwner()
 }
 
-function updateGameConfig() {
-  Roster.updateGameConfig()
+function applyConfig(cfg) {
+  Components.CfgMenu.takeConfig(cfg)
+  Roster.applyGameConfig(cfg)
 
   let acts_html = ""
   for (let i = 0; i < Roster.game_config.act_list.length; i++) {
@@ -280,6 +280,7 @@ window.d6t.openConfig = function () {
 }
 
 window.d6t.applyConfig = function () {
+  applyConfig(Components.CfgMenu.buildConfig())
   showConfig(false)
 }
 
@@ -287,9 +288,21 @@ window.d6t.cancelConfig = function () {
   showConfig(false)
 }
 
+window.d6t.cfgUpdateNumActs = function(nud) {
+  Components.CfgMenu.setActionCount(nud.value)
+}
+
+window.d6t.cfgAddCond = function() {
+  Components.CfgMenu.addCond()
+}
+
+window.d6t.cfgDeleteCond = function(button) {
+  Components.CfgMenu.deleteCond(button)
+}
+
 setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
 DiceTray.create(document.getElementById("dice-parent"))
 
 updatePlayerList()
+applyConfig(Roster.game_config)
 showConfig(true)
-updateGameConfig()

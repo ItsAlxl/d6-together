@@ -10,18 +10,26 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="style.css" type="text/css" rel="stylesheet" />
 
-    <script type="module" src="game.js"></script>
     <script type="module">
       import { createIcons, PencilRuler, UserPlus, UserX, CirclePlus, Trash } from "lucide"
-      createIcons({
-        icons: {
-          PencilRuler,
-          UserPlus,
-          UserX,
-          CirclePlus,
-          Trash,
+      window.lucide = {
+        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash },
+        refresh: function (late = true) {
+          createIcons({
+            icons: window.lucide.icons,
+            nameAttr: late ? "data-lucide-late" : "data-lucide",
+          })
+          if (late) {
+            let n = document.querySelectorAll("[data-lucide-late]")
+            for (let i = 0; i < n.length; n++) {
+              let attr = n[i].getAttribute("data-lucide-late")
+              n[i].removeAttribute("data-lucide-late")
+              n[i].setAttribute("data-lucide", attr)
+            }
+          }
         },
-      })
+      }
+      window.lucide.refresh(false)
 
       import Split from "split-grid"
       Split({
@@ -33,6 +41,7 @@
         ],
       })
     </script>
+    <script type="module" src="game.js"></script>
   </head>
   <body class="h-screen">
     <div id="view-tabletop" class="hidden h-full grid grid-cols-[1fr_5px_1fr]">
@@ -142,67 +151,43 @@
         <div class="flex flex-col items-center gap-3">
           Actions
           <div class="flex flex-row items-center gap-8">
-            <div># of Actions <input type="number" min="1" max="48" class="w-14" /></div>
-            <div>Max Rating <input type="number" min="1" max="5" class="w-14" /></div>
+            <div>
+              Count
+              <input
+                id="config-act-count"
+                type="number"
+                min="1"
+                max="48"
+                class="w-14"
+                onchange="d6t.cfgUpdateNumActs(this)"
+              />
+            </div>
+            <div>
+              Max Rating <input id="config-act-max" type="number" min="1" max="5" class="w-14" />
+            </div>
           </div>
           <div
             id="config-acts"
             class="grid grid-cols-3 content-start gap-3 scrollable-y min-h-[85%]"
-          >
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-            <input type="text" class="input input-bordered" />
-          </div>
+          ></div>
         </div>
         <div class="bg-base-300 ml-2 mr-2"></div>
         <div class="flex flex-col items-center gap-3">
           Condition
-          <button class="btn btn-square btn-lxs" onclick="">
+          <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddCond()">
             <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
           </button>
-          <div id="config-cond" class="flex flex-col w-full gap-3 scrollable-y min-h-[85%]">
-            <div id="config-cond-0" class="grid grid-cols-3 gap-1">
-              <div class="flex flex-row col-span-3 w-full">
-                <input type="text" class="input input-bordered grow" />
-                <button class="btn btn-square btn-lxs" onclick="">
-                  <svg class="w-[75%] h-[75%]" data-lucide="trash"></svg>
-                </button>
-              </div>
-              <textarea
-                spellcheck="false"
-                class="textarea textarea-bordered resize-none col-span-2 leading-relaxed"
-                placeholder="<condition has no player description>"
-              ></textarea>
-              <div class="flex flex-col items-end gap-1">
-                <div>Max <input type="number" min="-100" max="100" class="w-14" /></div>
-                <div>Push <input type="number" min="-100" max="100" class="w-14" /></div>
-                <div>Assist <input type="number" min="-100" max="100" class="w-14" /></div>
-              </div>
-            </div>
-          </div>
+          <div id="config-cond" class="flex flex-col w-full gap-3 scrollable-y min-h-[85%]"></div>
         </div>
         <div class="bg-base-300 ml-2 mr-2"></div>
         <div class="flex flex-col items-center gap-3">
           Biography
           <textarea
+            id="config-bio"
             spellcheck="false"
             class="textarea textarea-bordered resize-none w-full h-full leading-relaxed"
             placeholder="Each section goes on its own line"
+            data-d6t-cfg="bio"
           ></textarea>
         </div>
       </div>

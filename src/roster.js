@@ -41,8 +41,6 @@ class Toon {
 }
 
 export let game_config = {
-  bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
-  act_max: 4,
   act_list: [
     "HUNT a target",
     "FINESSE with precision",
@@ -57,22 +55,24 @@ export let game_config = {
     "WRECK with brute force",
     "SWAY someone's thinking",
   ],
+  act_max: 4,
+  bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
   cond: [
     {
       name: "Harm",
       max: 5,
-      text_default: "Unharmed.",
+      text: "Unharmed.",
     },
     {
       name: "Trauma",
       max: 4,
-      text_default: "Unscarred.",
+      text: "Unscarred.",
     },
     {
       name: "Stress",
       max: 9,
-      d_push: 2,
-      d_assist: 1,
+      push: 2,
+      assist: 1,
     },
   ],
 }
@@ -163,7 +163,8 @@ export function setToonName(id, name) {
   toons[id].bio_name = name
 }
 
-export function updateGameConfig() {
+export function applyGameConfig(gc) {
+  game_config = gc
   for (let t of toons) {
     t.applyGameConfig()
   }
