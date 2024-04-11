@@ -127,9 +127,11 @@ function getFirstFreeIdx(array) {
   return array.length
 }
 
-export function addPlayer(pdata = {}, idx = getFirstFreeIdx(players)) {
-  pdata.id = idx
-  setAtRoster(new Player(pdata), idx, players)
+export function addPlayer(pdata = {}) {
+  if (!pdata.hasOwnProperty("id")) pdata.id = getFirstFreeIdx(players)
+  let p = new Player(pdata)
+  setAtRoster(p, pdata.id, players)
+  return p
 }
 
 export function deletePlayer(id) {
@@ -141,12 +143,12 @@ export function deletePlayer(id) {
   players[id] = null
 }
 
-export function addToon(tdata = {}, idx = getFirstFreeIdx(toons)) {
-  tdata.id = idx
-  if (!tdata.hasOwnProperty("plr_id")) {
-    tdata.plr_id = 0
-  }
-  setAtRoster(new Toon(tdata), idx, toons)
+export function addToon(tdata = {}) {
+  if (!tdata.hasOwnProperty("id")) tdata.id = getFirstFreeIdx(toons)
+  if (!tdata.hasOwnProperty("plr_id")) tdata.plr_id = 0
+  let t = new Toon(tdata)
+  setAtRoster(t, tdata.id, toons)
+  return t
 }
 
 export function deleteToon(id) {

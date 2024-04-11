@@ -104,17 +104,46 @@ window.d6t.onActionClicked = function (act_id) {
   }
 }
 
-function setToonName(toon, name) {
-  Roster.setToonName(toon.id, name)
-  Components.ToonTab.applyName(Roster.toons[current_toon_id])
+window.d6t.applyToonName = function () {
+  Multiplayer.send(
+    "syncToonName",
+    {
+      toon_id: current_toon_id,
+      value: document.getElementById("toon-name").value,
+    },
+    Multiplayer.SEND_ALL
+  )
 }
 
-window.d6t.applyToonName = function () {
-  setToonName(Roster.toons[current_toon_id], document.getElementById("toon-name").value)
+Multiplayer.cb.syncToonName = function (data, sender) {
+  if (plrIsToonAuthority(sender, data.toon_id)) {
+    Roster.setToonName(data.toon_id, data.value)
+    Components.ToonTab.applyName(Roster.toons[data.toon_id])
+    if (sender != MY_PLR_ID) {
+      refreshToonName(Roster.toons[data.toon_id])
+    }
+  }
 }
 
 window.d6t.applyToonBio = function (bio_id) {
-  Roster.setToonBio(current_toon_id, bio_id, Components.ToonSheet.getBioExtraElement(bio_id).value)
+  Multiplayer.send(
+    "syncToonBio",
+    {
+      toon_id: current_toon_id,
+      bio_id: bio_id,
+      value: Components.ToonSheet.getBioExtraElement(bio_id).value,
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncToonBio = function (data, sender) {
+  if (plrIsToonAuthority(sender, data.toon_id)) {
+    Roster.setToonBio(data.toon_id, data.bio_id, data.value)
+    if (sender != MY_PLR_ID) {
+      refreshToonBio(data.bio_id, Roster.toons[data.toon_id])
+    }
+  }
 }
 
 function updateToonTabs() {
@@ -131,13 +160,24 @@ function updateToonTabs() {
 }
 
 window.d6t.newToon = function () {
-  Roster.addToon()
+  Multiplayer.send("syncAddToon", Roster.addToon(), Multiplayer.SEND_OTHERS)
   updateToonTabs()
 }
 
+Multiplayer.cb.syncAddToon = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Roster.addToon(data)
+    updateToonTabs()
+  }
+}
+
 window.d6t.deleteToon = function () {
-  if (current_toon_id >= 0) {
-    Roster.deleteToon(current_toon_id)
+  Multiplayer.send("syncDeleteToon", { toon_id: current_toon_id }, Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncDeleteToon = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Roster.deleteToon(data.toon_id)
     updateToonTabs()
   }
 }
@@ -158,71 +198,80 @@ function updatePlayerList() {
 }
 
 function applyConfig(cfg) {
-  Components.CfgMenu.takeConfig(cfg)
-  Roster.applyGameConfig(cfg)
-
-  let acts_html = ""
-  for (let i = 0; i < Roster.game_config.act_list.length; i++) {
-    acts_html += Components.Action.getHTML(
-      i,
-      Roster.game_config.act_list[i],
-      Roster.game_config.act_max
-    )
+  if (Multiplayer.isConnected()) {
+    Multiplayer.send("syncConfig", cfg, Multiplayer.SEND_ALL)
+  } else {
+    Multiplayer.cb.syncConfig(cfg, Multiplayer.HOST_SENDER_ID)
   }
-  replaceChildHTML(document.getElementById("toon-actions"), acts_html)
+}
 
-  let bio_extras_html = ""
-  for (let i = 0; i < Roster.game_config.bio_extras.length; i++) {
-    bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
-  }
-  replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
+Multiplayer.cb.syncConfig = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Components.CfgMenu.takeConfig(data)
+    Roster.applyGameConfig(data)
 
-  let conds_html = ""
-  for (let i = 0; i < Roster.game_config.cond.length; i++) {
-    conds_html += Components.ToonCond.getHTML(i, Roster.game_config.cond[i])
+    let acts_html = ""
+    for (let i = 0; i < Roster.game_config.act_list.length; i++) {
+      acts_html += Components.Action.getHTML(
+        i,
+        Roster.game_config.act_list[i],
+        Roster.game_config.act_max
+      )
+    }
+    replaceChildHTML(document.getElementById("toon-actions"), acts_html)
+
+    let bio_extras_html = ""
+    for (let i = 0; i < Roster.game_config.bio_extras.length; i++) {
+      bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
+    }
+    replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
+
+    let conds_html = ""
+    for (let i = 0; i < Roster.game_config.cond.length; i++) {
+      conds_html += Components.ToonCond.getHTML(i, Roster.game_config.cond[i])
+    }
+    replaceChildHTML(document.getElementById("toon-cond"), conds_html)
   }
-  replaceChildHTML(document.getElementById("toon-cond"), conds_html)
 }
 
 function refreshToonOwner(toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+  if (toon != null && toon.id == current_toon_id) {
     document.getElementById("toon-owner").value = toon.plr_id
   }
 }
 
-function refreshToonName(toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+function refreshToonName(toon) {
+  if (toon != null && toon.id == current_toon_id) {
     document.getElementById("toon-name").value = toon.bio_name
   }
 }
 
-function refreshToonAction(act_id, toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+function refreshToonAction(act_id, toon) {
+  if (toon != null && toon.id == current_toon_id) {
     Components.Action.setValue(act_id, toon.acts[act_id])
   }
 }
 
-function refreshToonBio(bio_id, toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+function refreshToonBio(bio_id, toon) {
+  if (toon != null && toon.id == current_toon_id) {
     Components.ToonSheet.getBioExtraElement(bio_id).value = toon.bio_extras[bio_id]
   }
 }
 
-function refreshToonCondValue(cond_id, toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+function refreshToonCondValue(cond_id, toon) {
+  if (toon != null && toon.id == current_toon_id) {
     Components.ToonCond.setValue(cond_id, toon.cond[cond_id].v ?? 0)
   }
 }
 
-function refreshToonCondText(cond_id, toon = Roster.toons[current_toon_id]) {
-  if (toon != null) {
+function refreshToonCondText(cond_id, toon) {
+  if (toon != null && toon.id == current_toon_id) {
     Components.ToonCond.setText(cond_id, toon.cond[cond_id].t ?? "")
   }
 }
 
-function refreshToonSheet() {
-  let toon = Roster.toons[current_toon_id]
-  if (toon != null) {
+function refreshToonSheet(toon = Roster.toons[current_toon_id]) {
+  if (toon != null && toon.id == current_toon_id) {
     for (let act_id in toon.acts) {
       refreshToonAction(act_id, toon)
     }
@@ -246,7 +295,7 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
   if (id != current_toon_id && current_toon_id >= 0) {
     Components.ToonTab.setSelected(current_toon_id, false)
   }
-  current_toon_id = id
+  current_toon_id = parseInt(id)
 
   let valid_toon = Components.ToonTab.setSelected(id, true)
   if (!visual_reapply && valid_toon) {
@@ -255,20 +304,91 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
   setVisible(document.getElementById("toon-sheet"), valid_toon)
 }
 
+function plrIsToonAuthority(plr_id, toon_id) {
+  return plr_id == Roster.toons[toon_id].plr_id || plr_id == Multiplayer.HOST_SENDER_ID
+}
+
 window.d6t.setActionValue = function (act_id, value) {
-  Roster.setToonAct(current_toon_id, parseInt(act_id), parseInt(value))
+  Multiplayer.send(
+    "syncActionVal",
+    {
+      toon_id: current_toon_id,
+      act_id: act_id,
+      value: value,
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncActionVal = function (data, sender) {
+  if (plrIsToonAuthority(sender, data.toon_id)) {
+    Roster.setToonAct(data.toon_id, data.act_id, data.value)
+    if (sender != MY_PLR_ID) {
+      refreshToonAction(data.act_id, Roster.toons[data.toon_id])
+    }
+  }
 }
 
 window.d6t.applyToonOwner = function () {
-  Roster.setToonOwner(current_toon_id, parseInt(document.getElementById("toon-owner").value))
+  Multiplayer.send(
+    "syncToonOwner",
+    {
+      toon_id: current_toon_id,
+      value: document.getElementById("toon-owner").value,
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncToonOwner = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Roster.setToonOwner(data.toon_id, data.value)
+    if (sender != MY_PLR_ID) {
+      refreshToonOwner(Roster.toons[data.toon_id])
+    }
+  }
 }
 
 window.d6t.applyCondValue = function (cond_id) {
-  Roster.setToonCondValue(current_toon_id, cond_id, Components.ToonCond.getValue(cond_id))
+  Multiplayer.send(
+    "syncCondVal",
+    {
+      toon_id: current_toon_id,
+      cond_id: cond_id,
+      value: Components.ToonCond.getValue(cond_id),
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncCondVal = function (data, sender) {
+  if (plrIsToonAuthority(sender, data.toon_id)) {
+    Roster.setToonCondValue(data.toon_id, data.cond_id, data.value)
+    if (sender != MY_PLR_ID) {
+      refreshToonCondValue(data.cond_id, Roster.toons[data.toon_id])
+    }
+  }
 }
 
 window.d6t.applyCondText = function (cond_id) {
-  Roster.setToonCondText(current_toon_id, cond_id, Components.ToonCond.getText(cond_id))
+  Multiplayer.send(
+    "syncCondText",
+    {
+      toon_id: current_toon_id,
+      cond_id: cond_id,
+      value: Components.ToonCond.getText(cond_id),
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncCondText = function (data, sender) {
+  if (plrIsToonAuthority(sender, data.toon_id)) {
+    Roster.setToonCondText(data.toon_id, data.cond_id, data.value)
+    if (sender != MY_PLR_ID) {
+      refreshToonCondText(data.cond_id, Roster.toons[data.toon_id])
+    }
+  }
 }
 
 function showConfig(s) {
@@ -304,11 +424,16 @@ window.d6t.cfgDeleteCond = function (button) {
 function importJson(json_text) {
   let json_obj = JSON.parse(json_text)
   applyConfig(json_obj.cfg)
+  Multiplayer.send("syncToonImport", json_obj.toons, Multiplayer.SEND_ALL)
+}
 
-  for (let i = 0; i < json_obj.toons.length; i++) {
-    Roster.addToon(json_obj.toons[i])
+Multiplayer.cb.syncToonImport = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    for (let i = 0; i < data.length; i++) {
+      Roster.addToon(data[i])
+    }
+    updateToonTabs()
   }
-  updateToonTabs()
 }
 
 function getExportJson() {
@@ -386,14 +511,13 @@ Multiplayer.cb.hosted = function (data, sender) {
     )
     updatePlayerList()
     finishLobbyTransition()
+    // TODO: actual UI element for this
     console.log("hosted on %s", data.code)
   }
 }
 
 Multiplayer.cb.joiner = function (data, sender) {
   if (sender == Multiplayer.SERVER_SENDER_ID) {
-    Roster.addPlayer(data.prof, data.id)
-    updatePlayerList()
     Multiplayer.send(
       "joined",
       {
@@ -403,6 +527,25 @@ Multiplayer.cb.joiner = function (data, sender) {
       },
       data.id
     )
+
+    data.prof.id = data.id
+    Multiplayer.send("syncPlrJoined", Roster.addPlayer(data.prof), Multiplayer.SEND_OTHERS)
+    updatePlayerList()
+  }
+}
+
+Multiplayer.cb.syncPlrJoined = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Roster.addPlayer(data)
+    updatePlayerList()
+  }
+}
+
+// TODO: host migration
+Multiplayer.cb.leaver = function (data, sender) {
+  if (sender == Multiplayer.SERVER_SENDER_ID) {
+    Roster.deletePlayer(data.id)
+    updatePlayerList()
   }
 }
 

@@ -95,16 +95,12 @@
             <a class="link" target="_blank" href="https://github.com/ItsAlxl/d6-together"
               >source code</a
             >
-            is publicly available.
+            is publicly available. Users who are inclined to run their own instance of d6 Together are encouraged to do so.
           </p>
           <p>
-            The only data that d6 Together collects is the information users provide for their
-            one-time profile. As long as users do not voluntarily put personally identifiable
-            information as their username, all profile information is not personally identifiable.
-            That profile data is transmitted to other users during multiplayer via vtt.itsalxl.com,
-            but is never stored on the server. Connecting to vtt.itsalxl.com generates a connection
-            ID that is not personally identifiable which is cleared from the server upon
-            disconnection.
+            All data that d6 Together receives has to be explicitly entered by the user, and none of
+            it is personally identifiable unless the user intentionally enters personally identifiable information (don't!). The information is transmitted user-to-user via the
+            server, but the server never stores information.
           </p>
         </div>
       </div>
@@ -229,6 +225,7 @@
           <h1 id="prompt-title" class="text-xl"></h1>
           <div id="prompt-list" class="">
             <div id="pmt-arbitrary" class="prompt-inputs">
+              <!-- TODO: make these sync with the player list -->
               <input type="number" min="0" max="10" value="0" id="arb-mine" />
               <input type="number" min="0" max="10" value="0" id="arb-dbg" />
               <input type="number" disabled min="0" max="10" value="0" />

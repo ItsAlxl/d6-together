@@ -154,7 +154,7 @@ function getCondNumberElement(cond_id) {
 
 ToonCond.getValue = function (cond_id) {
   let number_elm = getCondNumberElement(cond_id)
-  return (number_elm && number_elm.value) ?? getPipsValue(getCondValueName(cond_id))
+  return parseInt((number_elm && number_elm.value) ?? getPipsValue(getCondValueName(cond_id)))
 }
 
 ToonCond.setValue = function (cond_id, value) {
