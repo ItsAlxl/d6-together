@@ -1,6 +1,5 @@
 class Player {
   id
-  net_owner
   name
 
   constructor(pdata) {
@@ -89,8 +88,20 @@ export let game_config = {
 export const players = []
 export const toons = []
 
-window.MY_PLR_ID = -1
-window.MY_NET_ID = 1 // TODO: relocate to mutliplayer.js
+function syncArray(arr, sync) {
+  arr.length = sync.length
+  for (let i = 0; i < sync.length; i++) {
+    arr[i] = sync[i]
+  }
+}
+
+export function syncPlayers(p) {
+  syncArray(players, p)
+}
+
+export function syncToons(t) {
+  syncArray(toons, t)
+}
 
 function resizeArray(array, new_length, fill_value) {
   let prev_length = array.length
@@ -116,13 +127,9 @@ function getFirstFreeIdx(array) {
   return array.length
 }
 
-export function addPlayer(net_id, pdata = {}, idx = getFirstFreeIdx(players)) {
+export function addPlayer(pdata = {}, idx = getFirstFreeIdx(players)) {
   pdata.id = idx
-  pdata.net_owner = net_id
   setAtRoster(new Player(pdata), idx, players)
-  if (players[idx].net_owner == MY_NET_ID) {
-    MY_PLR_ID = idx
-  }
 }
 
 export function deletePlayer(id) {
@@ -178,12 +185,3 @@ export function applyGameConfig(gc) {
     }
   }
 }
-
-// TODO: add host player when they create a room
-addPlayer(MY_NET_ID, {
-  name: "me :)",
-})
-// TODO: add other players when they join
-addPlayer(2 * MY_NET_ID, {
-  name: "friend c:",
-})

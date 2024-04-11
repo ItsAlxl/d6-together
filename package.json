@@ -8,7 +8,8 @@
     "start": "npm run build && node d6-together.js",
     "dev": "vite",
     "build": "vite build --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ws": "node d6-together.js"
   },
   "dependencies": {
     "@dimforge/rapier3d": "^0.12.0",

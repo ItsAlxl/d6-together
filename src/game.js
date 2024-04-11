@@ -1,7 +1,9 @@
 import * as DiceTray from "./dicetray.js"
 import * as Components from "./components.js"
 import * as Roster from "./roster.js"
+import * as Multiplayer from "./multiplayer.js"
 
+window.MY_PLR_ID = -1
 window.d6t = {}
 
 const PROMPT_MAP = {
@@ -347,15 +349,71 @@ window.d6t.showExportDlg = function (s) {
 
 function updateHostVis() {
   let host_elements = document.querySelectorAll("[data-host-only]")
-  let is_host = String(MY_NET_ID == 1)
+  let is_host = String(MY_PLR_ID == Multiplayer.HOST_SENDER_ID)
   for (let i = 0; i < host_elements.length; i++) {
     setVisible(host_elements[i], host_elements[i].getAttribute("data-host-only") == is_host)
   }
 }
 
-updateHostVis()
-DiceTray.create(document.getElementById("dice-parent"))
+window.d6t.joinRoom = function () {
+  let room_code = document.getElementById("mp-room-code").value
+  if (room_code.length >= 4) {
+    Multiplayer.joinGame(room_code, {
+      name: document.getElementById("prof-name").value,
+    })
+  }
+}
 
-updatePlayerList()
+window.d6t.hostRoom = function () {
+  Multiplayer.hostGame()
+}
+
+function finishLobbyTransition() {
+  updateHostVis()
+  setVisible(document.getElementById("view-join"), false)
+  showConfig(MY_PLR_ID == Multiplayer.HOST_SENDER_ID)
+  DiceTray.create(document.getElementById("dice-parent"))
+}
+
+Multiplayer.cb.hosted = function (data, sender) {
+  if (sender == Multiplayer.SERVER_SENDER_ID) {
+    MY_PLR_ID = Multiplayer.HOST_SENDER_ID
+    Roster.addPlayer(
+      {
+        name: document.getElementById("prof-name").value,
+      },
+      Multiplayer.HOST_SENDER_ID
+    )
+    updatePlayerList()
+    finishLobbyTransition()
+    console.log("hosted on %s", data.code)
+  }
+}
+
+Multiplayer.cb.joiner = function (data, sender) {
+  if (sender == Multiplayer.SERVER_SENDER_ID) {
+    Roster.addPlayer(data.prof, data.id)
+    updatePlayerList()
+    Multiplayer.send(
+      "joined",
+      {
+        id: data.id,
+        players: Roster.players,
+        toons: Roster.toons,
+      },
+      data.id
+    )
+  }
+}
+
+Multiplayer.cb.joined = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    MY_PLR_ID = data.id
+    Roster.syncPlayers(data.players)
+    Roster.syncToons(data.toons)
+    finishLobbyTransition()
+    updateToonTabs()
+  }
+}
+
 applyConfig(Roster.game_config)
-showConfig(MY_NET_ID == 1)

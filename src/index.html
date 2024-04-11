@@ -53,6 +53,115 @@
     <script type="module" src="game.js"></script>
   </head>
   <body class="h-screen">
+    <div id="view-join" class="m-auto h-full w-[80%] flex flex-col">
+      <h1 class="font-bold text-xl text-center">d6 Together</h1>
+      <h2 class="text-lg text-center">play Forged in the Dark games online</h2>
+      <div class="grow flex flex-col justify-center w-[50%] m-auto gap-4">
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Username</span>
+          </div>
+          <input
+            id="prof-name"
+            type="text"
+            placeholder="Player"
+            class="input input-bordered w-full"
+          />
+        </label>
+        <label class="form-control w-full">
+          <div class="label">
+            <span class="label-text">Room</span>
+          </div>
+          <input id="mp-room-code" type="text" class="input input-bordered w-full" />
+        </label>
+        <button class="btn btn-outline btn-primary" onclick="d6t.joinRoom()">Join</button>
+        <button class="btn btn-outline btn-secondary" onclick="d6t.hostRoom()">Host</button>
+      </div>
+      <div class="collapse bg-base-200 collapse-arrow border border-neutral">
+        <input type="checkbox" />
+        <div class="collapse-title">Credits</div>
+        <div class="collapse-content max-h-24 overflow-y-auto">
+          <p>d6 Together by alxl</p>
+          <p>Blades in the Dark by John Harper</p>
+          <p>Lucide Icons by Cole Bemis & Lucide Contributors</p>
+        </div>
+      </div>
+      <div class="collapse bg-base-200 collapse-arrow border border-neutral">
+        <input type="checkbox" />
+        <div class="collapse-title">Privacy Policy</div>
+        <div class="collapse-content max-h-24 overflow-y-auto">
+          <p>
+            d6 Together is open-source, meaning the
+            <a class="link" target="_blank" href="https://github.com/ItsAlxl/d6-together"
+              >source code</a
+            >
+            is publicly available.
+          </p>
+          <p>
+            The only data that d6 Together collects is the information users provide for their
+            one-time profile. As long as users do not voluntarily put personally identifiable
+            information as their username, all profile information is not personally identifiable.
+            That profile data is transmitted to other users during multiplayer via vtt.itsalxl.com,
+            but is never stored on the server. Connecting to vtt.itsalxl.com generates a connection
+            ID that is not personally identifiable which is cleared from the server upon
+            disconnection.
+          </p>
+        </div>
+      </div>
+      <div class="collapse bg-base-200 collapse-arrow border border-neutral">
+        <input type="checkbox" />
+        <div class="collapse-title">Licenses</div>
+        <div class="collapse-content max-h-32 overflow-y-auto">
+          <p>d6 Together is copyright (c) 2024 alxl</p>
+          <p>
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this
+            software and associated documentation files (the "Software"), to deal in the Software
+            without restriction, including without limitation the rights to use, copy, modify,
+            merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+            permit persons to whom the Software is furnished to do so, subject to the following
+            conditions: The above copyright notice and this permission notice shall be included in
+            all copies or substantial portions of the Software.
+          </p>
+          <p>
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+            INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+            PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+            LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+            OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+            OTHER DEALINGS IN THE SOFTWARE.
+          </p>
+          <div class="divider"></div>
+          <p>
+            This work is based on
+            <a href="http://www.bladesinthedark.com/" target="_blank" class="link"
+              >Blades in the Dark</a
+            >, product of One Seven Design, developed and authored by John Harper, and licensed for
+            our use under the
+            <a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" class="link"
+              >Creative Commons Attribution 3.0 Unported license</a
+            >.
+          </p>
+          <div class="divider"></div>
+          <p>
+            Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as part of Feather
+            (MIT). All other copyright (c) for Lucide are held by Lucide Contributors 2022.
+          </p>
+          <p>
+            Permission to use, copy, modify, and/or distribute this software for any purpose with or
+            without fee is hereby granted, provided that the above copyright notice and this
+            permission notice appear in all copies.
+          </p>
+          <p>
+            THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO
+            THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+            EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+            DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+            IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+            CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+          </p>
+        </div>
+      </div>
+    </div>
     <div id="view-tabletop" class="hidden h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
