@@ -56,17 +56,24 @@
     <div id="view-tabletop" class="hidden h-full grid grid-cols-[1fr_5px_1fr]">
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
-          <!-- replace with DaisyUI Menu -->
-          <div id="host-controls" class="hidden flex flex-row justify-center">
-            <button class="btn btn-square btn-lxs" onclick="d6t.openConfig()">
-              <svg class="w-[75%] h-[75%]" data-lucide="pencil-ruler"></svg>
-            </button>
-            <button class="btn btn-square btn-lxs" onclick="d6t.deleteToon()">
-              <svg class="w-[75%] h-[75%]" data-lucide="user-x"></svg>
-            </button>
-            <button class="btn btn-square btn-lxs" onclick="d6t.newToon()">
-              <svg class="w-[75%] h-[75%]" data-lucide="user-plus"></svg>
-            </button>
+          <div class="flex flex-row justify-center" data-host-only="true">
+            <ul class="menu menu-sm menu-horizontal bg-base-200 rounded-box">
+              <li>
+                <a onclick="d6t.openConfig()">
+                  <svg data-lucide="pencil-ruler"></svg>
+                </a>
+              </li>
+              <li>
+                <a onclick="d6t.deleteToon()">
+                  <svg data-lucide="user-x"></svg>
+                </a>
+              </li>
+              <li>
+                <a onclick="d6t.newToon()">
+                  <svg data-lucide="user-plus"></svg>
+                </a>
+              </li>
+            </ul>
           </div>
           <div id="toon-tabs" role="tablist" class="tabs tabs-bordered scrollable-x"></div>
           <div id="toon-sheet" class="hidden flex flex-row items-start">
@@ -194,7 +201,7 @@
             <svg class="w-[75%] h-[75%]" data-lucide="upload"></svg>
           </button>
         </div>
-        <div class="grow flex flex-row gap-2 justify-end">
+        <div class="grow flex flex-row gap-2 justify-end" data-host-only="true">
           <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
           <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
         </div>

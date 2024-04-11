@@ -345,9 +345,17 @@ window.d6t.showExportDlg = function (s) {
   }
 }
 
-setVisible(document.getElementById("host-controls"), MY_NET_ID == 1)
+function updateHostVis() {
+  let host_elements = document.querySelectorAll("[data-host-only]")
+  let is_host = String(MY_NET_ID == 1)
+  for (let i = 0; i < host_elements.length; i++) {
+    setVisible(host_elements[i], host_elements[i].getAttribute("data-host-only") == is_host)
+  }
+}
+
+updateHostVis()
 DiceTray.create(document.getElementById("dice-parent"))
 
 updatePlayerList()
 applyConfig(Roster.game_config)
-showConfig(true)
+showConfig(MY_NET_ID == 1)
