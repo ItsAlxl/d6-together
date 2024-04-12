@@ -13,7 +13,7 @@ const PROMPT_MAP = {
     act: "Roll!",
   },
   "pmt-action": {
-    cb: requestActionRool,
+    cb: requestActionRoll,
     title: "Action Roll",
     act: "Roll!",
   },
@@ -22,6 +22,7 @@ const urlParams = new URLSearchParams(window.location.search)
 
 let current_toon_id = -1
 let current_prompt = ""
+let prompt_owner = -1
 
 let action_value = -1
 let action_assister = -1
@@ -35,29 +36,59 @@ function setVisible(e, v) {
 }
 
 function requestPoolRoll() {
-  DiceTray.poolRoll(
-    MY_PLR_ID,
+  Multiplayer.send(
+    "syncPoolRoll",
     {
-      [MY_PLR_ID]: document.getElementById("arb-mine").valueAsNumber,
-      [2]: document.getElementById("arb-dbg").valueAsNumber,
+      pool: {
+        // TODO: make this actually work lol
+        [MY_PLR_ID]: document.getElementById("arb-mine").valueAsNumber,
+        [2]: document.getElementById("arb-dbg").valueAsNumber,
+      },
+      seed: generateSeed(),
     },
-    generateSeed()
+    Multiplayer.SEND_ALL
   )
 }
 
-function requestActionRool() {
-  let pool = {
-    [MY_PLR_ID]: action_value + (document.getElementById("action-push").checked ? 1 : 0),
+Multiplayer.cb.syncPoolRoll = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    DiceTray.poolRoll(sender, data.pool, data.seed)
+  }
+}
+
+function requestActionRoll() {
+  let data = {
+    value: action_value,
+    push: document.getElementById("action-push").checked,
+    seed: generateSeed(),
   }
   if (action_assister >= 0) {
-    pool[action_assister] = 1
+    data.ass = action_assister
   }
-  DiceTray.actionRoll(MY_PLR_ID, pool, generateSeed())
 
-  action_assister = -1
-  action_value = -1
-  document.getElementById("action-push").checked = false
-  document.getElementById("action-assist").checked = false
+  Multiplayer.send("syncActionRoll", data, Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncActionRoll = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    let pool = {
+      [sender]: data.value + (data.push ? 1 : 0),
+    }
+    if (data.ass != null) {
+      pool[data.ass] = 1
+    }
+    DiceTray.actionRoll(sender, pool, data.seed)
+    // TODO: implement stress cost, requirements
+
+    action_assister = -1
+    action_value = -1
+    document.getElementById("action-push").checked = false
+    document.getElementById("action-assist").checked = false
+  }
+}
+
+function isPlrPromptAuthority(plr_id) {
+  return prompt_owner == plr_id
 }
 
 window.d6t.applyPrompt = function () {
@@ -72,17 +103,24 @@ function isPromptOpen(p) {
 }
 
 window.d6t.openPrompt = function (id) {
-  if (!isPromptOpen(id)) {
+  if (!isPromptOpen(id) && prompt_owner < 0) {
+    Multiplayer.send("syncPromptOpen", { prompt_id: id }, Multiplayer.SEND_ALL)
+  }
+}
+
+Multiplayer.cb.syncPromptOpen = function (data, sender) {
+  if (prompt_owner < 0) {
     let prompts_par = document.getElementById("prompt-list")
-    current_prompt = id
+    current_prompt = data.prompt_id
     for (let i = 0; i < prompts_par.children.length; i++) {
-      setVisible(prompts_par.children[i], prompts_par.children[i].id == id)
+      setVisible(prompts_par.children[i], prompts_par.children[i].id == data.prompt_id)
     }
 
     let pdata = PROMPT_MAP[current_prompt]
     if (pdata == null) {
       d6t.closePrompt()
     } else {
+      prompt_owner = sender
       document.getElementById("prompt-title").innerText = pdata.title
       document.getElementById("prompt-confirm-btn").innerText = pdata.act
       setVisible(document.getElementById("prompt-bg"), true)
@@ -91,8 +129,15 @@ window.d6t.openPrompt = function (id) {
 }
 
 window.d6t.closePrompt = function () {
-  current_prompt = ""
-  setVisible(document.getElementById("prompt-bg"), false)
+  Multiplayer.send("syncPromptClose", null, Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncPromptClose = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    prompt_owner = -1
+    current_prompt = ""
+    setVisible(document.getElementById("prompt-bg"), false)
+  }
 }
 
 window.d6t.onActionClicked = function (act_id) {
@@ -281,7 +326,6 @@ function enableElement(elm, enable) {
 
 function enableToonSheetEditing(e) {
   let elms = document.getElementById("toon-sheet").querySelectorAll("input, textarea, button")
-  console.log(elms)
   for (let i = 0; i < elms.length; i++) {
     enableElement(elms[i], e)
   }

@@ -2,7 +2,7 @@ import * as THREE from "three"
 import * as TWEEN from "@tweenjs/tween.js"
 import RAPIER from "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
 
-const DBG_MODE = true
+const DBG_MODE = false
 
 const COL_LAYER_DICE_OFFSCREEN = 0x1000_0001
 const COL_LAYER_DICE_ONSCREEN = 0x0100_1103
@@ -133,7 +133,6 @@ function splitmix32(a) {
 
 let rng
 function seedRNG(s) {
-  console.log(s)
   rng = splitmix32(s)
 }
 
@@ -605,12 +604,12 @@ function create(dom_parent) {
       PHYS_WORLD.step()
 
       if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
-        let req_id = getNextIdFromReq(roll_request, MY_PLR_ID)
+        let req_id = getNextIdFromReq(roll_request, roll_boss_id)
         if (req_id != null) {
           popRequest(req_id)
         }
-        if (roll_request.hasOwnProperty(MY_PLR_ID)) {
-          popRequest(MY_PLR_ID)
+        if (roll_request.hasOwnProperty(roll_boss_id)) {
+          popRequest(roll_boss_id)
         }
       }
 
