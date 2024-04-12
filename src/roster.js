@@ -88,19 +88,18 @@ export let game_config = {
 export const players = []
 export const toons = []
 
-function syncArray(arr, sync) {
-  arr.length = sync.length
-  for (let i = 0; i < sync.length; i++) {
-    arr[i] = sync[i]
+export function syncPlayers(p) {
+  players.length = p.length
+  for (let i = 0; i < p.length; i++) {
+    players[i] = new Player(p[i])
   }
 }
 
-export function syncPlayers(p) {
-  syncArray(players, p)
-}
-
 export function syncToons(t) {
-  syncArray(toons, t)
+  toons.length = t.length
+  for (let i = 0; i < t.length; i++) {
+    toons[i] = new Toon(t[i])
+  }
 }
 
 function resizeArray(array, new_length, fill_value) {

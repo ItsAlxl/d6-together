@@ -207,9 +207,7 @@ function applyConfig(cfg) {
 
 Multiplayer.cb.syncConfig = function (data, sender) {
   if (sender == Multiplayer.HOST_SENDER_ID) {
-    if (sender != MY_PLR_ID) {
-      Components.CfgMenu.takeConfig(data)
-    }
+    Components.CfgMenu.takeConfig(data)
     Roster.applyGameConfig(data)
 
     let acts_html = ""
@@ -233,6 +231,8 @@ Multiplayer.cb.syncConfig = function (data, sender) {
       conds_html += Components.ToonCond.getHTML(i, Roster.game_config.cond[i])
     }
     replaceChildHTML(document.getElementById("toon-cond"), conds_html)
+
+    refreshToonOwner()
   }
 }
 
