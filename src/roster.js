@@ -159,12 +159,44 @@ export function deleteToon(id) {
   if (id >= 0 && id < toons.length) toons[id] = null
 }
 
+export function getCondCost(cond_opt) {
+  const cost = {}
+  for (let i = 0; i < game_config.cond.length; i++) {
+    if (game_config.cond[i][cond_opt]) {
+      cost[i] = game_config.cond[i][cond_opt]
+    }
+  }
+  return cost
+}
+
+export function toonCanAffordCost(toon_id, cond_opt) {
+  const cost = getCondCost(cond_opt)
+  for (let i in cost) {
+    if (getToonCondValue(toon_id, i) + cost[i] < (game_config.cond[i].min ?? 0)) {
+      return false
+    }
+  }
+  return true
+}
+
+export function toonSpendCost(toon_id, cond_opt) {
+  const cost = getCondCost(cond_opt)
+  for (let i in cost) {
+    setToonCondValue(toon_id, i, getToonCondValue(toon_id, i) + cost[i])
+  }
+}
+
 export function setToonBio(id, key, value) {
   toons[id].bio_extras[key] = value
 }
 
 export function setToonCondValue(id, key, value) {
-  toons[id].cond[key].v = value
+  const cond = game_config.cond[key]
+  toons[id].cond[key].v = Math.min(cond.max ?? 0, Math.max(value, cond.min ?? 0))
+}
+
+export function getToonCondValue(id, key) {
+  return toons[id].cond[key].v ?? 0
 }
 
 export function setToonCondText(id, key, text) {

@@ -38,9 +38,13 @@ const PROMPT_MAP = {
       Components.Prompt.labelActionCbox("push", "Not Pushing")
       Components.Prompt.labelActionCbox("assist", "Not Assisted")
 
-      let is_mine = Roster.isToonOwner(MY_PLR_ID, action_toon)
-      Components.Prompt.enableActionCbox("push", is_mine || Multiplayer.isHost())
-      Components.Prompt.enableActionCbox("assist", !is_mine || Multiplayer.isHost())
+      Components.Prompt.enableActionCbox(
+        "push",
+        Multiplayer.isHost() ||
+          (Roster.isToonOwner(MY_PLR_ID, action_toon) &&
+            Roster.toonCanAffordCost(action_toon, "push"))
+      )
+      updateAssistValidity()
 
       enableElement(document.getElementById("action-bonus"), isPlrPromptAuthority(MY_PLR_ID))
     },
@@ -138,6 +142,17 @@ function getMyToonId() {
     : Roster.findFirstOwnedToon(MY_PLR_ID)
 }
 
+function updateAssistValidity() {
+  let my_toon = getMyToonId()
+  Components.Prompt.enableActionCbox(
+    "assist",
+    action_assist_toon >= 0
+      ? Multiplayer.isHost() || Roster.isToonOwner(MY_PLR_ID, action_assist_toon)
+      : my_toon != action_toon &&
+          (Multiplayer.isHost() || Roster.toonCanAffordCost(my_toon, "assist"))
+  )
+}
+
 window.d6t.applyActionAssist = function () {
   let data = { value: document.getElementById("action-assist").checked }
   data.toon = Multiplayer.isHost() && !data.value ? action_assist_toon : getMyToonId()
@@ -159,13 +174,7 @@ Multiplayer.cb.syncActionAssist = function (data, sender) {
         ? "Not Assisted"
         : "Assisted by " + Roster.getToonName(action_assist_toon)
     )
-    Components.Prompt.enableActionCbox(
-      "assist",
-      Multiplayer.isHost() ||
-        (action_assist_toon >= 0
-          ? Roster.isToonOwner(MY_PLR_ID, action_assist_toon)
-          : !Roster.isToonOwner(MY_PLR_ID, action_toon))
-    )
+    updateAssistValidity()
     document.getElementById("action-assist").checked = action_assist_toon >= 0
   }
 }
@@ -189,11 +198,13 @@ function requestActionRoll() {
     value:
       Roster.getToonAct(action_toon, action_act_id) +
       document.getElementById("action-bonus").valueAsNumber,
-    push: document.getElementById("action-push").checked,
     seed: generateSeed(),
   }
   if (action_assist_toon >= 0) {
     data.ass = action_assist_toon
+  }
+  if (document.getElementById("action-push").checked) {
+    data.push = 1
   }
 
   Multiplayer.send("syncActionRoll", data, Multiplayer.SEND_ALL)
@@ -202,13 +213,19 @@ function requestActionRoll() {
 Multiplayer.cb.syncActionRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
     let pool = {
-      [sender]: data.value + (data.push ? 1 : 0),
+      [Roster.getToonOwner(action_toon)]: data.value + (data.push ?? 0),
+    }
+    if (data.push) {
+      Roster.toonSpendCost(action_toon, "push")
     }
     if (data.ass != null) {
-      pool[Roster.getToonOwner(action_assist_toon)] = 1
+      pool[Roster.getToonOwner(data.ass)] = 1
+      Roster.toonSpendCost(data.ass, "assist")
+    }
+    for (let i = 0; i < Roster.game_config.cond.length; i++) {
+      refreshToonCondValue(i)
     }
     DiceTray.actionRoll(sender, pool, data.seed)
-    // TODO: implement stress cost, requirements
 
     action_toon = -1
     action_act_id = -1
@@ -442,9 +459,9 @@ function refreshToonBio(bio_id, toon) {
   }
 }
 
-function refreshToonCondValue(cond_id, toon) {
+function refreshToonCondValue(cond_id, toon = Roster.toons[current_toon_id]) {
   if (toon != null && toon.id == current_toon_id) {
-    Components.ToonCond.setValue(cond_id, toon.cond[cond_id].v ?? 0)
+    Components.ToonCond.setValue(cond_id, Roster.getToonCondValue(toon.id, cond_id))
   }
 }
 
@@ -495,6 +512,7 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
   let valid_toon = Components.ToonTab.setSelected(id, true)
   if (!visual_reapply && valid_toon) {
     refreshToonSheet()
+    updateAssistValidity()
   }
   setVisible(document.getElementById("toon-sheet"), valid_toon)
 
