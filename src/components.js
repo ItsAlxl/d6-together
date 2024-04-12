@@ -223,6 +223,24 @@ Prompt.getAllArbitraryNudElements = function () {
   return document.querySelectorAll("[" + arbitraryOwnerAttr + "]")
 }
 
+Prompt.enableActionCbox = function (id, enable) {
+  const elm = document.getElementById("action-" + id)
+  const par = elm.parentNode
+  if (enable) {
+    par.classList.remove("cursor-not-allowed")
+    par.classList.add("cursor-pointer")
+    elm.removeAttribute("disabled")
+  } else {
+    par.classList.remove("cursor-pointer")
+    par.classList.add("cursor-not-allowed")
+    elm.setAttribute("disabled", true)
+  }
+}
+
+Prompt.labelActionCbox = function (id, txt) {
+  document.getElementById("action-" + id + "-lbl").innerText = txt
+}
+
 /*
   ConfigMenu
 */

@@ -29,6 +29,20 @@ const PROMPT_MAP = {
     onOpen: function () {
       document.getElementById("action-push").checked = false
       document.getElementById("action-assist").checked = false
+      document.getElementById("action-bonus").value = 0
+
+      Components.Prompt.labelActionCbox(
+        "push",
+        MY_PLR_ID == prompt_owner ? "Push Yourself" : "Pushing"
+      )
+      Components.Prompt.labelActionCbox(
+        "assist",
+        MY_PLR_ID == prompt_owner ? "Assisted" : "Assist Them"
+      )
+
+      Components.Prompt.enableActionCbox("push", isPlrPromptAuthority(MY_PLR_ID))
+      Components.Prompt.enableActionCbox("assist", MY_PLR_ID != prompt_owner)
+      enableElement(document.getElementById("action-bonus"), isPlrPromptAuthority(MY_PLR_ID))
     },
     title: "Action Roll",
     act: "Roll!",
@@ -96,9 +110,52 @@ Multiplayer.cb.syncPoolRoll = function (data, sender) {
   }
 }
 
+window.d6t.applyActionPush = function () {
+  Multiplayer.send(
+    "syncActionPush",
+    { value: document.getElementById("action-push").checked },
+    Multiplayer.SEND_OTHERS
+  )
+}
+
+Multiplayer.cb.syncActionPush = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    document.getElementById("action-push").checked = data.value
+  }
+}
+
+window.d6t.applyActionAssist = function () {
+  Multiplayer.send("syncActionAssist", null, Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncActionAssist = function (data, sender) {
+  if (sender != prompt_owner && (sender == action_assister || action_assister == -1)) {
+    action_assister = action_assister == -1 ? sender : -1
+    if (sender != MY_PLR_ID) {
+      document.getElementById("action-assist").checked = action_assister >= 0
+    }
+  }
+}
+
+window.d6t.applyActionBonus = function () {
+  Multiplayer.send(
+    "syncActionBonus",
+    {
+      value: document.getElementById("action-bonus").valueAsNumber,
+    },
+    Multiplayer.SEND_OTHERS
+  )
+}
+
+Multiplayer.cb.syncActionBonus = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    document.getElementById("action-bonus").value = data.value
+  }
+}
+
 function requestActionRoll() {
   let data = {
-    value: action_value,
+    value: action_value + document.getElementById("action-bonus").valueAsNumber,
     push: document.getElementById("action-push").checked,
     seed: generateSeed(),
   }
