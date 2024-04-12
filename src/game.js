@@ -18,6 +18,7 @@ const PROMPT_MAP = {
     act: "Roll!",
   },
 }
+const urlParams = new URLSearchParams(window.location.search)
 
 let current_toon_id = -1
 let current_prompt = ""
@@ -479,6 +480,10 @@ window.d6t.showImportDlg = function (s) {
   }
 }
 
+window.d6t.showInviteDlg = function (s) {
+  showModalDlg(document.getElementById("modal-invite"), s)
+}
+
 window.d6t.processImport = function () {
   importJson(document.getElementById("import-text").value)
   window.d6t.showImportDlg(false)
@@ -531,8 +536,13 @@ Multiplayer.cb.hosted = function (data, sender) {
     )
     updatePlayerList()
     finishLobbyTransition()
-    // TODO: actual UI element for this
-    console.log("hosted on %s", data.code)
+
+    document.getElementById("invite-code").innerText = data.code
+
+    let link_target = window.location.href + "?room=" + data.code
+    let link_elm = document.getElementById("invite-link")
+    link_elm.innerText = link_target
+    link_elm.setAttribute("href", link_target)
   }
 }
 
@@ -580,3 +590,4 @@ Multiplayer.cb.joined = function (data, sender) {
 }
 
 applyConfig(Roster.game_config)
+document.getElementById("mp-room-code").value = urlParams.get("room") ?? ""

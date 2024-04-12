@@ -20,9 +20,10 @@
         Trash,
         Upload,
         Download,
+        TicketPlus,
       } from "lucide"
       window.lucide = {
-        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash, Upload, Download },
+        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash, Upload, Download, TicketPlus },
         refresh: function (late = true) {
           createIcons({
             icons: window.lucide.icons,
@@ -95,11 +96,13 @@
             <a class="link" target="_blank" href="https://github.com/ItsAlxl/d6-together"
               >source code</a
             >
-            is publicly available. Users who are inclined to run their own instance of d6 Together are encouraged to do so.
+            is publicly available. Users who are inclined to run their own instance of d6 Together
+            are encouraged to do so.
           </p>
           <p>
             All data that d6 Together receives has to be explicitly entered by the user, and none of
-            it is personally identifiable unless the user intentionally enters personally identifiable information (don't!). The information is transmitted user-to-user via the
+            it is personally identifiable unless the user intentionally enters personally
+            identifiable information (don't!). The information is transmitted user-to-user via the
             server, but the server never stores information.
           </p>
         </div>
@@ -159,10 +162,33 @@
       </div>
     </div>
     <div id="view-tabletop" class="hidden h-full grid grid-cols-[1fr_5px_1fr]">
+      <dialog id="modal-invite" class="modal">
+        <div class="modal-box">
+          <h3 class="text-lg pb-2">
+            Room Code: <span class="font-bold" id="invite-code"></span>
+          </h3>
+          <p>
+            Tell your friends to join you with the above room code. Alternatively, provide them with
+            this link:
+          </p>
+          <p class="pb-2 link"><a target="_blank" id="invite-link"> </a></p>
+          <div class="modal-action">
+            <button class="btn" onclick="d6t.showInviteDlg(false)">Close</button>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button class="cursor-default">Close</button>
+        </form>
+      </dialog>
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
           <div class="flex flex-row justify-center" data-host-only="true">
             <ul class="menu menu-sm menu-horizontal bg-base-200 rounded-box">
+              <li>
+                <a onclick="d6t.showInviteDlg(true)">
+                  <svg data-lucide="ticket-plus"></svg>
+                </a>
+              </li>
               <li>
                 <a onclick="d6t.openConfig()">
                   <svg data-lucide="pencil-ruler"></svg>
