@@ -8,12 +8,28 @@ window.d6t = {}
 
 const PROMPT_MAP = {
   "pmt-arbitrary": {
-    cb: requestPoolRoll,
+    onApply: requestPoolRoll,
+    onOpen: function () {
+      let plist = ""
+      for (let p of Roster.players) {
+        if (p != null) {
+          plist += Components.Prompt.getArbitraryNudHTML(
+            p,
+            isPlrArbitraryNudAuthority(MY_PLR_ID, p.id)
+          )
+        }
+      }
+      replaceChildHTML(document.getElementById("pmt-arbitrary"), plist)
+    },
     title: "Build Pool",
     act: "Roll!",
   },
   "pmt-action": {
-    cb: requestActionRoll,
+    onApply: requestActionRoll,
+    onOpen: function () {
+      document.getElementById("action-push").checked = false
+      document.getElementById("action-assist").checked = false
+    },
     title: "Action Roll",
     act: "Roll!",
   },
@@ -35,15 +51,39 @@ function setVisible(e, v) {
   v ? e.classList.remove("hidden") : e.classList.add("hidden")
 }
 
+function isPlrArbitraryNudAuthority(plr_id, arb_owner) {
+  return plr_id == arb_owner || plr_id == Multiplayer.HOST_SENDER_ID
+}
+
+window.d6t.applyArbNud = function (plr_id) {
+  Multiplayer.send(
+    "syncArbNudVal",
+    {
+      id: plr_id,
+      value: Components.Prompt.getArbitraryNudElement(plr_id).valueAsNumber,
+    },
+    Multiplayer.SEND_OTHERS
+  )
+}
+
+Multiplayer.cb.syncArbNudVal = function (data, sender) {
+  if (isPlrArbitraryNudAuthority(sender, data.id)) {
+    Components.Prompt.getArbitraryNudElement(data.id).value = data.value
+  }
+}
+
 function requestPoolRoll() {
+  const pool = {}
+  const elms = Components.Prompt.getAllArbitraryNudElements()
+  for (let i = 0; i < elms.length; i++) {
+    let v = elms[i].valueAsNumber
+    if (v) pool[elms[i].getAttribute("data-d6t-arb-own")] = v
+  }
+
   Multiplayer.send(
     "syncPoolRoll",
     {
-      pool: {
-        // TODO: make this actually work lol
-        [MY_PLR_ID]: document.getElementById("arb-mine").valueAsNumber,
-        [2]: document.getElementById("arb-dbg").valueAsNumber,
-      },
+      pool: pool,
       seed: generateSeed(),
     },
     Multiplayer.SEND_ALL
@@ -82,18 +122,16 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
 
     action_assister = -1
     action_value = -1
-    document.getElementById("action-push").checked = false
-    document.getElementById("action-assist").checked = false
   }
 }
 
 function isPlrPromptAuthority(plr_id) {
-  return prompt_owner == plr_id
+  return prompt_owner == plr_id || plr_id == Multiplayer.HOST_SENDER_ID
 }
 
 window.d6t.applyPrompt = function () {
   if (PROMPT_MAP[current_prompt] != null) {
-    PROMPT_MAP[current_prompt].cb()
+    PROMPT_MAP[current_prompt].onApply()
   }
   d6t.closePrompt()
 }
@@ -123,6 +161,7 @@ Multiplayer.cb.syncPromptOpen = function (data, sender) {
       prompt_owner = sender
       document.getElementById("prompt-title").innerText = pdata.title
       document.getElementById("prompt-confirm-btn").innerText = pdata.act
+      pdata.onOpen()
       setVisible(document.getElementById("prompt-bg"), true)
     }
   }

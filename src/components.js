@@ -203,6 +203,27 @@ ToonCond.getHTML = function (cond_id, cond_data) {
 }
 
 /*
+  Prompts
+*/
+export const Prompt = {}
+
+let arbitraryOwnerAttr = "data-d6t-arb-own"
+
+Prompt.getArbitraryNudHTML = function (plr, editable) {
+  return `<input type="number" min="0" max="10" value="0" ${arbitraryOwnerAttr}=${plr.id} ${
+    editable ? "" : "disabled"
+  } onchange="d6t.applyArbNud('${plr.id}')"/>`
+}
+
+Prompt.getArbitraryNudElement = function (plr_id) {
+  return document.querySelector("[" + arbitraryOwnerAttr + "='" + plr_id + "']")
+}
+
+Prompt.getAllArbitraryNudElements = function () {
+  return document.querySelectorAll("[" + arbitraryOwnerAttr + "]")
+}
+
+/*
   ConfigMenu
 */
 export const CfgMenu = {}
