@@ -751,6 +751,7 @@ Multiplayer.cb.joiner = function (data, sender) {
         id: data.id,
         players: Roster.players,
         toons: Roster.toons,
+        cfg: Roster.game_config,
       },
       data.id
     )
@@ -779,6 +780,7 @@ Multiplayer.cb.leaver = function (data, sender) {
 Multiplayer.cb.joined = function (data, sender) {
   if (sender == Multiplayer.HOST_SENDER_ID) {
     MY_PLR_ID = data.id
+    Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
     finishLobbyTransition()
