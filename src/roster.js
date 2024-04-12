@@ -202,6 +202,10 @@ export function setToonName(id, name) {
   toons[id].bio_name = name
 }
 
+export function getToonName(id) {
+  return toons[id].bio_name
+}
+
 export function applyGameConfig(gc) {
   game_config = gc
   for (let t of toons) {

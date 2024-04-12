@@ -35,18 +35,18 @@ const PROMPT_MAP = {
       document.getElementById("action-assist").checked = false
       document.getElementById("action-bonus").value = 0
 
+      Components.Prompt.labelActionCbox("push", "Not Pushing")
+      Components.Prompt.labelActionCbox("assist", "Not Assisted")
+
       let is_mine = Roster.isToonOwner(MY_PLR_ID, action_toon)
-      // TODO: labels are "Pushing/Not Pushing" and "Unassisted/Assisted by TOON_NAME"
-      Components.Prompt.labelActionCbox("push", is_mine ? "Push Yourself" : "Pushing")
       Components.Prompt.enableActionCbox("push", is_mine || Multiplayer.isHost())
-      Components.Prompt.labelActionCbox("assist", is_mine ? "Assisted" : "Assist Them")
       Components.Prompt.enableActionCbox("assist", !is_mine || Multiplayer.isHost())
 
       enableElement(document.getElementById("action-bonus"), isPlrPromptAuthority(MY_PLR_ID))
     },
     getTitle: function () {
       return (
-        Roster.toons[action_toon].bio_name +
+        Roster.getToonName(action_toon) +
         "\n" +
         Components.Action.getName(Roster.game_config.act_list[action_act_id])
       )
@@ -120,14 +120,15 @@ Multiplayer.cb.syncPoolRoll = function (data, sender) {
 window.d6t.applyActionPush = function () {
   Multiplayer.send(
     "syncActionPush",
-    { value: document.getElementById("action-push").checked },
-    Multiplayer.SEND_OTHERS
+    document.getElementById("action-push").checked,
+    Multiplayer.SEND_ALL
   )
 }
 
 Multiplayer.cb.syncActionPush = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
-    document.getElementById("action-push").checked = data.value
+    Components.Prompt.labelActionCbox("push", data ? "Pushing" : "Not Pushing")
+    document.getElementById("action-push").checked = data
   }
 }
 
@@ -151,6 +152,20 @@ Multiplayer.cb.syncActionAssist = function (data, sender) {
     (action_assist_toon == -1 || action_assist_toon == data.toon)
   ) {
     action_assist_toon = data.value && data.toon != action_toon ? data.toon : -1
+
+    Components.Prompt.labelActionCbox(
+      "assist",
+      action_assist_toon < 0
+        ? "Not Assisted"
+        : "Assisted by " + Roster.getToonName(action_assist_toon)
+    )
+    Components.Prompt.enableActionCbox(
+      "assist",
+      Multiplayer.isHost() ||
+        (action_assist_toon >= 0
+          ? Roster.isToonOwner(MY_PLR_ID, action_assist_toon)
+          : !Roster.isToonOwner(MY_PLR_ID, action_toon))
+    )
     document.getElementById("action-assist").checked = action_assist_toon >= 0
   }
 }
@@ -158,16 +173,14 @@ Multiplayer.cb.syncActionAssist = function (data, sender) {
 window.d6t.applyActionBonus = function () {
   Multiplayer.send(
     "syncActionBonus",
-    {
-      value: document.getElementById("action-bonus").valueAsNumber,
-    },
+    document.getElementById("action-bonus").valueAsNumber,
     Multiplayer.SEND_OTHERS
   )
 }
 
 Multiplayer.cb.syncActionBonus = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
-    document.getElementById("action-bonus").value = data.value
+    document.getElementById("action-bonus").value = data
   }
 }
 
@@ -340,12 +353,12 @@ Multiplayer.cb.syncAddToon = function (data, sender) {
 }
 
 window.d6t.deleteToon = function () {
-  Multiplayer.send("syncDeleteToon", { toon_id: current_toon_id }, Multiplayer.SEND_ALL)
+  Multiplayer.send("syncDeleteToon", current_toon_id, Multiplayer.SEND_ALL)
 }
 
 Multiplayer.cb.syncDeleteToon = function (data, sender) {
   if (sender == Multiplayer.HOST_SENDER_ID) {
-    Roster.deleteToon(data.toon_id)
+    Roster.deleteToon(data)
     updateToonTabs()
   }
 }
