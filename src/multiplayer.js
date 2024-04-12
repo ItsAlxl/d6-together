@@ -83,3 +83,7 @@ export function joinGame(room_code, prof_data) {
 export function isConnected() {
   return ws != null
 }
+
+export function isHost() {
+  return MY_PLR_ID == HOST_SENDER_ID
+}

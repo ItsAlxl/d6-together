@@ -207,7 +207,9 @@ function applyConfig(cfg) {
 
 Multiplayer.cb.syncConfig = function (data, sender) {
   if (sender == Multiplayer.HOST_SENDER_ID) {
-    Components.CfgMenu.takeConfig(data)
+    if (sender != MY_PLR_ID) {
+      Components.CfgMenu.takeConfig(data)
+    }
     Roster.applyGameConfig(data)
 
     let acts_html = ""
@@ -237,6 +239,7 @@ Multiplayer.cb.syncConfig = function (data, sender) {
 function refreshToonOwner(toon = Roster.toons[current_toon_id]) {
   if (toon != null && toon.id == current_toon_id) {
     document.getElementById("toon-owner").value = toon.plr_id
+    enableToonSheetEditing(plrIsToonAuthority(MY_PLR_ID, toon.id))
   }
 }
 
@@ -270,6 +273,18 @@ function refreshToonCondText(cond_id, toon) {
   }
 }
 
+function enableElement(elm, enable) {
+  enable ? elm.removeAttribute("disabled") : elm.setAttribute("disabled", true)
+}
+
+function enableToonSheetEditing(e) {
+  let elms = document.getElementById("toon-sheet").querySelectorAll("input, textarea, button")
+  console.log(elms)
+  for (let i = 0; i < elms.length; i++) {
+    enableElement(elms[i], e)
+  }
+}
+
 function refreshToonSheet(toon = Roster.toons[current_toon_id]) {
   if (toon != null && toon.id == current_toon_id) {
     for (let act_id in toon.acts) {
@@ -282,8 +297,8 @@ function refreshToonSheet(toon = Roster.toons[current_toon_id]) {
       refreshToonCondValue(cond_id, toon)
       refreshToonCondText(cond_id, toon)
     }
-    refreshToonOwner(toon)
     refreshToonName(toon)
+    refreshToonOwner(toon)
   }
 }
 
@@ -302,6 +317,10 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
     refreshToonSheet()
   }
   setVisible(document.getElementById("toon-sheet"), valid_toon)
+
+  if (!valid_toon) {
+    current_toon_id = -1
+  }
 }
 
 function plrIsToonAuthority(plr_id, toon_id) {
@@ -474,10 +493,11 @@ window.d6t.showExportDlg = function (s) {
 
 function updateHostVis() {
   let host_elements = document.querySelectorAll("[data-host-only]")
-  let is_host = String(MY_PLR_ID == Multiplayer.HOST_SENDER_ID)
+  let is_host = String(Multiplayer.isHost())
   for (let i = 0; i < host_elements.length; i++) {
     setVisible(host_elements[i], host_elements[i].getAttribute("data-host-only") == is_host)
   }
+  enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
 }
 
 window.d6t.joinRoom = function () {
@@ -496,7 +516,7 @@ window.d6t.hostRoom = function () {
 function finishLobbyTransition() {
   updateHostVis()
   setVisible(document.getElementById("view-join"), false)
-  showConfig(MY_PLR_ID == Multiplayer.HOST_SENDER_ID)
+  showConfig(Multiplayer.isHost())
   DiceTray.create(document.getElementById("dice-parent"))
 }
 
