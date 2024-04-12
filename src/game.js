@@ -118,6 +118,7 @@ window.d6t.applyToonName = function () {
 
 Multiplayer.cb.syncToonName = function (data, sender) {
   if (plrIsToonAuthority(sender, data.toon_id)) {
+    if (data.value.length == 0) data.value = "Character"
     Roster.setToonName(data.toon_id, data.value)
     Components.ToonTab.applyName(Roster.toons[data.toon_id])
     if (sender != MY_PLR_ID) {

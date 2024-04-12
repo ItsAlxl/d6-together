@@ -3,6 +3,8 @@ class Player {
   name
 
   constructor(pdata) {
+    if (!pdata.hasOwnProperty("id")) pdata.id = getFirstFreeIdx(players)
+    if (!pdata.hasOwnProperty("name") || pdata.name.length == 0) pdata.name = "Player"
     for (let key in pdata) {
       if (this.hasOwnProperty(key)) {
         this[key] = pdata[key]
@@ -14,12 +16,16 @@ class Player {
 class Toon {
   id
   plr_id
-  bio_name = "Character"
+  bio_name
   bio_extras = []
   cond = []
   acts = []
 
   constructor(tdata) {
+    if (!tdata.hasOwnProperty("id")) tdata.id = getFirstFreeIdx(toons)
+    if (!tdata.hasOwnProperty("plr_id")) tdata.plr_id = 0
+    if (!tdata.hasOwnProperty("bio_name") || tdata.bio_name.length == 0)
+      tdata.bio_name = "Character"
     for (let key in tdata) {
       if (this.hasOwnProperty(key)) {
         this[key] = tdata[key]
@@ -127,7 +133,6 @@ function getFirstFreeIdx(array) {
 }
 
 export function addPlayer(pdata = {}) {
-  if (!pdata.hasOwnProperty("id")) pdata.id = getFirstFreeIdx(players)
   let p = new Player(pdata)
   setAtRoster(p, pdata.id, players)
   return p
@@ -143,8 +148,6 @@ export function deletePlayer(id) {
 }
 
 export function addToon(tdata = {}) {
-  if (!tdata.hasOwnProperty("id")) tdata.id = getFirstFreeIdx(toons)
-  if (!tdata.hasOwnProperty("plr_id")) tdata.plr_id = 0
   let t = new Toon(tdata)
   setAtRoster(t, tdata.id, toons)
   return t
