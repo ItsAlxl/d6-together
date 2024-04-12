@@ -36,16 +36,21 @@ function setPipsValue(name, val) {
 */
 export const Action = {}
 
-function getActionName(act_id) {
+function getActionId(act_id) {
   return "act-rating-" + act_id
 }
 
 function getActionValueHTML(act_id, value, hidden = false) {
-  return getPipHTML(getActionName(act_id), value, hidden, `d6t.setActionValue(${act_id}, ${value})`)
+  return getPipHTML(getActionId(act_id), value, hidden, `d6t.setActionValue(${act_id}, ${value})`)
 }
 
 function getActionRatingHTML(act_id, max) {
   return getPipsHTML(act_id, max, getActionValueHTML)
+}
+
+Action.getName = function (act_text) {
+  let space_idx = act_text.indexOf(" ")
+  return space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
 }
 
 Action.getHTML = function (act_id, act_text, max) {
@@ -61,7 +66,7 @@ Action.getHTML = function (act_id, act_text, max) {
     </div>`
   }
   return `
-  <div class="flex flex-col" id="${getActionName(act_id)}"> ${button_text}${getActionRatingHTML(
+  <div class="flex flex-col" id="${getActionId(act_id)}"> ${button_text}${getActionRatingHTML(
     act_id,
     max
   )}
@@ -69,11 +74,11 @@ Action.getHTML = function (act_id, act_text, max) {
 }
 
 Action.getValue = function (act_id) {
-  return getPipsValue(getActionName(act_id))
+  return getPipsValue(getActionId(act_id))
 }
 
 Action.setValue = function (act_id, val) {
-  setPipsValue(getActionName(act_id), val)
+  setPipsValue(getActionId(act_id), val)
 }
 
 /*

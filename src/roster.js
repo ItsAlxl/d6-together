@@ -173,8 +173,29 @@ export function setToonAct(id, key, value) {
   toons[id].acts[key] = value
 }
 
+export function getToonAct(id, key) {
+  return toons[id].acts[key]
+}
+
 export function setToonOwner(id, plr_id) {
   toons[id].plr_id = plr_id
+}
+
+export function getToonOwner(id) {
+  return toons[id].plr_id
+}
+
+export function isToonOwner(plr_id, toon_id) {
+  return getToonOwner(toon_id) == plr_id
+}
+
+export function findFirstOwnedToon(plr_id) {
+  for (let i = 0; i < toons.length; i++) {
+    if (toons[i] != null && isToonOwner(plr_id, i)) {
+      return i
+    }
+  }
+  return -1
 }
 
 export function setToonName(id, name) {

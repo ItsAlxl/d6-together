@@ -250,7 +250,7 @@
           id="prompt-bg"
           class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
         >
-          <h1 id="prompt-title" class="text-xl"></h1>
+          <h1 id="prompt-title" class="text-xl text-center"></h1>
           <!-- TODO: add, clear, reroll -->
           <div id="prompt-list" class="">
             <div id="pmt-arbitrary" class="prompt-inputs"></div>
@@ -258,7 +258,7 @@
               <label class="label p-0 justify-normal cursor-pointer">
                 <input
                   type="checkbox"
-                  class="checkbox checkbox-primary"
+                  class="checkbox checkbox-secondary"
                   id="action-push"
                   onclick="d6t.applyActionPush()"
                 />
@@ -278,7 +278,7 @@
                 <input
                   id="action-bonus"
                   type="number"
-                  min="1"
+                  min="0"
                   max="10"
                   value="0"
                   class="w-14"

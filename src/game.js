@@ -26,25 +26,31 @@ const PROMPT_MAP = {
   },
   "pmt-action": {
     onApply: requestActionRoll,
+    applyExtraData: function (data) {
+      action_toon = data.toon_id
+      action_act_id = data.act_id
+    },
     onOpen: function () {
       document.getElementById("action-push").checked = false
       document.getElementById("action-assist").checked = false
       document.getElementById("action-bonus").value = 0
 
-      Components.Prompt.labelActionCbox(
-        "push",
-        MY_PLR_ID == prompt_owner ? "Push Yourself" : "Pushing"
-      )
-      Components.Prompt.labelActionCbox(
-        "assist",
-        MY_PLR_ID == prompt_owner ? "Assisted" : "Assist Them"
-      )
+      let is_mine = Roster.isToonOwner(MY_PLR_ID, action_toon)
+      // TODO: labels are "Pushing/Not Pushing" and "Unassisted/Assisted by TOON_NAME"
+      Components.Prompt.labelActionCbox("push", is_mine ? "Push Yourself" : "Pushing")
+      Components.Prompt.enableActionCbox("push", is_mine || Multiplayer.isHost())
+      Components.Prompt.labelActionCbox("assist", is_mine ? "Assisted" : "Assist Them")
+      Components.Prompt.enableActionCbox("assist", !is_mine || Multiplayer.isHost())
 
-      Components.Prompt.enableActionCbox("push", isPlrPromptAuthority(MY_PLR_ID))
-      Components.Prompt.enableActionCbox("assist", MY_PLR_ID != prompt_owner)
       enableElement(document.getElementById("action-bonus"), isPlrPromptAuthority(MY_PLR_ID))
     },
-    title: "Action Roll",
+    getTitle: function () {
+      return (
+        Roster.toons[action_toon].bio_name +
+        "\n" +
+        Components.Action.getName(Roster.game_config.act_list[action_act_id])
+      )
+    },
     act: "Roll!",
   },
 }
@@ -54,8 +60,9 @@ let current_toon_id = -1
 let current_prompt = ""
 let prompt_owner = -1
 
-let action_value = -1
-let action_assister = -1
+let action_toon = -1
+let action_act_id = -1
+let action_assist_toon = -1
 
 function generateSeed() {
   return Date.now() * Math.random()
@@ -124,16 +131,27 @@ Multiplayer.cb.syncActionPush = function (data, sender) {
   }
 }
 
+function getMyToonId() {
+  return current_toon_id >= 0 && isPlrToonAuthority(MY_PLR_ID, current_toon_id)
+    ? current_toon_id
+    : Roster.findFirstOwnedToon(MY_PLR_ID)
+}
+
 window.d6t.applyActionAssist = function () {
-  Multiplayer.send("syncActionAssist", null, Multiplayer.SEND_ALL)
+  let data = { value: document.getElementById("action-assist").checked }
+  data.toon = Multiplayer.isHost() && !data.value ? action_assist_toon : getMyToonId()
+
+  Multiplayer.send("syncActionAssist", data, Multiplayer.SEND_ALL)
 }
 
 Multiplayer.cb.syncActionAssist = function (data, sender) {
-  if (sender != prompt_owner && (sender == action_assister || action_assister == -1)) {
-    action_assister = action_assister == -1 ? sender : -1
-    if (sender != MY_PLR_ID) {
-      document.getElementById("action-assist").checked = action_assister >= 0
-    }
+  if (
+    data.toon >= 0 &&
+    isPlrToonAuthority(sender, data.toon) &&
+    (action_assist_toon == -1 || action_assist_toon == data.toon)
+  ) {
+    action_assist_toon = data.value && data.toon != action_toon ? data.toon : -1
+    document.getElementById("action-assist").checked = action_assist_toon >= 0
   }
 }
 
@@ -155,12 +173,14 @@ Multiplayer.cb.syncActionBonus = function (data, sender) {
 
 function requestActionRoll() {
   let data = {
-    value: action_value + document.getElementById("action-bonus").valueAsNumber,
+    value:
+      Roster.getToonAct(action_toon, action_act_id) +
+      document.getElementById("action-bonus").valueAsNumber,
     push: document.getElementById("action-push").checked,
     seed: generateSeed(),
   }
-  if (action_assister >= 0) {
-    data.ass = action_assister
+  if (action_assist_toon >= 0) {
+    data.ass = action_assist_toon
   }
 
   Multiplayer.send("syncActionRoll", data, Multiplayer.SEND_ALL)
@@ -172,13 +192,14 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
       [sender]: data.value + (data.push ? 1 : 0),
     }
     if (data.ass != null) {
-      pool[data.ass] = 1
+      pool[Roster.getToonOwner(action_assist_toon)] = 1
     }
     DiceTray.actionRoll(sender, pool, data.seed)
     // TODO: implement stress cost, requirements
 
-    action_assister = -1
-    action_value = -1
+    action_toon = -1
+    action_act_id = -1
+    action_assist_toon = -1
   }
 }
 
@@ -197,18 +218,20 @@ function isPromptOpen(p) {
   return p == current_prompt
 }
 
-window.d6t.openPrompt = function (id) {
+window.d6t.openPrompt = function (id, extra_data) {
   if (!isPromptOpen(id) && prompt_owner < 0) {
-    Multiplayer.send("syncPromptOpen", { prompt_id: id }, Multiplayer.SEND_ALL)
+    let syncData = { id: id }
+    if (extra_data) syncData.extra = extra_data
+    Multiplayer.send("syncPromptOpen", syncData, Multiplayer.SEND_ALL)
   }
 }
 
 Multiplayer.cb.syncPromptOpen = function (data, sender) {
-  if (prompt_owner < 0) {
+  if (prompt_owner < 0 || sender == prompt_owner) {
     let prompts_par = document.getElementById("prompt-list")
-    current_prompt = data.prompt_id
+    current_prompt = data.id
     for (let i = 0; i < prompts_par.children.length; i++) {
-      setVisible(prompts_par.children[i], prompts_par.children[i].id == data.prompt_id)
+      setVisible(prompts_par.children[i], prompts_par.children[i].id == data.id)
     }
 
     let pdata = PROMPT_MAP[current_prompt]
@@ -216,8 +239,12 @@ Multiplayer.cb.syncPromptOpen = function (data, sender) {
       d6t.closePrompt()
     } else {
       prompt_owner = sender
-      document.getElementById("prompt-title").innerText = pdata.title
-      document.getElementById("prompt-confirm-btn").innerText = pdata.act
+      if (data.extra && pdata.applyExtraData) {
+        pdata.applyExtraData(data.extra)
+      }
+      document.getElementById("prompt-title").innerText =
+        (pdata.getTitle && pdata.getTitle()) ?? pdata.title ?? ""
+      document.getElementById("prompt-confirm-btn").innerText = pdata.act ?? "Confirm"
       pdata.onOpen()
       setVisible(document.getElementById("prompt-bg"), true)
     }
@@ -237,12 +264,10 @@ Multiplayer.cb.syncPromptClose = function (data, sender) {
 }
 
 window.d6t.onActionClicked = function (act_id) {
-  let value = Components.Action.getValue(act_id)
   if (isPromptOpen("pmt-arbitrary")) {
-    document.getElementById("arb-mine").valueAsNumber = value
+    document.getElementById("arb-mine").value = Roster.getToonAct(current_toon_id, act_id)
   } else {
-    action_value = parseInt(value)
-    d6t.openPrompt("pmt-action")
+    d6t.openPrompt("pmt-action", { act_id: act_id, toon_id: current_toon_id })
   }
 }
 
@@ -258,7 +283,7 @@ window.d6t.applyToonName = function () {
 }
 
 Multiplayer.cb.syncToonName = function (data, sender) {
-  if (plrIsToonAuthority(sender, data.toon_id)) {
+  if (isPlrToonAuthority(sender, data.toon_id)) {
     if (data.value.length == 0) data.value = "Character"
     Roster.setToonName(data.toon_id, data.value)
     Components.ToonTab.applyName(Roster.toons[data.toon_id])
@@ -281,7 +306,7 @@ window.d6t.applyToonBio = function (bio_id) {
 }
 
 Multiplayer.cb.syncToonBio = function (data, sender) {
-  if (plrIsToonAuthority(sender, data.toon_id)) {
+  if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonBio(data.toon_id, data.bio_id, data.value)
     if (sender != MY_PLR_ID) {
       refreshToonBio(data.bio_id, Roster.toons[data.toon_id])
@@ -382,7 +407,7 @@ Multiplayer.cb.syncConfig = function (data, sender) {
 function refreshToonOwner(toon = Roster.toons[current_toon_id]) {
   if (toon != null && toon.id == current_toon_id) {
     document.getElementById("toon-owner").value = toon.plr_id
-    enableToonSheetEditing(plrIsToonAuthority(MY_PLR_ID, toon.id))
+    enableToonSheetEditing(isPlrToonAuthority(MY_PLR_ID, toon.id))
   }
 }
 
@@ -465,8 +490,8 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
   }
 }
 
-function plrIsToonAuthority(plr_id, toon_id) {
-  return plr_id == Roster.toons[toon_id].plr_id || plr_id == Multiplayer.HOST_SENDER_ID
+function isPlrToonAuthority(plr_id, toon_id) {
+  return Roster.isToonOwner(plr_id, toon_id) || plr_id == Multiplayer.HOST_SENDER_ID
 }
 
 window.d6t.setActionValue = function (act_id, value) {
@@ -482,7 +507,7 @@ window.d6t.setActionValue = function (act_id, value) {
 }
 
 Multiplayer.cb.syncActionVal = function (data, sender) {
-  if (plrIsToonAuthority(sender, data.toon_id)) {
+  if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonAct(data.toon_id, data.act_id, data.value)
     if (sender != MY_PLR_ID) {
       refreshToonAction(data.act_id, Roster.toons[data.toon_id])
@@ -523,7 +548,7 @@ window.d6t.applyCondValue = function (cond_id) {
 }
 
 Multiplayer.cb.syncCondVal = function (data, sender) {
-  if (plrIsToonAuthority(sender, data.toon_id)) {
+  if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonCondValue(data.toon_id, data.cond_id, data.value)
     if (sender != MY_PLR_ID) {
       refreshToonCondValue(data.cond_id, Roster.toons[data.toon_id])
@@ -544,7 +569,7 @@ window.d6t.applyCondText = function (cond_id) {
 }
 
 Multiplayer.cb.syncCondText = function (data, sender) {
-  if (plrIsToonAuthority(sender, data.toon_id)) {
+  if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonCondText(data.toon_id, data.cond_id, data.value)
     if (sender != MY_PLR_ID) {
       refreshToonCondText(data.cond_id, Roster.toons[data.toon_id])
