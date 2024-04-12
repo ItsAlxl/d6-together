@@ -97,14 +97,14 @@ export const toons = []
 export function syncPlayers(p) {
   players.length = p.length
   for (let i = 0; i < p.length; i++) {
-    players[i] = new Player(p[i])
+    players[i] = p[i] ? new Player(p[i]) : null
   }
 }
 
 export function syncToons(t) {
   toons.length = t.length
   for (let i = 0; i < t.length; i++) {
-    toons[i] = new Toon(t[i])
+    toons[i] = t[i] ? new Toon(t[i]) : null
   }
 }
 
@@ -139,12 +139,14 @@ export function addPlayer(pdata = {}) {
 }
 
 export function deletePlayer(id) {
-  for (let t of toons) {
-    if (t.plr_id == id) {
-      t.plr_id = 0
+  if (id >= 0 && id < players.length) {
+    for (let t of toons) {
+      if (t != null && t.plr_id == id) {
+        t.plr_id = 0
+      }
     }
+    players[id] = null
   }
-  players[id] = null
 }
 
 export function addToon(tdata = {}) {
@@ -154,7 +156,7 @@ export function addToon(tdata = {}) {
 }
 
 export function deleteToon(id) {
-  toons[id] = null
+  if (id >= 0 && id < toons.length) toons[id] = null
 }
 
 export function setToonBio(id, key, value) {
