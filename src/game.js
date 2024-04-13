@@ -295,7 +295,10 @@ Multiplayer.cb.syncPromptClose = function (data, sender) {
 
 window.d6t.onActionClicked = function (act_id) {
   if (isPromptOpen("pmt-arbitrary")) {
-    document.getElementById("arb-mine").value = Roster.getToonAct(current_toon_id, act_id)
+    document.querySelector('[data-d6t-arb-own="' + MY_PLR_ID + '"]').value = Roster.getToonAct(
+      current_toon_id,
+      act_id
+    )
   } else {
     d6t.openPrompt("pmt-action", { act_id: act_id, toon_id: current_toon_id })
   }
