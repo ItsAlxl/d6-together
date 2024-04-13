@@ -587,6 +587,7 @@ function fillPlayerSelect(select_id) {
 }
 
 function updatePlayerList() {
+  DiceTray.updatePlayerMats(Roster.players)
   fillPlayerSelect("toon-owner")
   refreshToonOwner()
 }
@@ -933,12 +934,22 @@ function updateHostVis(root) {
   }
 }
 
+function getProfData() {
+  return {
+    name: document.getElementById("prof-name").value,
+    dice: {
+      bg_id: document.getElementById("dice-bg-id").value,
+      bg_clr: document.getElementById("dice-bg-clr").value,
+      val_id: document.getElementById("dice-val-id").value,
+      val_clr: document.getElementById("dice-val-clr").value,
+    },
+  }
+}
+
 window.d6t.joinRoom = function () {
   let room_code = document.getElementById("mp-room-code").value
   if (room_code.length >= 4) {
-    Multiplayer.joinGame(room_code, {
-      name: document.getElementById("prof-name").value,
-    })
+    Multiplayer.joinGame(room_code, getProfData())
   }
 }
 
@@ -957,9 +968,7 @@ Multiplayer.cb.hosted = function (data, sender) {
     MY_PLR_ID = 0
     Multiplayer.cb.crown(MY_PLR_ID, sender)
 
-    Roster.addPlayer({
-      name: document.getElementById("prof-name").value,
-    })
+    Roster.addPlayer(getProfData())
     updatePlayerList()
     finishLobbyTransition()
 
@@ -1045,6 +1054,67 @@ window.d6t.requestRecrown = function () {
   )
   window.d6t.showRecrownDlg(false)
 }
+
+window.d6t.getDiceImage = function (id) {
+  return "/dice" + id + ".png"
+}
+
+class DicePreview {
+  img
+  tint = "#ffffff"
+  ctx = null
+  ready = false
+
+  constructor(canvas, startUrl) {
+    this.ctx = canvas.getContext("2d")
+    this.setBaseImage(startUrl)
+  }
+
+  draw() {
+    this.ctx.globalCompositeOperation = "copy"
+    this.ctx.drawImage(this.img, 0, 0, 300, 200)
+    this.ctx.globalCompositeOperation = "multiply"
+    this.ctx.fillStyle = this.tint
+    this.ctx.fillRect(0, 0, 300, 200)
+    this.ctx.globalCompositeOperation = "destination-in"
+    this.ctx.drawImage(this.img, 0, 0, 300, 200)
+  }
+
+  setBaseImage(url) {
+    if (url && url.length > 0) {
+      this.img = new Image()
+      this.img.onload = () => {
+        this.setTint(this.tint)
+      }
+      this.img.src = url
+      this.draw()
+    }
+  }
+
+  setTint(t) {
+    this.tint = t
+    this.draw()
+  }
+}
+const DICE_PVW_BG = new DicePreview(document.getElementById("dice-pvw-bg"))
+const DICE_PVW_VAL = new DicePreview(document.getElementById("dice-pvw-val"))
+
+window.d6t.applyDicePvwImg = function (img_type) {
+  ;(img_type == "bg" ? DICE_PVW_BG : DICE_PVW_VAL).setBaseImage(
+    d6t.getDiceImage(document.getElementById("dice-" + img_type + "-id").value)
+  )
+}
+
+window.d6t.applyDicePvwClr = function (img_type) {
+  ;(img_type == "bg" ? DICE_PVW_BG : DICE_PVW_VAL).setTint(
+    document.getElementById("dice-" + img_type + "-clr").value
+  )
+}
+
+window.d6t.applyDicePvwImg("bg")
+window.d6t.applyDicePvwImg("val")
+window.d6t.applyDicePvwClr("bg")
+window.d6t.applyDicePvwClr("val")
 
 applyConfig(Roster.game_config)
 document.getElementById("mp-room-code").value = urlParams.get("room") ?? ""

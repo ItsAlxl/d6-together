@@ -1,6 +1,7 @@
 class Player {
   id
   name
+  dice
 
   constructor(pdata) {
     if (!pdata.hasOwnProperty("id")) pdata.id = getFirstFreeIdx(players)

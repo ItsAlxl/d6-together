@@ -72,27 +72,94 @@
     <div id="view-join" class="m-auto h-full w-[80%] flex flex-col">
       <h1 class="font-bold text-xl text-center">d6 Together</h1>
       <h2 class="text-lg text-center">play Forged in the Dark games online</h2>
-      <!-- TODO: dice customization -->
-      <div class="grow flex flex-col justify-center w-[50%] m-auto gap-4">
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Username</span>
+      <div class="grow flex flex-row justify-center w-[80%] m-auto gap-4">
+        <div
+          class="grow flex flex-col justify-center items-center w-[50%] m-auto gap-4 min-w-[300px]"
+        >
+          <div>Dice Customization</div>
+          <div class="w-[300px] h-[200px]">
+            <canvas
+              id="dice-pvw-bg"
+              class="absolute w-[300px] h-[200px] z-10"
+              width="300"
+              height="200"
+              id="canvas"
+            ></canvas>
+            <canvas
+              id="dice-pvw-val"
+              class="absolute w-[300px] h-[200px] z-10"
+              width="300"
+              height="200"
+              id="canvas"
+            ></canvas>
           </div>
-          <input
-            id="prof-name"
-            type="text"
-            placeholder="Player"
-            class="input input-bordered w-full"
-          />
-        </label>
-        <label class="form-control w-full">
-          <div class="label">
-            <span class="label-text">Room</span>
+          <div class="grid grid-cols-2 gap-8 max-w-md">
+            <div class="flex flex-col grow justify-center items-center gap-2">
+              <div class="text-center">Body</div>
+              <!-- TODO: allow using arbitrary image URLs for dice -->
+              <select
+                id="dice-bg-id"
+                name="dice-bg-id"
+                class="select select-sm select-bordered w-full"
+                onchange="d6t.applyDicePvwImg('bg')"
+              >
+                <option value="/gimp/marble">Marble</option>
+                <option value="/gimp/wood">Wood</option>
+                <option value="/gimp/bricks">Bricks</option>
+                <option value="/plxl/base">plxl</option>
+              </select>
+              <input
+                type="color"
+                id="dice-bg-clr"
+                name="dice-bg-clr"
+                value="#ffffff"
+                onchange="d6t.applyDicePvwClr('bg')"
+              />
+            </div>
+            <div class="flex flex-col grow justify-center items-center gap-2">
+              <div class="text-center">Values</div>
+              <select
+                id="dice-val-id"
+                name="dice-val-id"
+                class="select select-sm select-bordered w-full"
+                onchange="d6t.applyDicePvwImg('val')"
+              >
+                <option value="/plain/pips">Standard Pips</option>
+                <option value="/plain/numerals">Standard Numerals</option>
+                <option value="/plxl/pips">plxl Pips</option>
+                <option value="/plxl/numerals">plxl Numerals</option>
+              </select>
+              <input
+                type="color"
+                id="dice-val-clr"
+                name="dice-val-clr"
+                value="#000000"
+                onchange="d6t.applyDicePvwClr('val')"
+              />
+            </div>
           </div>
-          <input id="mp-room-code" type="text" class="input input-bordered w-full" />
-        </label>
-        <button class="btn btn-outline btn-primary" onclick="d6t.joinRoom()">Join</button>
-        <button class="btn btn-outline btn-secondary" onclick="d6t.hostRoom()">Host</button>
+        </div>
+        <div class="grow flex flex-col justify-center w-[50%] m-auto gap-4">
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Username</span>
+            </div>
+            <input
+              id="prof-name"
+              type="text"
+              placeholder="Player"
+              class="input input-bordered w-full"
+            />
+          </label>
+          <label class="form-control w-full">
+            <div class="label">
+              <span class="label-text">Room</span>
+            </div>
+            <input id="mp-room-code" type="text" class="input input-bordered w-full" />
+          </label>
+          <button class="btn btn-outline btn-primary" onclick="d6t.joinRoom()">Join</button>
+          <button class="btn btn-outline btn-secondary" onclick="d6t.hostRoom()">Host</button>
+        </div>
       </div>
       <div class="collapse bg-base-200 collapse-arrow border border-neutral">
         <input type="checkbox" />
@@ -223,11 +290,6 @@
           <div class="flex flex-row justify-center" data-d6t-host="true">
             <ul class="menu menu-sm menu-horizontal bg-base-200 rounded-box">
               <li>
-                <a onclick="d6t.showInviteDlg(true)">
-                  <svg data-lucide="ticket-plus"></svg>
-                </a>
-              </li>
-              <li>
                 <a onclick="d6t.showRecrownDlg(true)">
                   <svg data-lucide="crown"></svg>
                 </a>
@@ -235,6 +297,11 @@
               <li>
                 <a onclick="d6t.openConfig()">
                   <svg data-lucide="pencil-ruler"></svg>
+                </a>
+              </li>
+              <li>
+                <a onclick="d6t.showInviteDlg(true)">
+                  <svg data-lucide="ticket-plus"></svg>
                 </a>
               </li>
               <li>
@@ -327,7 +394,7 @@
         </div>
         <div
           id="prompt-bg"
-          class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
+          class="hidden overlap z-50 p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
         >
           <h1 id="prompt-title" class="text-xl text-center"></h1>
           <div id="prompt-list" class="">

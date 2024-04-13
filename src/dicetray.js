@@ -53,15 +53,39 @@ let DICE_COL_SHAPE
 
 const TEXTURE_LOADER = new THREE.TextureLoader()
 
-const DICE_MAT_BASE = new THREE.MeshPhongMaterial({
-  color: "#fff",
-  map: TEXTURE_LOADER.load("/fallback_dice/marble.png"),
-})
-const DICE_MAT_PIPS = new THREE.MeshPhongMaterial({
-  color: "#000",
-  map: TEXTURE_LOADER.load("/fallback_dice/numerals_outlined.png"),
-  alphaTest: 0.5,
-})
+const player_mats = {}
+
+function cleanupPlayerMat(idx) {
+  for (let i = 0; i < player_mats[idx].length; i++) player_mats[idx][i].dispose()
+}
+
+function deletePlayerMat(idx) {
+  cleanupPlayerMat(idx)
+  delete player_mats[idx]
+}
+
+function updatePlayerMats(players) {
+  for (let i = 0; i < players.length; i++) {
+    if (players[i] == null && player_mats[i]) deletePlayerMat(i)
+    else if (players[i] != null) {
+      if (player_mats[i]) cleanupPlayerMat(i)
+      player_mats[i] = [
+        new THREE.MeshPhongMaterial({
+          color: players[i].dice.bg_clr,
+          map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.bg_id)),
+        }),
+        new THREE.MeshPhongMaterial({
+          color: players[i].dice.val_clr,
+          map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.val_id)),
+          alphaTest: 0.5,
+        }),
+      ]
+    }
+  }
+  for (let i in player_mats) {
+    if (i < 0 || i > players.length) deletePlayerMat(i)
+  }
+}
 
 function createDiceGeom(length) {
   const geometry = new THREE.BufferGeometry()
@@ -203,9 +227,7 @@ class Dice3D {
       COL_LAYER_DICE_OFFSCREEN
     )
 
-    this.dbg_mat = DICE_MAT_PIPS.clone()
-    this.dbg_mat.color.setHex(0xff0000)
-    this.mesh = new THREE.Mesh(DICE_GEOM, [DICE_MAT_BASE, this.dbg_mat])
+    this.mesh = new THREE.Mesh(DICE_GEOM, player_mats[owner_id])
     this.moveMeshToBody()
     RENDER_SCENE.add(this.mesh)
 
@@ -311,7 +333,7 @@ class Dice3D {
       },
       true
     )
-    
+
     resetSoftTimeout()
     this.num_rerolls++
   }
@@ -327,7 +349,6 @@ class Dice3D {
       this.reroll_cocked()
     } else {
       this.finished = true
-      this.dbg_mat.color.setHex(0x0000ff)
       this.lock(true)
       this.body.sleep()
       dieFinished()
@@ -403,7 +424,6 @@ class Dice3D {
       if (pos.y > -TRAY_BUFFER_SIZE && pos.y < TRAY_BUFFER_SIZE) {
         this.offscreen = false
         this.body.collider(0).setCollisionGroups(COL_LAYER_DICE_ONSCREEN)
-        this.dbg_mat.color.setHex(0x00ff00)
         this.body.resetForces()
       } else {
         this.body.addForce(
@@ -430,7 +450,6 @@ class Dice3D {
   cleanup() {
     RENDER_SCENE.remove(this.mesh)
     PHYS_WORLD.removeRigidBody(this.body)
-    this.dbg_mat.dispose()
   }
 }
 
@@ -696,4 +715,4 @@ async function create(dom_parent) {
   renderer.domElement.style = ""
 }
 
-export { create, isReady, actionRoll, poolRoll, addDice, reroll, clear }
+export { create, isReady, updatePlayerMats, actionRoll, poolRoll, addDice, reroll, clear }
