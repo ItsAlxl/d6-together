@@ -8,23 +8,22 @@ window.d6t = {}
 
 const PROMPT_MAP = {
   "pmt-arbitrary": {
+    title: "Build Dice Pool",
+    act: "Roll!",
     onApply: requestPoolRoll,
     onOpen: function () {
-      let plist = ""
-      for (let p of Roster.players) {
-        if (p != null) {
-          plist += Components.Prompt.getArbitraryNudHTML(
-            p,
-            isPlrArbitraryNudAuthority(MY_PLR_ID, p.id)
-          )
-        }
-      }
-      replaceChildHTML(document.getElementById("pmt-arbitrary"), plist)
+      createPlayerNudsHTML("pmt-arbitrary")
     },
-    title: "Build Pool",
-    act: "Roll!",
   },
   "pmt-action": {
+    getTitle: function () {
+      return (
+        Roster.getToonName(action_toon) +
+        "\n" +
+        Components.Action.getName(Roster.game_config.act_list[action_act_id])
+      )
+    },
+    act: "Roll!",
     onApply: requestActionRoll,
     applyExtraData: function (data) {
       action_toon = data.toon_id
@@ -48,14 +47,24 @@ const PROMPT_MAP = {
 
       enableElement(document.getElementById("action-bonus"), isPlrPromptAuthority(MY_PLR_ID))
     },
-    getTitle: function () {
-      return (
-        Roster.getToonName(action_toon) +
-        "\n" +
-        Components.Action.getName(Roster.game_config.act_list[action_act_id])
-      )
+  },
+  "pmt-add": {
+    title: "Add Dice",
+    act: "Add!",
+    onApply: requestAddDice,
+    onOpen: function () {
+      createPlayerNudsHTML("pmt-add")
     },
-    act: "Roll!",
+  },
+  "pmt-reroll": {
+    title: "Reroll Dice",
+    act: "Reroll!",
+    onApply: requestRerollDice,
+  },
+  "pmt-clear": {
+    title: "Clear Dice",
+    act: "Clear!",
+    onApply: requestClearDice,
   },
 }
 const urlParams = new URLSearchParams(window.location.search)
@@ -80,12 +89,13 @@ function isPlrArbitraryNudAuthority(plr_id, arb_owner) {
   return plr_id == arb_owner || plr_id == Multiplayer.HOST_SENDER_ID
 }
 
-window.d6t.applyArbNud = function (plr_id) {
+window.d6t.applyArbNud = function (prompt_id, plr_id) {
   Multiplayer.send(
     "syncArbNudVal",
     {
       id: plr_id,
-      value: Components.Prompt.getArbitraryNudElement(plr_id).valueAsNumber,
+      prompt: prompt_id,
+      value: Components.Prompt.getArbitraryNudElement(prompt_id, plr_id).valueAsNumber,
     },
     Multiplayer.SEND_OTHERS
   )
@@ -93,22 +103,39 @@ window.d6t.applyArbNud = function (plr_id) {
 
 Multiplayer.cb.syncArbNudVal = function (data, sender) {
   if (isPlrArbitraryNudAuthority(sender, data.id)) {
-    Components.Prompt.getArbitraryNudElement(data.id).value = data.value
+    Components.Prompt.getArbitraryNudElement(data.prompt, data.id).value = data.value
   }
 }
 
-function requestPoolRoll() {
+function createPlayerNudsHTML(prompt_id) {
+  let plist = ""
+  for (let p of Roster.players) {
+    if (p != null) {
+      plist += Components.Prompt.getArbitraryNudHTML(
+        prompt_id,
+        p,
+        isPlrArbitraryNudAuthority(MY_PLR_ID, p.id)
+      )
+    }
+  }
+  replaceChildHTML(document.getElementById(prompt_id), plist)
+}
+
+function buildArbitraryPool(prompt_id) {
   const pool = {}
-  const elms = Components.Prompt.getAllArbitraryNudElements()
+  const elms = Components.Prompt.getAllArbitraryNudElements(prompt_id)
   for (let i = 0; i < elms.length; i++) {
     let v = elms[i].valueAsNumber
     if (v) pool[elms[i].getAttribute("data-d6t-arb-own")] = v
   }
+  return pool
+}
 
+function requestPoolRoll() {
   Multiplayer.send(
     "syncPoolRoll",
     {
-      pool: pool,
+      pool: buildArbitraryPool("pmt-arbitrary"),
       seed: generateSeed(),
     },
     Multiplayer.SEND_ALL
@@ -118,6 +145,43 @@ function requestPoolRoll() {
 Multiplayer.cb.syncPoolRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
     DiceTray.poolRoll(sender, data.pool, data.seed)
+  }
+}
+
+function requestAddDice() {
+  Multiplayer.send(
+    "syncAddDice",
+    {
+      pool: buildArbitraryPool("pmt-add"),
+      seed: generateSeed(),
+    },
+    Multiplayer.SEND_ALL
+  )
+}
+
+Multiplayer.cb.syncAddDice = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    DiceTray.addDice(data.pool, data.seed)
+  }
+}
+
+function requestRerollDice() {
+  Multiplayer.send("syncRerollDice", generateSeed(), Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncRerollDice = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    DiceTray.reroll(data)
+  }
+}
+
+function requestClearDice() {
+  Multiplayer.send("syncClearDice", null, Multiplayer.SEND_ALL)
+}
+
+Multiplayer.cb.syncClearDice = function (data, sender) {
+  if (isPlrPromptAuthority(sender)) {
+    DiceTray.clear()
   }
 }
 
@@ -258,13 +322,13 @@ window.d6t.openPrompt = function (id, extra_data) {
 
 Multiplayer.cb.syncPromptOpen = function (data, sender) {
   if (prompt_owner < 0 || sender == prompt_owner) {
-    let prompts_par = document.getElementById("prompt-list")
+    const prompts_par = document.getElementById("prompt-list")
     current_prompt = data.id
     for (let i = 0; i < prompts_par.children.length; i++) {
       setVisible(prompts_par.children[i], prompts_par.children[i].id == data.id)
     }
 
-    let pdata = PROMPT_MAP[current_prompt]
+    const pdata = PROMPT_MAP[current_prompt]
     if (pdata == null) {
       d6t.closePrompt()
     } else {
@@ -275,7 +339,12 @@ Multiplayer.cb.syncPromptOpen = function (data, sender) {
       document.getElementById("prompt-title").innerText =
         (pdata.getTitle && pdata.getTitle()) ?? pdata.title ?? ""
       document.getElementById("prompt-confirm-btn").innerText = pdata.act ?? "Confirm"
-      pdata.onOpen()
+
+      const controls = document.getElementById("prompt-controls").children
+      for (let i = 0; i < controls.length; i++) {
+        enableElement(controls[i], isPlrPromptAuthority(MY_PLR_ID))
+      }
+      if (pdata.onOpen) pdata.onOpen()
       setVisible(document.getElementById("prompt-bg"), true)
     }
   }

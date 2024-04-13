@@ -246,7 +246,12 @@
         <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
         <div class="flex flex-col gap-4">
           <div class="flex flex-row flex-wrap justify-center" id="clock-menu" data-d6t-host="true">
-            <input class="input input-sm input-bordered" id="clock-name" type="text" placeholder="Clock" />
+            <input
+              class="input input-sm input-bordered"
+              id="clock-name"
+              type="text"
+              placeholder="Clock"
+            />
             <input type="number" class="w-12" id="clock-size" min="0" max="12" value="0" />
             <label class="btn btn-square btn-sm swap swap-rotate">
               <input type="checkbox" id="clock-priv" />
@@ -274,9 +279,18 @@
       <div class="m-auto max-w-[100vh] grid">
         <div id="dicetray" class="overlap p-2 flex flex-col">
           <div class="" id="dice-parent"></div>
-          <div class="pb-2">
-            <button class="btn btn-primary" onclick="d6t.openPrompt('pmt-arbitrary')">
+          <div class="flex flex-row pt-3 gap-3 justify-center">
+            <button class="btn btn-outline btn-primary" onclick="d6t.openPrompt('pmt-arbitrary')">
               Build Pool
+            </button>
+            <button class="btn btn-outline btn-secondary" onclick="d6t.openPrompt('pmt-add')">
+              Add
+            </button>
+            <button class="btn btn-outline btn-secondary" onclick="d6t.openPrompt('pmt-reroll')">
+              Reroll
+            </button>
+            <button class="btn btn-outline btn-error" onclick="d6t.openPrompt('pmt-clear')">
+              Clear
             </button>
           </div>
         </div>
@@ -285,7 +299,6 @@
           class="hidden overlap p-4 bg-base-300/[.95] flex flex-col gap-4 justify-center items-center"
         >
           <h1 id="prompt-title" class="text-xl text-center"></h1>
-          <!-- TODO: add, clear, reroll -->
           <div id="prompt-list" class="">
             <div id="pmt-arbitrary" class="prompt-inputs"></div>
             <div id="pmt-action" class="prompt-inputs">
@@ -320,8 +333,11 @@
                 />
               </div>
             </div>
+            <div id="pmt-add" class="prompt-inputs"></div>
+            <div id="pmt-reroll" class="prompt-inputs"></div>
+            <div id="pmt-clear" class="prompt-inputs"></div>
           </div>
-          <div class="flex flex-col gap-1 justify-center">
+          <div class="flex flex-col gap-1 justify-center" id="prompt-controls">
             <button
               id="prompt-confirm-btn"
               class="btn btn-outline btn-primary"

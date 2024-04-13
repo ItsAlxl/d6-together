@@ -55,6 +55,7 @@ Action.getName = function (act_text) {
 
 Action.getHTML = function (act_id, act_text, max) {
   let space_idx = act_text.indexOf(" ")
+  // TODO: replace tooltips
   let button_text = `
   <button class="btn btn-neutral btn-sm w-full" onclick="d6t.onActionClicked('${act_id}')">${
     space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
@@ -214,18 +215,20 @@ export const Prompt = {}
 
 let arbitraryOwnerAttr = "data-d6t-arb-own"
 
-Prompt.getArbitraryNudHTML = function (plr, editable) {
+Prompt.getArbitraryNudHTML = function (prompt_key, plr, editable) {
   return `<input type="number" min="0" max="10" value="0" ${arbitraryOwnerAttr}=${plr.id} ${
     editable ? "" : "disabled"
-  } onchange="d6t.applyArbNud('${plr.id}')"/>`
+  } onchange="d6t.applyArbNud('${prompt_key}', '${plr.id}')"/>`
 }
 
-Prompt.getArbitraryNudElement = function (plr_id) {
-  return document.querySelector("[" + arbitraryOwnerAttr + "='" + plr_id + "']")
+Prompt.getArbitraryNudElement = function (prompt_key, plr_id) {
+  return document
+    .getElementById(prompt_key)
+    .querySelector("[" + arbitraryOwnerAttr + "='" + plr_id + "']")
 }
 
-Prompt.getAllArbitraryNudElements = function () {
-  return document.querySelectorAll("[" + arbitraryOwnerAttr + "]")
+Prompt.getAllArbitraryNudElements = function (prompt_key) {
+  return document.getElementById(prompt_key).querySelectorAll("[" + arbitraryOwnerAttr + "]")
 }
 
 Prompt.enableActionCbox = function (id, enable) {

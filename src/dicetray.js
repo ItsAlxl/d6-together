@@ -77,12 +77,12 @@ function createDiceGeom(length) {
   }
 
   function appendFace(xx, yy, zz, zl) {
-    let vert_data = []
-    let uv_left = xx == "x" ? 0 : xx == "y" ? 0.333 : 0.666
-    let uv_top = zl < 0 ? 0 : 0.5
+    const vert_data = []
+    const uv_left = xx == "x" ? 0 : xx == "y" ? 0.333 : 0.666
+    const uv_top = zl < 0 ? 0 : 0.5
     for (let fv = 0; fv < 4; fv++) {
-      let left = fv % 3 == 0
-      let top = fv <= 1
+      const left = fv % 3 == 0
+      const top = fv <= 1
       vert_data.push({
         [xx]: left ? -length : length,
         [yy]: top ? -length : length,
@@ -91,8 +91,8 @@ function createDiceGeom(length) {
         v: uv_top + (top ? 0 : 0.5),
       })
     }
-    let wind_a = zl > 0 ? 1 : 3
-    let wind_b = zl > 0 ? 3 : 1
+    const wind_a = zl > 0 ? 1 : 3
+    const wind_b = zl > 0 ? 3 : 1
     appendVertData(vert_data[0])
     appendVertData(vert_data[wind_a])
     appendVertData(vert_data[wind_b])
@@ -184,9 +184,9 @@ class Dice3D {
   constructor(owner_id) {
     this.owner_id = owner_id
 
-    let side_sign = owner_id == roll_boss_id ? 1 : -1
-    let rand_q = { x: rng(), y: rng(), z: rng(), w: rng() }
-    let ndenom = Math.sqrt(rand_q.x ** 2 + rand_q.y ** 2 + rand_q.z ** 2 + rand_q.w ** 2)
+    const side_sign = owner_id == roll_boss_id ? 1 : -1
+    const rand_q = { x: rng(), y: rng(), z: rng(), w: rng() }
+    const ndenom = Math.sqrt(rand_q.x ** 2 + rand_q.y ** 2 + rand_q.z ** 2 + rand_q.w ** 2)
     rand_q.x /= ndenom
     rand_q.y /= ndenom
     rand_q.z /= ndenom
@@ -238,14 +238,14 @@ class Dice3D {
   }
 
   parseResult(force = false) {
-    let ix = 2,
+    const ix = 2,
       iy = 6,
       iz = 10
-    let abs_x = Math.abs(this.mesh.matrix.elements[ix])
-    let abs_y = Math.abs(this.mesh.matrix.elements[iy])
-    let abs_z = Math.abs(this.mesh.matrix.elements[iz])
-    let best_abs = Math.max(abs_x, abs_y, abs_z)
-    let i = best_abs == abs_x ? ix : best_abs == abs_y ? iy : iz
+    const abs_x = Math.abs(this.mesh.matrix.elements[ix])
+    const abs_y = Math.abs(this.mesh.matrix.elements[iy])
+    const abs_z = Math.abs(this.mesh.matrix.elements[iz])
+    const best_abs = Math.max(abs_x, abs_y, abs_z)
+    const i = best_abs == abs_x ? ix : best_abs == abs_y ? iy : iz
 
     if (!force && best_abs < UP_DOT_THRESHOLD) {
       return -1
@@ -268,9 +268,33 @@ class Dice3D {
     return 4
   }
 
+  fullReroll() {
+    this.offscreen = true
+    this.finished = false
+    this.num_rerolls = 0
+    this.resetTimeout()
+
+    this.body.applyImpulse(
+      {
+        x: rngRangePn(75, 250),
+        y: rngRangePn(75, 250) + 150,
+        z: 500,
+      },
+      true
+    )
+    this.body.applyTorqueImpulse(
+      {
+        x: rngRangePn(350, 550),
+        y: rngRangePn(350, 550),
+        z: rngRangePn(350, 550),
+      },
+      true
+    )
+  }
+
   reroll_cocked() {
     this.resetTimeout()
-    let pos = this.body.translation()
+    const pos = this.body.translation()
     this.body.applyImpulse(
       {
         x: 250 * (pos.x == 0 ? rngSign() : pos.x < 0 ? 1 : -1),
@@ -287,8 +311,14 @@ class Dice3D {
       },
       true
     )
+    
     resetSoftTimeout()
     this.num_rerolls++
+  }
+
+  lock(l) {
+    this.body.lockTranslations(l, true)
+    this.body.lockRotations(l, true)
   }
 
   endRoll(force) {
@@ -298,22 +328,21 @@ class Dice3D {
     } else {
       this.finished = true
       this.dbg_mat.color.setHex(0x0000ff)
-      this.body.lockTranslations(true, true)
-      this.body.lockRotations(true, true)
+      this.lock(true)
       this.body.sleep()
       dieFinished()
     }
   }
 
   moveMeshToBody() {
-    let pos = this.body.translation()
-    let rot = this.body.rotation()
+    const pos = this.body.translation()
+    const rot = this.body.rotation()
     this.mesh.position.set(pos.x, pos.y, pos.z)
     this.mesh.quaternion.set(rot.x, rot.y, rot.z, rot.w)
   }
 
   moveToFinalSpot(x, y, z) {
-    let q = VALUE_TO_QUAT[this.final_value]
+    const q = VALUE_TO_QUAT[this.final_value]
     if (
       q.x * this.mesh.quaternion.x +
         q.y * this.mesh.quaternion.y +
@@ -439,16 +468,20 @@ function poolRoll(boss_id, plr_dice_counts, seed) {
   addDice(plr_dice_counts, seed)
 }
 
+function prepRoll(seed) {
+  seedRNG(seed)
+  roll_ticks = 0
+  resetSoftTimeout()
+}
+
 function addDice(plr_dice_counts, seed) {
   if (!isReady()) {
     return
   }
-  seedRNG(seed)
-  roll_ticks = 0
-  resetSoftTimeout()
+  prepRoll(seed)
 
   for (let pid in plr_dice_counts) {
-    let d = Math.min(MAX_DICE_PER_PLAYER, plr_dice_counts[pid])
+    const d = Math.min(MAX_DICE_PER_PLAYER, plr_dice_counts[pid])
     if (d > 0) {
       if (roll_request.hasOwnProperty(pid)) {
         roll_request[pid] += d
@@ -459,7 +492,21 @@ function addDice(plr_dice_counts, seed) {
   }
 }
 
+function reroll(seed) {
+  if (!isReady() || dice.length == 0) {
+    return
+  }
+  prepRoll(seed)
+  num_finished = 0
+
+  for (let d of dice) {
+    d.lock(false)
+    d.fullReroll()
+  }
+}
+
 function clear() {
+  roll_request = {}
   for (let d of dice) {
     d.cleanup()
   }
@@ -489,16 +536,16 @@ function dieFinished() {
       return roll_take_lowest ? a.final_value < b.final_value : a.final_value > b.final_value
     })
 
-    let num_dice = dice.length
-    let num_result_dice =
+    const num_dice = dice.length
+    const num_result_dice =
       !roll_take_lowest &&
       num_dice > 1 &&
       dice[num_dice - 1].final_value == 6 &&
       dice[num_dice - 2].final_value == 6
         ? 2
         : 1
-    let num_extra_dice = num_dice - num_result_dice
-    let top_y = Math.min(
+    const num_extra_dice = num_dice - num_result_dice
+    const top_y = Math.min(
       TRAY_SIDE - ARRANGE_RESULT_SPACING - ARRANGE_SPACING,
       ARRANGE_START_Y + (Math.ceil(num_extra_dice / ARRANGE_MAX_COLS) - 1.0) * ARRANGE_SPACING
     )
@@ -511,10 +558,10 @@ function dieFinished() {
       )
     }
 
-    var col = -1
-    var row = -1
-    var row_size = -1
-    var left_x = -1
+    let col = -1
+    let row = -1
+    let row_size = -1
+    let left_x = -1
     for (let i = num_extra_dice - 1; i >= 0; i--) {
       if (col >= row_size) {
         col = 0
@@ -591,7 +638,7 @@ async function create(dom_parent) {
     COL_LAYER_WORLD_WEAK
   )
 
-  let dbg_lines = new THREE.LineSegments(
+  const dbg_lines = new THREE.LineSegments(
     new THREE.BufferGeometry(),
     new THREE.LineBasicMaterial({
       color: 0xffffff,
@@ -600,11 +647,11 @@ async function create(dom_parent) {
   )
   RENDER_SCENE.add(dbg_lines)
 
-  let tickPhys = () => {
+  function tickPhys() {
     PHYS_WORLD.step()
 
     if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
-      let req_id = getNextIdFromReq(roll_request, roll_boss_id)
+      const req_id = getNextIdFromReq(roll_request, roll_boss_id)
       if (req_id != null) {
         popRequest(req_id)
       }
@@ -633,7 +680,7 @@ async function create(dom_parent) {
     requestAnimationFrame(tickRender)
 
     if (DBG_MODE) {
-      let buffers = PHYS_WORLD.debugRender()
+      const buffers = PHYS_WORLD.debugRender()
       dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
       dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
     }
@@ -649,4 +696,4 @@ async function create(dom_parent) {
   renderer.domElement.style = ""
 }
 
-export { create, isReady, actionRoll, poolRoll, addDice, clear }
+export { create, isReady, actionRoll, poolRoll, addDice, reroll, clear }
