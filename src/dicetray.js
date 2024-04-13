@@ -1,6 +1,5 @@
 import * as THREE from "three"
 import * as TWEEN from "@tweenjs/tween.js"
-import RAPIER from "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
 
 const DBG_MODE = false
 
@@ -541,113 +540,113 @@ function popRequest(req_id) {
   }
 }
 
-function create(dom_parent) {
-  RAPIER.init().then(() => {
-    RENDER_SCENE = new THREE.Scene()
-    RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
-    const sun = new THREE.DirectionalLight(0xffffff, 2.5)
-    sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
-    RENDER_SCENE.add(sun)
+async function create(dom_parent) {
+  const RAPIER = await import("@dimforge/rapier3d")
 
-    PHYS_WORLD = new RAPIER.World({
-      x: 0,
-      y: 0,
-      z: GRAVITY,
-    })
-    DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
-    DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
+  RENDER_SCENE = new THREE.Scene()
+  RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5)
+  sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
+  RENDER_SCENE.add(sun)
 
-    const frustumSize = 2 * (TRAY_SIDE - 1)
-    const camera = new THREE.OrthographicCamera(
-      frustumSize / -2,
-      frustumSize / 2,
-      frustumSize / 2,
-      frustumSize / -2,
-      0,
-      20
-    )
-
-    const renderer = new THREE.WebGLRenderer()
-    renderer.setSize(1000, 1000)
-
-    camera.position.z = TRAY_HALF_HEIGHT
-
-    // create the dicetray
-    const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
-    const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
-    const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
-    PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
-    PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
-    PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
-      COL_LAYER_WORLD_STRONG
-    )
-    PHYS_WORLD.createCollider(
-      WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)
-    ).setCollisionGroups(COL_LAYER_WORLD_STRONG)
-    PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)).setCollisionGroups(
-      COL_LAYER_WORLD_WEAK
-    )
-    PHYS_WORLD.createCollider(
-      WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)
-    ).setCollisionGroups(COL_LAYER_WORLD_WEAK)
-
-    let dbg_lines = new THREE.LineSegments(
-      new THREE.BufferGeometry(),
-      new THREE.LineBasicMaterial({
-        color: 0xffffff,
-        vertexColors: true,
-      })
-    )
-    RENDER_SCENE.add(dbg_lines)
-
-    let tickPhys = () => {
-      PHYS_WORLD.step()
-
-      if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
-        let req_id = getNextIdFromReq(roll_request, roll_boss_id)
-        if (req_id != null) {
-          popRequest(req_id)
-        }
-        if (roll_request.hasOwnProperty(roll_boss_id)) {
-          popRequest(roll_boss_id)
-        }
-      }
-
-      for (let d of dice) {
-        d.tickPhys()
-      }
-
-      roll_ticks++
-      if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
-        for (let d of dice) {
-          d.endRoll(true)
-        }
-      }
-
-      setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
-    }
-    tickPhys()
-    phys_ready = true
-
-    function tickRender() {
-      requestAnimationFrame(tickRender)
-
-      if (DBG_MODE) {
-        let buffers = PHYS_WORLD.debugRender()
-        dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
-        dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
-      }
-      dbg_lines.visible = DBG_MODE
-
-      TWEEN.update()
-      renderer.render(RENDER_SCENE, camera)
-    }
-    tickRender()
-
-    dom_parent.appendChild(renderer.domElement)
-    renderer.domElement.classList.add("h-full", "w-full")
-    renderer.domElement.style = ""
+  PHYS_WORLD = new RAPIER.World({
+    x: 0,
+    y: 0,
+    z: GRAVITY,
   })
+  DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
+  DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
+
+  const frustumSize = 2 * (TRAY_SIDE - 1)
+  const camera = new THREE.OrthographicCamera(
+    frustumSize / -2,
+    frustumSize / 2,
+    frustumSize / 2,
+    frustumSize / -2,
+    0,
+    20
+  )
+
+  const renderer = new THREE.WebGLRenderer()
+  renderer.setSize(1000, 1000)
+
+  camera.position.z = TRAY_HALF_HEIGHT
+
+  // create the dicetray
+  const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
+  const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
+  const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
+  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
+  PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
+  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_STRONG
+  )
+  PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(-TRAY_SIDE, 0, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_STRONG
+  )
+  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, TRAY_SIDE, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_WEAK
+  )
+  PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)).setCollisionGroups(
+    COL_LAYER_WORLD_WEAK
+  )
+
+  let dbg_lines = new THREE.LineSegments(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+    })
+  )
+  RENDER_SCENE.add(dbg_lines)
+
+  let tickPhys = () => {
+    PHYS_WORLD.step()
+
+    if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
+      let req_id = getNextIdFromReq(roll_request, roll_boss_id)
+      if (req_id != null) {
+        popRequest(req_id)
+      }
+      if (roll_request.hasOwnProperty(roll_boss_id)) {
+        popRequest(roll_boss_id)
+      }
+    }
+
+    for (let d of dice) {
+      d.tickPhys()
+    }
+
+    roll_ticks++
+    if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
+      for (let d of dice) {
+        d.endRoll(true)
+      }
+    }
+
+    setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
+  }
+  tickPhys()
+  phys_ready = true
+
+  function tickRender() {
+    requestAnimationFrame(tickRender)
+
+    if (DBG_MODE) {
+      let buffers = PHYS_WORLD.debugRender()
+      dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
+      dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
+    }
+    dbg_lines.visible = DBG_MODE
+
+    TWEEN.update()
+    renderer.render(RENDER_SCENE, camera)
+  }
+  tickRender()
+
+  dom_parent.appendChild(renderer.domElement)
+  renderer.domElement.classList.add("h-full", "w-full")
+  renderer.domElement.style = ""
 }
 
 export { create, isReady, actionRoll, poolRoll, addDice, clear }
