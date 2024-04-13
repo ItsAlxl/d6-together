@@ -247,6 +247,142 @@ Prompt.labelActionCbox = function (id, txt) {
 }
 
 /*
+  Clock
+*/
+export const Clock = {}
+
+function getClockTag(key) {
+  return 'data-d6t-clock="' + key + '"'
+}
+
+Clock.getFromPart = function (part) {
+  return part.closest("[" + getClockTag("root") + "]")
+}
+
+function getClockPart(clock_root, part_name) {
+  return clock_root.querySelector("[" + getClockTag(part_name) + "]")
+}
+
+function fillClockSvgSegments(svg, num_segments) {
+  for (let i = 0; i < svg.children.length; i++) {
+    i < num_segments
+      ? svg.children[i].removeAttribute("fill")
+      : svg.children[i].setAttribute("fill", "transparent")
+  }
+}
+
+Clock.setValue = function (clock_root, value) {
+  fillClockSvgSegments(getClockPart(clock_root, "svg"), value)
+  getClockPart(clock_root, "nud").value = value
+}
+
+Clock.getData = function (clock_root) {
+  const nud = getClockPart(clock_root, "nud")
+  return {
+    title: getClockPart(clock_root, "label").innerText,
+    size: nud.max,
+    value: nud.valueAsNumber,
+  }
+}
+
+function findNumberEnd(text) {
+  let dot_idx = text.indexOf(".")
+  for (let i = text.length - 1; i > dot_idx; i--) {
+    if (text.charAt(i) != "0") return i + 1
+  }
+  return dot_idx
+}
+
+function shortenNumber(n) {
+  let txt = n.toFixed(2)
+  return txt.substring(0, findNumberEnd(txt))
+}
+
+function getSegmentSvg(r, cx, cy, sx, sy, ex, ey, filled) {
+  return `<path d="M${cx} ${cy}L${sx} ${sy}A${r} ${r} 0 0 1 ${ex} ${ey}" ${
+    filled ? "" : 'fill="transparent"'
+  }></path>`
+}
+
+function getClockSvg(num_segments, value = 0, r = 60) {
+  const buffered_r = r + 3
+  const buffered2_r = 2 * buffered_r
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+  svg.setAttribute("viewbox", [0, 0, 2 * buffered_r, 2 * buffered_r].join(" "))
+  svg.setAttribute("width", 2 * buffered_r + "px")
+  svg.setAttribute("height", 2 * buffered_r + "px")
+  svg.setAttribute("stroke-width", 2.5)
+  svg.setAttribute("fill-opacity", 0.4)
+  svg.classList.add("stroke-base-content")
+  svg.classList.add("fill-base-content")
+
+  num_segments = num_segments ? Math.min(12, Math.max(num_segments, 2)) : 4
+  const angle = (2 * Math.PI) / num_segments
+  let paths = ""
+
+  // sin for x, -cos for y to make it start at the top and turn clockwise
+  let start_x = buffered_r
+  let start_y = buffered_r - r
+  for (let i = 0; i < num_segments; i++) {
+    const end_x = buffered_r + r * Math.sin(angle * (i + 1))
+    const end_y = buffered_r - r * Math.cos(angle * (i + 1))
+    paths += getSegmentSvg(
+      r,
+      buffered_r,
+      buffered_r,
+      shortenNumber(start_x),
+      shortenNumber(start_y),
+      shortenNumber(end_x),
+      shortenNumber(end_y),
+      i < value
+    )
+    start_x = end_x
+    start_y = end_y
+  }
+  return `
+<svg
+  ${getClockTag("svg")}
+  viewbox="0 0 ${buffered2_r} ${buffered2_r}"
+  width="${buffered2_r}px"
+  height="${buffered2_r}px"
+  stroke-width="2.5"
+  fill-opacity="0.4"
+  class="stroke-base-content fill-base-content"
+>${paths}</svg>`
+}
+
+Clock.getHtml = function (title, num_segments, priv, value) {
+  value = value ?? 0
+  return `
+<div class="flex flex-col" ${getClockTag("root")}>
+  <div ${getClockTag("label")} class="text-center">${
+    title == null || title.length == 0 ? "Clock" : title
+  }</div>
+  ${getClockSvg(num_segments, value)}
+  <div class="hidden flex flex-row justify-center" data-d6t-host="true">
+    <button class="btn btn-square btn-lxs" onclick="d6t.removeClock(this)">
+      <svg class="w-[75%] h-[75%]" data-lucide-late="trash"></svg>
+    </button>
+    <button
+      class="btn btn-square btn-lxs"
+      onclick="d6t.toggleClockPrivacy(this)"
+    >
+      <svg class="w-[75%] h-[75%]" data-lucide-late="eye${priv ? "-off" : ""}"></svg>
+    </button>
+    <input
+      type="number"
+      class="w-12"
+      min="0"
+      max="${num_segments}"
+      value="${value}"
+      ${getClockTag("nud")}
+      onchange="d6t.applyClockVal(this)"
+    />
+  </div>
+</div>`
+}
+
+/*
   ConfigMenu
 */
 export const CfgMenu = {}

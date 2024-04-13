@@ -21,9 +21,22 @@
         Upload,
         Download,
         TicketPlus,
+        Eye,
+        EyeOff,
       } from "lucide"
       window.lucide = {
-        icons: { PencilRuler, UserPlus, UserX, CirclePlus, Trash, Upload, Download, TicketPlus },
+        icons: {
+          PencilRuler,
+          UserPlus,
+          UserX,
+          CirclePlus,
+          Trash,
+          Upload,
+          Download,
+          TicketPlus,
+          Eye,
+          EyeOff,
+        },
         refresh: function (late = true) {
           createIcons({
             icons: window.lucide.icons,
@@ -181,7 +194,7 @@
       </dialog>
       <div class="p-2 min-w-96 flex flex-col overflow-y-auto overflow-x-hidden">
         <div>
-          <div class="flex flex-row justify-center" data-host-only="true">
+          <div class="flex flex-row justify-center" data-d6t-host="true">
             <ul class="menu menu-sm menu-horizontal bg-base-200 rounded-box">
               <li>
                 <a onclick="d6t.showInviteDlg(true)">
@@ -231,9 +244,30 @@
           </div>
         </div>
         <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
-        <div>
-          <!-- TODO: clocks -->
-          Clocks etc
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-row flex-wrap justify-center" id="clock-menu" data-d6t-host="true">
+            <input class="input input-sm input-bordered" id="clock-name" type="text" placeholder="Clock" />
+            <input type="number" class="w-12" id="clock-size" min="0" max="12" value="0" />
+            <label class="btn btn-square btn-sm swap swap-rotate">
+              <input type="checkbox" id="clock-priv" />
+              <svg class="swap-off" data-lucide="eye"></svg>
+              <svg class="swap-on" data-lucide="eye-off"></svg>
+            </label>
+            <button class="btn btn-square btn-sm ml-2" onclick="d6t.addClock()">
+              <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
+            </button>
+          </div>
+          <div
+            class="flex flex-row flex-wrap justify-center gap-4"
+            data-d6t-clock="list"
+            id="clock-list-priv"
+            data-d6t-host="true"
+          ></div>
+          <div
+            class="flex flex-row flex-wrap justify-center gap-4"
+            data-d6t-clock="list"
+            id="clock-list-pub"
+          ></div>
         </div>
       </div>
       <div class="dragger-v" id="dragger-dicetray"></div>
@@ -276,12 +310,12 @@
               <div>
                 Free Bonus
                 <input
-                  id="action-bonus"
                   type="number"
+                  id="action-bonus"
+                  class="w-14"
                   min="0"
                   max="10"
                   value="0"
-                  class="w-14"
                   onclick="d6t.applyActionBonus()"
                 />
               </div>
@@ -344,7 +378,7 @@
             <svg class="w-[75%] h-[75%]" data-lucide="upload"></svg>
           </button>
         </div>
-        <div class="grow flex flex-row gap-2 justify-end" data-host-only="true">
+        <div class="grow flex flex-row gap-2 justify-end" data-d6t-host="true">
           <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
           <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
         </div>

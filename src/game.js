@@ -380,6 +380,126 @@ Multiplayer.cb.syncDeleteToon = function (data, sender) {
   }
 }
 
+function makeClockAddRequest(data) {
+  if (data.priv) {
+    Multiplayer.cb.syncAddClock(data, MY_PLR_ID)
+  } else {
+    Multiplayer.send("syncAddClock", data, Multiplayer.SEND_ALL)
+  }
+}
+
+window.d6t.addClock = function () {
+  const data = {
+    title: document.getElementById("clock-name").value,
+    size: document.getElementById("clock-size").valueAsNumber,
+  }
+  if (document.getElementById("clock-priv").checked) data.priv = 1
+  makeClockAddRequest(data)
+}
+
+Multiplayer.cb.syncAddClock = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    const list = document.getElementById(data.priv ? "clock-list-priv" : "clock-list-pub")
+    list.insertAdjacentHTML(
+      "beforeend",
+      Components.Clock.getHtml(data.title, data.size, data.priv, data.value)
+    )
+    updateHostVis(list)
+    window.lucide.refresh()
+  }
+}
+
+function getClocksAggregate(priv) {
+  const aggr = []
+  const list = document.getElementById(priv ? "clock-list-priv" : "clock-list-pub")
+  for (let i = 0; i < list.children.length; i++) {
+    aggr.push(Components.Clock.getData(list.children[i]))
+  }
+  return aggr
+}
+
+function createClocksFromAggregate(aggr, priv) {
+  let clocks_html = ""
+  for (let i = 0; i < aggr.length; i++) {
+    clocks_html += Components.Clock.getHtml(aggr[i].title, aggr[i].size, priv, aggr[i].value)
+  }
+  if (clocks_html.length > 0) {
+    const list = document.getElementById(priv ? "clock-list-priv" : "clock-list-pub")
+    list.insertAdjacentHTML("beforeend", clocks_html)
+
+    updateHostVis(list)
+    window.lucide.refresh()
+  }
+}
+
+function isClockPublic(clock) {
+  return clock.parentElement.id == "clock-list-pub"
+}
+
+function getPublicClock(idx) {
+  return document.getElementById("clock-list-pub").children[idx]
+}
+
+function deleteClock(clock) {
+  clock.remove()
+}
+
+function getElementIndex(elm) {
+  return [...elm.parentElement.children].indexOf(elm)
+}
+
+function handleClockRemoval(clock) {
+  if (isClockPublic(clock)) {
+    Multiplayer.send("syncRemoveClock", getElementIndex(clock), Multiplayer.SEND_OTHERS)
+  }
+  deleteClock(clock)
+}
+
+window.d6t.removeClock = function (del_btn) {
+  handleClockRemoval(Components.Clock.getFromPart(del_btn))
+}
+
+Multiplayer.cb.syncRemoveClock = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    deleteClock(getPublicClock(data))
+  }
+}
+
+function setClockVal(clock, value) {
+  Components.Clock.setValue(clock, value)
+}
+
+window.d6t.applyClockVal = function (nud) {
+  const clock = Components.Clock.getFromPart(nud)
+  if (isClockPublic(clock)) {
+    Multiplayer.send(
+      "syncClockValue",
+      { idx: getElementIndex(clock), value: nud.valueAsNumber },
+      Multiplayer.SEND_OTHERS
+    )
+  }
+  setClockVal(clock, nud.valueAsNumber)
+}
+
+Multiplayer.cb.syncClockValue = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    setClockVal(getPublicClock(data.idx), data.value)
+  }
+}
+
+window.d6t.toggleClockPrivacy = function (priv_button) {
+  const clock = Components.Clock.getFromPart(priv_button)
+  const clock_data = Components.Clock.getData(clock)
+  if (isClockPublic(clock)) {
+    clock_data.priv = 1
+  } else {
+    delete clock_data.priv
+  }
+
+  handleClockRemoval(clock)
+  makeClockAddRequest(clock_data)
+}
+
 function replaceChildHTML(elm, replacement) {
   elm.innerHTML = replacement
 }
@@ -638,12 +758,6 @@ window.d6t.cfgDeleteCond = function (button) {
   Components.CfgMenu.deleteCond(button)
 }
 
-function importJson(json_text) {
-  let json_obj = JSON.parse(json_text)
-  applyConfig(json_obj.cfg)
-  Multiplayer.send("syncToonImport", json_obj.toons, Multiplayer.SEND_ALL)
-}
-
 Multiplayer.cb.syncToonImport = function (data, sender) {
   if (sender == Multiplayer.HOST_SENDER_ID) {
     for (let i = 0; i < data.length; i++) {
@@ -653,17 +767,58 @@ Multiplayer.cb.syncToonImport = function (data, sender) {
   }
 }
 
+Multiplayer.cb.syncClockAggr = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    createClocksFromAggregate(data)
+  }
+}
+
+Multiplayer.cb.syncImport = function (data, sender) {
+  if (sender == Multiplayer.HOST_SENDER_ID) {
+    Multiplayer.cb.syncConfig(data.cfg, sender)
+
+    if (data.clocks) createClocksFromAggregate(data.clocks)
+
+    if (data.toons) {
+      for (let i = 0; i < data.toons.length; i++) {
+        Roster.addToon(data.toons[i])
+      }
+      updateToonTabs()
+    }
+  }
+}
+
+function importJson(json_text) {
+  let json_obj = JSON.parse(json_text)
+  applyConfig(json_obj.cfg)
+
+  if (json_obj.clocks_priv) {
+    createClocksFromAggregate(json_obj.clocks_priv, true)
+    delete json_obj.clocks_priv
+  }
+  Multiplayer.send("syncImport", json_obj, Multiplayer.SEND_ALL)
+}
+
 function getExportJson() {
-  let toon_data = []
+  const exp_data = {
+    cfg: Roster.game_config,
+  }
+
+  const toon_data = []
   for (let t of Roster.toons) {
     if (t != null) {
       toon_data.push(t.getExportData())
     }
   }
-  return JSON.stringify({
-    cfg: Roster.game_config,
-    toons: toon_data,
-  })
+  if (toon_data.length > 0) exp_data.toons = toon_data
+
+  const clocks_data = getClocksAggregate()
+  if (clocks_data.length > 0) exp_data.clocks = clocks_data
+
+  const clocks_priv_data = getClocksAggregate(true)
+  if (clocks_priv_data.length > 0) exp_data.clocks_priv = clocks_priv_data
+
+  return JSON.stringify(exp_data)
 }
 
 function showModalDlg(dlg, s) {
@@ -693,12 +848,16 @@ window.d6t.showExportDlg = function (s) {
   }
 }
 
-function updateHostVis() {
-  let host_elements = document.querySelectorAll("[data-host-only]")
+function updateHostVis(root) {
+  let host_elements = root.querySelectorAll("[data-d6t-host]")
   let is_host = String(Multiplayer.isHost())
   for (let i = 0; i < host_elements.length; i++) {
-    setVisible(host_elements[i], host_elements[i].getAttribute("data-host-only") == is_host)
+    setVisible(host_elements[i], host_elements[i].getAttribute("data-d6t-host") == is_host)
   }
+}
+
+function updateCrown() {
+  updateHostVis(document)
   enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
 }
 
@@ -716,7 +875,7 @@ window.d6t.hostRoom = function () {
 }
 
 function finishLobbyTransition() {
-  updateHostVis()
+  updateCrown()
   setVisible(document.getElementById("view-join"), false)
   showConfig(Multiplayer.isHost())
   DiceTray.create(document.getElementById("dice-parent"))
@@ -752,6 +911,7 @@ Multiplayer.cb.joiner = function (data, sender) {
         players: Roster.players,
         toons: Roster.toons,
         cfg: Roster.game_config,
+        clocks: getClocksAggregate(),
       },
       data.id
     )
@@ -783,6 +943,7 @@ Multiplayer.cb.joined = function (data, sender) {
     Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
+    createClocksFromAggregate(data.clocks)
     finishLobbyTransition()
     updateToonTabs()
   }
