@@ -319,7 +319,6 @@ function getClockSvg(num_segments, value = 0, r = 60) {
   svg.classList.add("stroke-base-content")
   svg.classList.add("fill-base-content")
 
-  num_segments = num_segments ? Math.min(12, Math.max(num_segments, 2)) : 4
   const angle = (2 * Math.PI) / num_segments
   let paths = ""
 
@@ -355,6 +354,7 @@ function getClockSvg(num_segments, value = 0, r = 60) {
 }
 
 Clock.getHtml = function (title, num_segments, priv, value) {
+  num_segments = num_segments ? Math.min(12, Math.max(num_segments, 2)) : 4
   value = value ?? 0
   return `
 <div class="flex flex-col" ${getClockTag("root")}>
