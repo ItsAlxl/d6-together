@@ -86,7 +86,7 @@ function setVisible(e, v) {
 }
 
 function isPlrArbitraryNudAuthority(plr_id, arb_owner) {
-  return plr_id == arb_owner || plr_id == Multiplayer.HOST_SENDER_ID
+  return plr_id == arb_owner || Multiplayer.isHost(plr_id)
 }
 
 window.d6t.applyArbNud = function (prompt_id, plr_id) {
@@ -298,7 +298,7 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
 }
 
 function isPlrPromptAuthority(plr_id) {
-  return prompt_owner == plr_id || plr_id == Multiplayer.HOST_SENDER_ID
+  return prompt_owner == plr_id || Multiplayer.isHost(plr_id)
 }
 
 window.d6t.applyPrompt = function () {
@@ -435,7 +435,7 @@ window.d6t.newToon = function () {
 }
 
 Multiplayer.cb.syncAddToon = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     Roster.addToon(data)
     updateToonTabs()
   }
@@ -446,7 +446,7 @@ window.d6t.deleteToon = function () {
 }
 
 Multiplayer.cb.syncDeleteToon = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     Roster.deleteToon(data)
     updateToonTabs()
   }
@@ -470,7 +470,7 @@ window.d6t.addClock = function () {
 }
 
 Multiplayer.cb.syncAddClock = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     const list = document.getElementById(data.priv ? "clock-list-priv" : "clock-list-pub")
     list.insertAdjacentHTML(
       "beforeend",
@@ -532,7 +532,7 @@ window.d6t.removeClock = function (del_btn) {
 }
 
 Multiplayer.cb.syncRemoveClock = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     deleteClock(getPublicClock(data))
   }
 }
@@ -554,7 +554,7 @@ window.d6t.applyClockVal = function (nud) {
 }
 
 Multiplayer.cb.syncClockValue = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     setClockVal(getPublicClock(data.idx), data.value)
   }
 }
@@ -576,14 +576,18 @@ function replaceChildHTML(elm, replacement) {
   elm.innerHTML = replacement
 }
 
-function updatePlayerList() {
+function fillPlayerSelect(select_id) {
   let plist = ""
   for (let p of Roster.players) {
     if (p != null) {
       plist += Components.ToonSheet.getPlrOptionHTML(p)
     }
   }
-  replaceChildHTML(document.getElementById("toon-owner"), plist)
+  replaceChildHTML(document.getElementById(select_id), plist)
+}
+
+function updatePlayerList() {
+  fillPlayerSelect("toon-owner")
   refreshToonOwner()
 }
 
@@ -596,7 +600,7 @@ function applyConfig(cfg) {
 }
 
 Multiplayer.cb.syncConfig = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     Components.CfgMenu.takeConfig(data)
     Roster.applyGameConfig(data)
 
@@ -674,7 +678,8 @@ function enableToonSheetEditing(e) {
   }
 }
 
-function refreshToonSheet(toon = Roster.toons[current_toon_id]) {
+function refreshToonSheet() {
+  const toon = Roster.toons[current_toon_id]
   if (toon != null && toon.id == current_toon_id) {
     for (let act_id in toon.acts) {
       refreshToonAction(act_id, toon)
@@ -714,7 +719,7 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
 }
 
 function isPlrToonAuthority(plr_id, toon_id) {
-  return Roster.isToonOwner(plr_id, toon_id) || plr_id == Multiplayer.HOST_SENDER_ID
+  return Roster.isToonOwner(plr_id, toon_id) || Multiplayer.isHost(plr_id)
 }
 
 window.d6t.setActionValue = function (act_id, value) {
@@ -750,7 +755,7 @@ window.d6t.applyToonOwner = function () {
 }
 
 Multiplayer.cb.syncToonOwner = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     Roster.setToonOwner(data.toon_id, data.value)
     if (sender != MY_PLR_ID) {
       refreshToonOwner(Roster.toons[data.toon_id])
@@ -831,7 +836,7 @@ window.d6t.cfgDeleteCond = function (button) {
 }
 
 Multiplayer.cb.syncToonImport = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     for (let i = 0; i < data.length; i++) {
       Roster.addToon(data[i])
     }
@@ -840,13 +845,13 @@ Multiplayer.cb.syncToonImport = function (data, sender) {
 }
 
 Multiplayer.cb.syncClockAggr = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     createClocksFromAggregate(data)
   }
 }
 
 Multiplayer.cb.syncImport = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     Multiplayer.cb.syncConfig(data.cfg, sender)
 
     if (data.clocks) createClocksFromAggregate(data.clocks)
@@ -898,10 +903,10 @@ function showModalDlg(dlg, s) {
 }
 
 window.d6t.showImportDlg = function (s) {
-  showModalDlg(document.getElementById("modal-import"), s)
   if (s) {
     document.getElementById("import-text").value = ""
   }
+  showModalDlg(document.getElementById("modal-import"), s)
 }
 
 window.d6t.showInviteDlg = function (s) {
@@ -914,10 +919,10 @@ window.d6t.processImport = function () {
 }
 
 window.d6t.showExportDlg = function (s) {
-  showModalDlg(document.getElementById("modal-export"), s)
   if (s) {
     document.getElementById("export-text").value = getExportJson()
   }
+  showModalDlg(document.getElementById("modal-export"), s)
 }
 
 function updateHostVis(root) {
@@ -926,11 +931,6 @@ function updateHostVis(root) {
   for (let i = 0; i < host_elements.length; i++) {
     setVisible(host_elements[i], host_elements[i].getAttribute("data-d6t-host") == is_host)
   }
-}
-
-function updateCrown() {
-  updateHostVis(document)
-  enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
 }
 
 window.d6t.joinRoom = function () {
@@ -947,21 +947,19 @@ window.d6t.hostRoom = function () {
 }
 
 function finishLobbyTransition() {
-  updateCrown()
-  setVisible(document.getElementById("view-join"), false)
-  showConfig(Multiplayer.isHost())
   DiceTray.create(document.getElementById("dice-parent"))
+  showConfig(Multiplayer.isHost())
+  setVisible(document.getElementById("view-join"), false)
 }
 
 Multiplayer.cb.hosted = function (data, sender) {
   if (sender == Multiplayer.SERVER_SENDER_ID) {
-    MY_PLR_ID = Multiplayer.HOST_SENDER_ID
-    Roster.addPlayer(
-      {
-        name: document.getElementById("prof-name").value,
-      },
-      Multiplayer.HOST_SENDER_ID
-    )
+    MY_PLR_ID = 0
+    Multiplayer.cb.crown(MY_PLR_ID, sender)
+
+    Roster.addPlayer({
+      name: document.getElementById("prof-name").value,
+    })
     updatePlayerList()
     finishLobbyTransition()
 
@@ -994,23 +992,8 @@ Multiplayer.cb.joiner = function (data, sender) {
   }
 }
 
-Multiplayer.cb.syncPlrJoined = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
-    Roster.addPlayer(data)
-    updatePlayerList()
-  }
-}
-
-// TODO: host migration
-Multiplayer.cb.leaver = function (data, sender) {
-  if (sender == Multiplayer.SERVER_SENDER_ID) {
-    Roster.deletePlayer(data.id)
-    updatePlayerList()
-  }
-}
-
 Multiplayer.cb.joined = function (data, sender) {
-  if (sender == Multiplayer.HOST_SENDER_ID) {
+  if (Multiplayer.isHost(sender)) {
     MY_PLR_ID = data.id
     Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
@@ -1019,6 +1002,48 @@ Multiplayer.cb.joined = function (data, sender) {
     finishLobbyTransition()
     updateToonTabs()
   }
+}
+
+Multiplayer.cb.syncPlrJoined = function (data, sender) {
+  if (Multiplayer.isHost(sender)) {
+    Roster.addPlayer(data)
+    updatePlayerList()
+  }
+}
+
+Multiplayer.cb.leaver = function (data, sender) {
+  if (sender == Multiplayer.SERVER_SENDER_ID) {
+    if (data.crown != null) Multiplayer.cb.crown(data.crown, sender)
+    Roster.deletePlayer(data.id)
+    updatePlayerList()
+  }
+}
+
+// TODO: show popups telling players about joins/quits, server disconnects, recrowning
+Multiplayer.cb.crown = function (data, sender) {
+  if (sender == Multiplayer.SERVER_SENDER_ID) {
+    Multiplayer.setHost(data)
+
+    updateHostVis(document)
+    enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
+    refreshToonSheet()
+  }
+}
+
+window.d6t.showRecrownDlg = function (s) {
+  if (s) {
+    fillPlayerSelect("recrown-select")
+  }
+  showModalDlg(document.getElementById("modal-recrown"), s)
+}
+
+window.d6t.requestRecrown = function () {
+  Multiplayer.send(
+    "crown",
+    document.getElementById("recrown-select").value,
+    Multiplayer.SEND_SERVER
+  )
+  window.d6t.showRecrownDlg(false)
 }
 
 applyConfig(Roster.game_config)

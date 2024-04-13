@@ -56,7 +56,7 @@ function registerRoom(host_ws) {
 
 function findRoom(code) {
   for (let i = 0; i < rooms.length; i++) {
-    if (rooms[i].code == code) return i
+    if (rooms[i] != null && rooms[i].code == code) return i
   }
   return -1
 }
@@ -64,6 +64,23 @@ function findRoom(code) {
 function addSockToRoom(ws, room) {
   ws.d6t_room = room
   ws.d6t_room_id = registerInArray(room.plrs, ws)
+}
+
+function findReplacementHostIdx(room) {
+  for (let i = 0; i < room.plrs.length; i++) {
+    if (room.plrs[i] != null && room.plrs[i] != room.host) return i
+  }
+  return -1
+}
+
+function switchRoomHost(room, to_idx = -1) {
+  to_idx = to_idx >= 0 ? to_idx : findReplacementHostIdx(room)
+  if (to_idx < 0 || to_idx >= room.plrs.length || room.plrs[to_idx] == null) {
+    untrackRoom(room)
+  } else {
+    room.host = room.plrs[to_idx]
+  }
+  return to_idx
 }
 
 function send(ws, key, data, sender = -1) {
@@ -75,7 +92,7 @@ function send(ws, key, data, sender = -1) {
 
 function sendToRoom(room, key, data, sender = -1) {
   for (let i = 0; i < room.plrs.length; i++) {
-    if (i != sender) {
+    if (i != sender && room.plrs[i] != null) {
       send(room.plrs[i], key, data, sender)
     }
   }
@@ -84,8 +101,24 @@ function sendToRoom(room, key, data, sender = -1) {
 function untrackWs(ws) {
   if (ws.d6t_room != null) {
     ws.d6t_room.plrs[ws.d6t_room_id] = null
-    sendToRoom(ws.d6t_room, "leaver", { id: ws.d6t_room_id })
+
+    const newHostIdx = ws.d6t_room.host == ws ? switchRoomHost(ws.d6t_room) : null
+    if (newHostIdx == null || newHostIdx >= 0) {
+      const data = { id: ws.d6t_room_id }
+      if (newHostIdx != null) data.crown = newHostIdx
+      sendToRoom(ws.d6t_room, "leaver", data)
+    }
   }
+}
+
+function untrackRoom(room) {
+  for (let i = 0; i < room.plrs.length; i++) {
+    if (room.plrs[i] != null) {
+      room.plrs[i].d6t_room = null
+      room.plrs[i].terminate()
+    }
+  }
+  rooms[room.idx] = null
 }
 
 function missingComps(msg, comps) {
@@ -127,11 +160,16 @@ wss.on("connection", function connection(ws) {
         let join_idx = findRoom(msg.d.code)
         if (join_idx >= 0) {
           addSockToRoom(ws, rooms[join_idx])
+          send(ws, "crown", rooms[join_idx].host.d6t_room_id)
           send(rooms[join_idx].host, "joiner", {
             id: ws.d6t_room_id,
             prof: msg.d.prof,
           })
         }
+        return
+      case "crown":
+        if (msg.d == null) return
+        sendToRoom(ws.d6t_room, "crown", switchRoomHost(ws.d6t_room, msg.d))
         return
     }
   })

@@ -23,6 +23,7 @@
         TicketPlus,
         Eye,
         EyeOff,
+        Crown,
       } from "lucide"
       window.lucide = {
         icons: {
@@ -36,6 +37,7 @@
           TicketPlus,
           Eye,
           EyeOff,
+          Crown,
         },
         refresh: function (late = true) {
           createIcons({
@@ -185,7 +187,31 @@
           </p>
           <p class="pb-2 link"><a target="_blank" id="invite-link"> </a></p>
           <div class="modal-action">
-            <button class="btn" onclick="d6t.showInviteDlg(false)">Close</button>
+            <button class="btn btn-outline btn-secondary" onclick="d6t.showInviteDlg(false)">
+              Close
+            </button>
+          </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+          <button class="cursor-default">Close</button>
+        </form>
+      </dialog>
+      <dialog id="modal-recrown" class="modal">
+        <div class="modal-box">
+          <h3 class="text-lg pb-2">You're the host!</h3>
+          <p>You can make someone else the host here.</p>
+          <p>Private clocks will <span class="font-bold">not</span> be transfered!</p>
+          <select
+            id="recrown-select"
+            class="select select-sm select-bordered max-w-xs w-full mt-3"
+          ></select>
+          <div class="modal-action">
+            <button class="btn btn-outline btn-error" onclick="d6t.showRecrownDlg(false)">
+              Cancel
+            </button>
+            <button class="btn btn-outline btn-primary" onclick="d6t.requestRecrown()">
+              Transfer Host
+            </button>
           </div>
         </div>
         <form method="dialog" class="modal-backdrop">
@@ -199,6 +225,11 @@
               <li>
                 <a onclick="d6t.showInviteDlg(true)">
                   <svg data-lucide="ticket-plus"></svg>
+                </a>
+              </li>
+              <li>
+                <a onclick="d6t.showRecrownDlg(true)">
+                  <svg data-lucide="crown"></svg>
                 </a>
               </li>
               <li>
@@ -358,8 +389,12 @@
             class="textarea textarea-bordered resize-none leading-snug grow"
           ></textarea>
           <div class="modal-action">
-            <button class="btn" onclick="d6t.showImportDlg(false)">Cancel</button>
-            <button class="btn" onclick="d6t.processImport()">Import & Apply</button>
+            <button class="btn btn-outline btn-error" onclick="d6t.showImportDlg(false)">
+              Cancel
+            </button>
+            <button class="btn btn-outline btn-primary" onclick="d6t.processImport()">
+              Import & Apply
+            </button>
           </div>
         </div>
         <form method="dialog" class="modal-backdrop cursor-default">
@@ -378,7 +413,9 @@
             class="textarea textarea-bordered resize-none leading-snug grow"
           ></textarea>
           <div class="modal-action">
-            <button class="btn" onclick="d6t.showExportDlg(false)">Close</button>
+            <button class="btn btn-outline btn-secondary" onclick="d6t.showExportDlg(false)">
+              Close
+            </button>
           </div>
         </div>
         <form method="dialog" class="modal-backdrop">

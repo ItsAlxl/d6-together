@@ -1,10 +1,11 @@
 let ws = null
 
 export const SERVER_SENDER_ID = -1
-export const HOST_SENDER_ID = 0
+export let HOST_SENDER_ID = 0
 
 export const SEND_ALL = -1
 export const SEND_OTHERS = -2
+export const SEND_SERVER = null
 
 export const cb = {}
 
@@ -56,9 +57,9 @@ function openConnection(join_data = null, address = "ws://localhost:6462") {
 
   ws.onopen = (event) => {
     if (join_data == null) {
-      send("host")
+      send("host", null, SEND_SERVER)
     } else {
-      send("join", join_data)
+      send("join", join_data, SEND_SERVER)
     }
   }
 
@@ -84,6 +85,10 @@ export function isConnected() {
   return ws != null
 }
 
-export function isHost() {
-  return MY_PLR_ID == HOST_SENDER_ID
+export function isHost(id = MY_PLR_ID) {
+  return id == HOST_SENDER_ID
+}
+
+export function setHost(id) {
+  HOST_SENDER_ID = id
 }
