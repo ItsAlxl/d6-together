@@ -376,7 +376,7 @@
       <div class="dragger-v" id="dragger-dicetray"></div>
       <div class="m-auto max-w-[100vh] grid">
         <div id="dicetray" class="overlap p-2 flex flex-col">
-          <div class="" id="dice-parent"></div>
+          <div id="dice-parent"></div>
           <div class="flex flex-row pt-3 gap-3 justify-center">
             <button class="btn btn-outline btn-primary" onclick="d6t.openPrompt('pmt-arbitrary')">
               Build Pool
@@ -407,7 +407,10 @@
                   id="action-push"
                   onclick="d6t.applyActionPush()"
                 />
-                <span class="label-text pl-2 grow" id="action-push-lbl"></span>
+                <span
+                  class="label-text pl-8 grow whitespace-nowrap fixed"
+                  id="action-push-lbl"
+                ></span>
               </label>
               <label class="label p-0 justify-normal cursor-pointer">
                 <input
@@ -416,7 +419,10 @@
                   id="action-assist"
                   onclick="d6t.applyActionAssist()"
                 />
-                <span class="label-text pl-2 grow" id="action-assist-lbl"></span>
+                <span
+                  class="label-text pl-8 grow whitespace-nowrap fixed"
+                  id="action-assist-lbl"
+                ></span>
               </label>
               <div>
                 Free Bonus
