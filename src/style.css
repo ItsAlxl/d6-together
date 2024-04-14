@@ -30,6 +30,31 @@
   .io-modal {
     @apply modal-box flex flex-col max-h-[80%] h-[80%] max-w-[80%] w-[80%];
   }
+
+  /* DaisyUI scales buttons down when focused, meaning that clicks near
+  the edge will animate but not fire the click event, which is no good */
+  .btn {
+    position: relative;
+  }
+  .btn::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    content: "";
+  }
+  .btn:active::after {
+    scale: calc(1 / var(--btn-focus-scale) * 1.01);
+  }
+
+  /* DaisyUI's ratings have a similar issue */
+  .rating input:focus-visible {
+    transform: translateY(0);
+  }
+  .rating input:active:focus {
+    transform: translateY(0);
+  }
 }
 
 @layer utilities {
@@ -39,27 +64,34 @@
 
   .select-disabled,
   .select:disabled,
-  .select[disabled] {
-    @apply d6t-disabled-info;
-  }
+  .select[disabled],
   .input-disabled,
   .input:disabled,
-  .input[disabled] {
-    @apply d6t-disabled-info;
-  }
+  .input[disabled],
   .textarea-disabled,
   .textarea:disabled,
-  .textarea[disabled] {
-    @apply d6t-disabled-info;
-  }
+  .textarea[disabled],
   .btn.btn-disabled,
   .btn[disabled],
   .btn:disabled {
     @apply d6t-disabled-info;
   }
+
   .rating input-disabled,
   .rating input:disabled,
   .rating input[disabled] {
     @apply cursor-default;
+  }
+}
+
+/* DaisyUI's animations are... bad */
+@keyframes button-pop {
+}
+@keyframes rating-pop {
+  0% {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1);
   }
 }
