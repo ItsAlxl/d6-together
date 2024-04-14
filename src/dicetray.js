@@ -184,11 +184,11 @@ function isXyzPhysZeroApprox(xyz, against = 0.001) {
 }
 
 const dice = []
+const requested_dice = []
 let roll_boss_id = -1
 let roll_take_lowest = false
 let roll_ticks = 0
 let roll_soft_target = 0
-let roll_request = {}
 
 class Dice3D {
   owner_id
@@ -453,13 +453,6 @@ class Dice3D {
   }
 }
 
-function getNextIdFromReq(pr, exclude_id = null) {
-  for (let p in pr) {
-    if (p != exclude_id) return p
-  }
-  return null
-}
-
 function isPoolReqEmpty(pr) {
   for (let p in pr) {
     if (pr[p] > 0) return false
@@ -499,16 +492,38 @@ function addDice(plr_dice_counts, seed) {
   }
   prepRoll(seed)
 
+  requested_dice.length = 0
+  // we want requested_dice[0] to always refer to the
+  // roll boss, even when the roll boss isn't rolling
+  if (!plr_dice_counts[roll_boss_id]) plr_dice_counts[roll_boss_id] = 0
   for (let pid in plr_dice_counts) {
     const d = Math.min(MAX_DICE_PER_PLAYER, plr_dice_counts[pid])
-    if (d > 0) {
-      if (roll_request.hasOwnProperty(pid)) {
-        roll_request[pid] += d
-      } else {
-        roll_request[pid] = d
-      }
+    if (d > 0 || pid == roll_boss_id) {
+      requested_dice.push({
+        p: pid,
+        n: d,
+      })
     }
   }
+  requested_dice.sort((a, b) => {
+    return a.p == roll_boss_id ? -1 : b.p == roll_boss_id ? 1 : a.p - b.p
+  })
+}
+
+function getNextDiceRequestIdx() {
+  return requested_dice.length > 1 ? requested_dice.length - 1 : -1
+}
+
+function popDiceRequest(req_idx = getNextDiceRequestIdx()) {
+  if (req_idx >= 0 && requested_dice[req_idx].n > 0) {
+    new Dice3D(req_idx)
+    requested_dice[req_idx].n--
+    if (req_idx > 0 && requested_dice[req_idx].n <= 0) requested_dice.length -= 1
+  }
+}
+
+function isDiceRequestFinished() {
+  return requested_dice.length == 0 || requested_dice.length == 1 && requested_dice[0].n == 0
 }
 
 function reroll(seed) {
@@ -525,7 +540,7 @@ function reroll(seed) {
 }
 
 function clear() {
-  roll_request = {}
+  requested_dice.length = 0
   for (let d of dice) {
     d.cleanup()
   }
@@ -545,14 +560,15 @@ function dieFinished() {
     dice.sort((a, b) => {
       if (a.final_value == b.final_value) {
         if (a.owner_id == b.owner_id) {
-          return a.idx < b.idx
+          return a.idx - b.idx
         }
-        if (a.owner_id == roll_boss_id || b.owner_id == roll_boss_id) {
-          return a.owner_id == roll_boss_id
-        }
-        return a.owner_id < b.owner_id
+        return a.owner_id == roll_boss_id
+          ? 1
+          : b.owner_id == roll_boss_id
+          ? -1
+          : a.owner_id - b.owner_id
       }
-      return roll_take_lowest ? a.final_value < b.final_value : a.final_value > b.final_value
+      return roll_take_lowest ? b.final_value - a.final_value : a.final_value - b.final_value
     })
 
     const num_dice = dice.length
@@ -595,14 +611,6 @@ function dieFinished() {
       )
       col += 1
     }
-  }
-}
-
-function popRequest(req_id) {
-  new Dice3D(req_id)
-  roll_request[req_id]--
-  if (roll_request[req_id] <= 0) {
-    delete roll_request[req_id]
   }
 }
 
@@ -669,14 +677,9 @@ async function create(dom_parent) {
   function tickPhys() {
     PHYS_WORLD.step()
 
-    if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0) {
-      const req_id = getNextIdFromReq(roll_request, roll_boss_id)
-      if (req_id != null) {
-        popRequest(req_id)
-      }
-      if (roll_request.hasOwnProperty(roll_boss_id)) {
-        popRequest(roll_boss_id)
-      }
+    if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0 && !isDiceRequestFinished()) {
+      popDiceRequest(0)
+      popDiceRequest()
     }
 
     for (let d of dice) {
