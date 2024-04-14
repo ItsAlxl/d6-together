@@ -732,7 +732,7 @@ window.d6t.setActionValue = function (act_id, value) {
     {
       toon_id: current_toon_id,
       act_id: act_id,
-      value: value,
+      value: Roster.getToonAct(current_toon_id, act_id) == value ? 0 : value,
     },
     Multiplayer.SEND_ALL
   )
@@ -741,9 +741,7 @@ window.d6t.setActionValue = function (act_id, value) {
 Multiplayer.cb.syncActionVal = function (data, sender) {
   if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonAct(data.toon_id, data.act_id, data.value)
-    if (sender != MY_PLR_ID) {
-      refreshToonAction(data.act_id, Roster.toons[data.toon_id])
-    }
+    refreshToonAction(data.act_id, Roster.toons[data.toon_id])
   }
 }
 
@@ -768,12 +766,13 @@ Multiplayer.cb.syncToonOwner = function (data, sender) {
 }
 
 window.d6t.applyCondValue = function (cond_id) {
+  const val = Components.ToonCond.getValue(cond_id)
   Multiplayer.send(
     "syncCondVal",
     {
       toon_id: current_toon_id,
       cond_id: cond_id,
-      value: Components.ToonCond.getValue(cond_id),
+      value: Roster.getToonCondValue(current_toon_id, cond_id) == val ? 0 : val,
     },
     Multiplayer.SEND_ALL
   )
@@ -782,9 +781,7 @@ window.d6t.applyCondValue = function (cond_id) {
 Multiplayer.cb.syncCondVal = function (data, sender) {
   if (isPlrToonAuthority(sender, data.toon_id)) {
     Roster.setToonCondValue(data.toon_id, data.cond_id, data.value)
-    if (sender != MY_PLR_ID) {
-      refreshToonCondValue(data.cond_id, Roster.toons[data.toon_id])
-    }
+    refreshToonCondValue(data.cond_id, Roster.toons[data.toon_id])
   }
 }
 
