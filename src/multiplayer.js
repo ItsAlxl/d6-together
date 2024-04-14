@@ -9,7 +9,7 @@ export const SEND_SERVER = null
 
 export const cb = {}
 
-const DBG_OUTPUTS = true
+const DBG_OUTPUTS = false
 
 export function send(key, data, target) {
   let o = { k: key }

@@ -5,11 +5,11 @@
   "description": "Play Forged in the Dark games online",
   "license": "MIT",
   "scripts": {
-    "start": "npm run build && node d6-together.js",
+    "deploy": "npm run build && npm run server",
     "dev": "vite",
     "build": "vite build --emptyOutDir",
     "preview": "vite preview",
-    "ws": "node d6-together.js"
+    "server": "node d6-together.js"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.12.0",
