@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import * as TWEEN from "@tweenjs/tween.js"
+const RAPIER = await import("@dimforge/rapier3d")
 
 const DBG_MODE = false
 
@@ -44,12 +45,6 @@ const VALUE_TO_QUAT = {
   [5]: { x: -0.5, y: 0.5, z: 0.5, w: 0.5 },
   [6]: { x: 0, y: 1, z: 0, w: 0 },
 }
-
-let phys_ready = false
-let RENDER_SCENE
-let PHYS_WORLD
-let DICE_BODY_PARAMS
-let DICE_COL_SHAPE
 
 const TEXTURE_LOADER = new THREE.TextureLoader()
 
@@ -469,13 +464,13 @@ function actionRoll(boss_id, plr_dice_counts, seed) {
   if (roll_take_lowest) {
     plr_dice_counts[boss_id] = 2
   }
-  clear()
+  createPhysWorld() // to ensure determinism, we merely recreate the entire world every roll
   roll_boss_id = boss_id
   addDice(plr_dice_counts, seed)
 }
 
 function poolRoll(boss_id, plr_dice_counts, seed) {
-  clear()
+  createPhysWorld()
   roll_boss_id = boss_id
   addDice(plr_dice_counts, seed)
 }
@@ -483,6 +478,7 @@ function poolRoll(boss_id, plr_dice_counts, seed) {
 function prepRoll(seed) {
   seedRNG(seed)
   if (phys_timeout) clearTimeout(phys_timeout)
+
   roll_ticks = 0
   resetSoftTimeout()
 }
@@ -621,6 +617,60 @@ function areDicePhysing() {
   return num_finished < dice.length
 }
 
+let phys_ready = false
+let RENDER_SCENE, PHYS_WORLD
+let DICE_BODY_PARAMS, DICE_COL_SHAPE
+let dbg_lines
+let renderer, camera
+function tickRender() {
+  requestAnimationFrame(tickRender)
+
+  if (dbg_lines) {
+    if (DBG_MODE) {
+      const buffers = PHYS_WORLD.debugRender()
+      dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
+      dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
+    }
+    dbg_lines.visible = DBG_MODE
+  }
+
+  TWEEN.update()
+  renderer.render(RENDER_SCENE, camera)
+}
+
+function createRenderScene() {
+  RENDER_SCENE = new THREE.Scene()
+  RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
+  const sun = new THREE.DirectionalLight(0xffffff, 2.5)
+  sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
+  RENDER_SCENE.add(sun)
+
+  const frustumSize = 2 * (TRAY_SIDE - 1)
+  camera = new THREE.OrthographicCamera(
+    frustumSize / -2,
+    frustumSize / 2,
+    frustumSize / 2,
+    frustumSize / -2,
+    0,
+    20
+  )
+
+  renderer = new THREE.WebGLRenderer()
+  renderer.setSize(1000, 1000)
+
+  camera.position.z = TRAY_HALF_HEIGHT
+
+  dbg_lines = new THREE.LineSegments(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+    })
+  )
+  RENDER_SCENE.add(dbg_lines)
+  tickRender()
+}
+
 let phys_timeout
 function tickPhys() {
   PHYS_WORLD.step()
@@ -644,44 +694,15 @@ function tickPhys() {
   if (areDicePhysing()) phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
 }
 
-let takeSnapshot, restoreSnapshot
-async function create(dom_parent, snap) {
-  const RAPIER = await import("@dimforge/rapier3d")
+function createPhysWorld() {
+  if (!isReady()) return
 
-  RENDER_SCENE = new THREE.Scene()
-  RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
-  const sun = new THREE.DirectionalLight(0xffffff, 2.5)
-  sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
-  RENDER_SCENE.add(sun)
+  PHYS_WORLD = new RAPIER.World({
+    x: 0,
+    y: 0,
+    z: GRAVITY,
+  })
 
-  if (snap) {
-    restoreSnapshot(snap)
-  } else {
-    PHYS_WORLD = new RAPIER.World({
-      x: 0,
-      y: 0,
-      z: GRAVITY,
-    })
-  }
-  DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
-  DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
-
-  const frustumSize = 2 * (TRAY_SIDE - 1)
-  const camera = new THREE.OrthographicCamera(
-    frustumSize / -2,
-    frustumSize / 2,
-    frustumSize / 2,
-    frustumSize / -2,
-    0,
-    20
-  )
-
-  const renderer = new THREE.WebGLRenderer()
-  renderer.setSize(1000, 1000)
-
-  camera.position.z = TRAY_HALF_HEIGHT
-
-  // create the dicetray
   const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
   const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
   const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
@@ -699,60 +720,19 @@ async function create(dom_parent, snap) {
   PHYS_WORLD.createCollider(WALL_TB_COL_SHAPE.setTranslation(0, -TRAY_SIDE, 0)).setCollisionGroups(
     COL_LAYER_WORLD_WEAK
   )
+}
 
-  const dbg_lines = new THREE.LineSegments(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({
-      color: 0xffffff,
-      vertexColors: true,
-    })
-  )
-  RENDER_SCENE.add(dbg_lines)
+function initialize(dom_parent) {
+  DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
+  DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
+
   phys_ready = true
-
-  function tickRender() {
-    requestAnimationFrame(tickRender)
-
-    if (DBG_MODE) {
-      const buffers = PHYS_WORLD.debugRender()
-      dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
-      dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
-    }
-    dbg_lines.visible = DBG_MODE
-
-    TWEEN.update()
-    renderer.render(RENDER_SCENE, camera)
-  }
-  tickRender()
+  createPhysWorld()
+  createRenderScene()
 
   dom_parent.appendChild(renderer.domElement)
   renderer.domElement.classList.add("h-full", "w-full")
   renderer.domElement.style = ""
 }
 
-takeSnapshot = function () {
-  return PHYS_WORLD ? PHYS_WORLD.takeSnapshot() : null
-}
-
-restoreSnapshot = function (snap) {
-  const converted_snap = []
-  let i = 0
-  while (snap[i] != null) {
-    converted_snap.push(snap[i])
-    i++
-  }
-  PHYS_WORLD = RAPIER.World.restoreSnapshot(new Uint8Array(converted_snap))
-}
-
-export {
-  create,
-  isReady,
-  updatePlayerMats,
-  actionRoll,
-  poolRoll,
-  addDice,
-  reroll,
-  clear,
-  takeSnapshot,
-  restoreSnapshot,
-}
+export { initialize, isReady, updatePlayerMats, actionRoll, poolRoll, addDice, reroll, clear }

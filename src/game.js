@@ -959,7 +959,7 @@ window.d6t.hostRoom = function () {
 }
 
 function finishLobbyTransition() {
-  DiceTray.create(document.getElementById("dice-parent"))
+  DiceTray.initialize(document.getElementById("dice-parent"))
   showConfig(Multiplayer.isHost())
   setVisible(document.getElementById("view-join"), false)
 }
