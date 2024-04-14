@@ -65,6 +65,7 @@ const PROMPT_MAP = {
   },
 }
 const urlParams = new URLSearchParams(window.location.search)
+const TOAST_DURATION_MS = 3000
 
 let current_toon_id = -1
 let current_prompt = ""
@@ -122,7 +123,7 @@ function buildArbitraryPool(prompt_id) {
   const pool = {}
   const elms = Components.Prompt.getAllArbitraryNudElements(prompt_id)
   for (let i = 0; i < elms.length; i++) {
-    let v = elms[i].valueAsNumber
+    const v = elms[i].valueAsNumber
     if (v) pool[elms[i].getAttribute("data-d6t-arb-own")] = v
   }
   return pool
@@ -204,7 +205,7 @@ function getMyToonId() {
 }
 
 function updateAssistValidity() {
-  let my_toon = getMyToonId()
+  const my_toon = getMyToonId()
   Components.Prompt.enableActionCbox(
     "assist",
     action_assist_toon >= 0
@@ -216,7 +217,7 @@ function updateAssistValidity() {
 }
 
 window.d6t.applyActionAssist = function () {
-  let data = { value: document.getElementById("action-assist").checked }
+  const data = { value: document.getElementById("action-assist").checked }
   data.toon = Multiplayer.isHost() && !data.value ? action_assist_toon : getMyToonId()
 
   Multiplayer.send("syncActionAssist", data, Multiplayer.SEND_ALL)
@@ -256,7 +257,7 @@ Multiplayer.cb.syncActionBonus = function (data, sender) {
 }
 
 function requestActionRoll() {
-  let data = {
+  const data = {
     value:
       Roster.getToonAct(action_toon, action_act_id) +
       document.getElementById("action-bonus").valueAsNumber,
@@ -274,7 +275,7 @@ function requestActionRoll() {
 
 Multiplayer.cb.syncActionRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
-    let pool = {
+    const pool = {
       [Roster.getToonOwner(action_toon)]: data.value + (data.push ?? 0),
     }
     if (data.push) {
@@ -312,7 +313,7 @@ function isPromptOpen(p) {
 
 window.d6t.openPrompt = function (id, extra_data, allow_reopen = false) {
   if (allow_reopen ? isPlrPromptAuthority(MY_PLR_ID) : !isPromptOpen(id) && prompt_owner < 0) {
-    let syncData = { id: id }
+    const syncData = { id: id }
     if (extra_data) syncData.extra = extra_data
     Multiplayer.send("syncPromptOpen", syncData, Multiplayer.SEND_ALL)
   }
@@ -476,7 +477,7 @@ Multiplayer.cb.syncAddClock = function (data, sender) {
     const list = document.getElementById(data.priv ? "clock-list-priv" : "clock-list-pub")
     list.insertAdjacentHTML(
       "beforeend",
-      Components.Clock.getHtml(data.title, data.size, data.priv, data.value)
+      Components.Clock.getHTML(data.title, data.size, data.priv, data.value)
     )
     updateHostVis(list)
     window.lucide.refresh()
@@ -495,7 +496,7 @@ function getClocksAggregate(priv) {
 function createClocksFromAggregate(aggr, priv) {
   let clocks_html = ""
   for (let i = 0; i < aggr.length; i++) {
-    clocks_html += Components.Clock.getHtml(aggr[i].title, aggr[i].size, priv, aggr[i].value)
+    clocks_html += Components.Clock.getHTML(aggr[i].title, aggr[i].size, priv, aggr[i].value)
   }
   if (clocks_html.length > 0) {
     const list = document.getElementById(priv ? "clock-list-priv" : "clock-list-pub")
@@ -675,7 +676,7 @@ function enableElement(elm, enable) {
 }
 
 function enableToonSheetEditing(e) {
-  let elms = document.getElementById("toon-sheet").querySelectorAll("input, textarea, button")
+  const elms = document.getElementById("toon-sheet").querySelectorAll("input, textarea, button")
   for (let i = 0; i < elms.length; i++) {
     enableElement(elms[i], e)
   }
@@ -709,7 +710,7 @@ window.d6t.selectToon = function (id, visual_reapply = false) {
   }
   current_toon_id = parseInt(id)
 
-  let valid_toon = Components.ToonTab.setSelected(id, true)
+  const valid_toon = Components.ToonTab.setSelected(id, true)
   if (!visual_reapply && valid_toon) {
     refreshToonSheet()
     updateAssistValidity()
@@ -869,7 +870,7 @@ Multiplayer.cb.syncImport = function (data, sender) {
 }
 
 function importJson(json_text) {
-  let json_obj = JSON.parse(json_text)
+  const json_obj = JSON.parse(json_text)
   applyConfig(json_obj.cfg)
 
   if (json_obj.clocks_priv) {
@@ -929,8 +930,8 @@ window.d6t.showExportDlg = function (s) {
 }
 
 function updateHostVis(root) {
-  let host_elements = root.querySelectorAll("[data-d6t-host]")
-  let is_host = String(Multiplayer.isHost())
+  const host_elements = root.querySelectorAll("[data-d6t-host]")
+  const is_host = String(Multiplayer.isHost())
   for (let i = 0; i < host_elements.length; i++) {
     setVisible(host_elements[i], host_elements[i].getAttribute("data-d6t-host") == is_host)
   }
@@ -949,7 +950,7 @@ function getProfData() {
 }
 
 window.d6t.joinRoom = function () {
-  let room_code = document.getElementById("mp-room-code").value
+  const room_code = document.getElementById("mp-room-code").value
   if (room_code.length >= 4) {
     Multiplayer.joinGame(room_code, getProfData())
   }
@@ -976,8 +977,8 @@ Multiplayer.cb.hosted = function (data, sender) {
 
     document.getElementById("invite-code").innerText = data.code
 
-    let link_target = window.location.href + "?room=" + data.code
-    let link_elm = document.getElementById("invite-link")
+    const link_target = window.location.href + "?room=" + data.code
+    const link_elm = document.getElementById("invite-link")
     link_elm.innerText = link_target
     link_elm.setAttribute("href", link_target)
   }
@@ -998,7 +999,9 @@ Multiplayer.cb.joiner = function (data, sender) {
     )
 
     data.prof.id = data.id
-    Multiplayer.send("syncPlrJoined", Roster.addPlayer(data.prof), Multiplayer.SEND_OTHERS)
+    const plr = Roster.addPlayer(data.prof)
+    Multiplayer.send("syncPlrJoined", plr, Multiplayer.SEND_OTHERS)
+    createToast(Components.Toast.getJoinerHTML(plr))
     updatePlayerList()
   }
 }
@@ -1017,24 +1020,26 @@ Multiplayer.cb.joined = function (data, sender) {
 
 Multiplayer.cb.syncPlrJoined = function (data, sender) {
   if (Multiplayer.isHost(sender)) {
-    Roster.addPlayer(data)
+    createToast(Components.Toast.getJoinerHTML(Roster.addPlayer(data)))
     updatePlayerList()
   }
 }
 
 Multiplayer.cb.leaver = function (data, sender) {
   if (sender == Multiplayer.SERVER_SENDER_ID) {
+    createToast(Components.Toast.getLeaverHTML(Roster.players[data.id]))
+
     if (data.crown != null) Multiplayer.cb.crown(data.crown, sender)
     Roster.deletePlayer(data.id)
     updatePlayerList()
   }
 }
 
-// TODO: show popups telling players about joins/quits, server disconnects, recrowning
 Multiplayer.cb.crown = function (data, sender) {
   if (sender == Multiplayer.SERVER_SENDER_ID) {
-    Multiplayer.setHost(data)
+    if (Roster.players[data]) createToast(Components.Toast.getCrownHTML(Roster.players[data]))
 
+    Multiplayer.setHost(data)
     updateHostVis(document)
     enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
     refreshToonSheet()
@@ -1055,6 +1060,21 @@ window.d6t.requestRecrown = function () {
     Multiplayer.SEND_SERVER
   )
   window.d6t.showRecrownDlg(false)
+}
+
+function createToast(html) {
+  const toast_par = document.getElementById("toast-par")
+  toast_par.insertAdjacentHTML("beforeend", html)
+  const toast = toast_par.lastChild
+  setTimeout(() => d6t.clearToast(toast), TOAST_DURATION_MS)
+}
+
+window.d6t.showDisconnectAlert = function (s) {
+  setVisible(document.getElementById("disconnect-alert"), s)
+}
+
+window.d6t.clearToast = function (toast) {
+  if (toast) toast.remove()
 }
 
 window.d6t.getDiceImage = function (id) {

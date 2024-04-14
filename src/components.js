@@ -243,9 +243,40 @@ Prompt.labelActionCbox = function (id, txt) {
 }
 
 /*
+  Toasts
+*/
+export const Toast = {}
+
+function getToastHTML(text, type) {
+  return `
+<button
+  class="btn ${type.length == 0 ? "" : "btn-" + type} btn-sm clearable-toast"
+  onclick="d6t.clearToast(this)"
+>
+  ${text}
+</button>`
+}
+
+Toast.getJoinerHTML = function (joiner_player) {
+  return getToastHTML(joiner_player.name + " has joined", "success")
+}
+
+Toast.getLeaverHTML = function (leaver_player) {
+  return getToastHTML(leaver_player.name + " has left", "warning")
+}
+
+Toast.getCrownHTML = function (new_host_plr) {
+  return getToastHTML(new_host_plr.name + " is now the host", "info")
+}
+
+/*
   Clock
 */
-export const Clock = {}
+export const Clock = {
+  MIN_SIZE: 2,
+  MAX_SIZE: 12,
+  DEF_SIZE: 4,
+}
 
 function getClockTag(key) {
   return 'data-d6t-clock="' + key + '"'
@@ -304,9 +335,9 @@ function getClockSvg(num_segments, value = 0, r = 60) {
   const buffered_r = r + 3
   const buffered2_r = 2 * buffered_r
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-  svg.setAttribute("viewbox", [0, 0, 2 * buffered_r, 2 * buffered_r].join(" "))
-  svg.setAttribute("width", 2 * buffered_r + "px")
-  svg.setAttribute("height", 2 * buffered_r + "px")
+  svg.setAttribute("viewbox", [0, 0, buffered2_r, buffered2_r].join(" "))
+  svg.setAttribute("width", buffered2_r + "px")
+  svg.setAttribute("height", buffered2_r + "px")
   svg.setAttribute("stroke-width", 2.5)
   svg.setAttribute("fill-opacity", 0.4)
   svg.classList.add("stroke-base-content")
@@ -346,8 +377,10 @@ function getClockSvg(num_segments, value = 0, r = 60) {
 >${paths}</svg>`
 }
 
-Clock.getHtml = function (title, num_segments, priv, value) {
-  num_segments = num_segments ? Math.min(12, Math.max(num_segments, 2)) : 4
+Clock.getHTML = function (title, num_segments, priv, value) {
+  num_segments = num_segments
+    ? Math.min(Clock.MAX_SIZE, Math.max(num_segments, Clock.MIN_SIZE))
+    : Clock.DEF_SIZE
   value = value ?? 0
   return `
 <div class="flex flex-col" ${getClockTag("root")}>

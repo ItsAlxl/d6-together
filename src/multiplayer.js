@@ -56,6 +56,7 @@ function openConnection(join_data = null, address = "ws://localhost:6462") {
   ws = new WebSocket(address)
 
   ws.onopen = (event) => {
+    d6t.showDisconnectAlert(false)
     if (join_data == null) {
       send("host", null, SEND_SERVER)
     } else {
@@ -67,6 +68,10 @@ function openConnection(join_data = null, address = "ws://localhost:6462") {
     let msg = JSON.parse(message.data)
     if (!msg || msg.k == null) return
     rpcFromMessage(msg)
+  }
+
+  ws.onclose = (ev) => {
+    d6t.showDisconnectAlert(true)
   }
 }
 

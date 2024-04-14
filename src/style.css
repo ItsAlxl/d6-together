@@ -31,6 +31,13 @@
     @apply modal-box flex flex-col max-h-[80%] h-[80%] max-w-[80%] w-[80%];
   }
 
+  .clearable-toast {
+    @apply pointer-events-auto;
+  }
+  .clearable-toast:active {
+    opacity: 0.5;
+  }
+
   /* DaisyUI scales buttons down when focused, meaning that clicks near
   the edge will animate but not fire the click event, which is no good */
   .btn {
