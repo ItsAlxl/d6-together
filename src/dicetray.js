@@ -464,12 +464,14 @@ function actionRoll(boss_id, plr_dice_counts, seed) {
   if (roll_take_lowest) {
     plr_dice_counts[boss_id] = 2
   }
+  clear()
   createPhysWorld() // to ensure determinism, we merely recreate the entire world every roll
   roll_boss_id = boss_id
   addDice(plr_dice_counts, seed)
 }
 
 function poolRoll(boss_id, plr_dice_counts, seed) {
+  clear()
   createPhysWorld()
   roll_boss_id = boss_id
   addDice(plr_dice_counts, seed)
