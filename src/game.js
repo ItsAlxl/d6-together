@@ -212,7 +212,8 @@ function updateAssistValidity() {
     "assist",
     action_assist_toon >= 0
       ? Multiplayer.isHost() || Roster.isToonOwner(MY_PLR_ID, action_assist_toon)
-      : my_toon != action_toon &&
+      : my_toon >= 0 &&
+          my_toon != action_toon &&
           (Multiplayer.isHost() || Roster.toonCanAffordCost(my_toon, "assist"))
   )
 }
