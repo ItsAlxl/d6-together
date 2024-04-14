@@ -1,6 +1,19 @@
-import * as THREE from "three"
-import * as TWEEN from "@tweenjs/tween.js"
-const RAPIER = await import("@dimforge/rapier3d")
+import {
+  TextureLoader,
+  MeshPhongMaterial,
+  BufferGeometry,
+  BufferAttribute,
+  Mesh,
+  Scene as RenderScene,
+  AmbientLight,
+  DirectionalLight,
+  OrthographicCamera,
+  WebGLRenderer,
+  LineSegments,
+  LineBasicMaterial,
+} from "three"
+import { Tween, update as tweenUpdate, Easing } from "@tweenjs/tween.js"
+import { init as RapierInit, World as PhysWorld, ColliderDesc, RigidBodyDesc } from "@dimforge/rapier3d-compat"
 
 const DBG_MODE = false
 
@@ -46,7 +59,7 @@ const VALUE_TO_QUAT = {
   [6]: { x: 0, y: 1, z: 0, w: 0 },
 }
 
-const TEXTURE_LOADER = new THREE.TextureLoader()
+const TEXTURE_LOADER = new TextureLoader()
 
 const player_mats = {}
 
@@ -65,11 +78,11 @@ function updatePlayerMats(players) {
     else if (players[i] != null) {
       if (player_mats[i]) cleanupPlayerMat(i)
       player_mats[i] = [
-        new THREE.MeshPhongMaterial({
+        new MeshPhongMaterial({
           color: players[i].dice.bg_clr,
           map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.bg_id)),
         }),
-        new THREE.MeshPhongMaterial({
+        new MeshPhongMaterial({
           color: players[i].dice.val_clr,
           map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.val_id)),
           alphaTest: 0.5,
@@ -83,7 +96,7 @@ function updatePlayerMats(players) {
 }
 
 function createDiceGeom(length) {
-  const geometry = new THREE.BufferGeometry()
+  const geometry = new BufferGeometry()
 
   const verts = []
   const uvs = []
@@ -126,8 +139,8 @@ function createDiceGeom(length) {
   appendFace("z", "x", "y", length)
   appendFace("z", "x", "y", -length)
 
-  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts), 3))
-  geometry.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(uvs), 2))
+  geometry.setAttribute("position", new BufferAttribute(new Float32Array(verts), 3))
+  geometry.setAttribute("uv", new BufferAttribute(new Float32Array(uvs), 2))
   geometry.computeVertexNormals()
   return geometry
 }
@@ -222,7 +235,7 @@ class Dice3D {
       COL_LAYER_DICE_OFFSCREEN
     )
 
-    this.mesh = new THREE.Mesh(DICE_GEOM, player_mats[owner_id])
+    this.mesh = new Mesh(DICE_GEOM, player_mats[owner_id])
     this.moveMeshToBody()
     RENDER_SCENE.add(this.mesh)
 
@@ -374,7 +387,7 @@ class Dice3D {
     this.body.setRotation(q, false)
     this.body.setTranslation({ x: x, y: y, z: z }, false)
 
-    new TWEEN.Tween({
+    new Tween({
       px: this.mesh.position.x,
       py: this.mesh.position.y,
       pz: this.mesh.position.z,
@@ -395,7 +408,7 @@ class Dice3D {
         },
         ARRANGE_MS
       )
-      .easing(TWEEN.Easing.Quadratic.InOut)
+      .easing(Easing.Quadratic.InOut)
       .onUpdate((o) => {
         this.mesh.position.set(o.px, o.py, o.pz)
         this.mesh.quaternion.set(o.rx, o.ry, o.rz, o.rw)
@@ -630,25 +643,25 @@ function tickRender() {
   if (dbg_lines) {
     if (DBG_MODE) {
       const buffers = PHYS_WORLD.debugRender()
-      dbg_lines.geometry.setAttribute("position", new THREE.BufferAttribute(buffers.vertices, 3))
-      dbg_lines.geometry.setAttribute("color", new THREE.BufferAttribute(buffers.colors, 4))
+      dbg_lines.geometry.setAttribute("position", new BufferAttribute(buffers.vertices, 3))
+      dbg_lines.geometry.setAttribute("color", new BufferAttribute(buffers.colors, 4))
     }
     dbg_lines.visible = DBG_MODE
   }
 
-  TWEEN.update()
+  tweenUpdate()
   renderer.render(RENDER_SCENE, camera)
 }
 
 function createRenderScene() {
-  RENDER_SCENE = new THREE.Scene()
-  RENDER_SCENE.add(new THREE.AmbientLight(0xffffff, 0.5))
-  const sun = new THREE.DirectionalLight(0xffffff, 2.5)
+  RENDER_SCENE = new RenderScene()
+  RENDER_SCENE.add(new AmbientLight(0xffffff, 0.5))
+  const sun = new DirectionalLight(0xffffff, 2.5)
   sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
   RENDER_SCENE.add(sun)
 
   const frustumSize = 2 * (TRAY_SIDE - 1)
-  camera = new THREE.OrthographicCamera(
+  camera = new OrthographicCamera(
     frustumSize / -2,
     frustumSize / 2,
     frustumSize / 2,
@@ -657,14 +670,14 @@ function createRenderScene() {
     20
   )
 
-  renderer = new THREE.WebGLRenderer()
+  renderer = new WebGLRenderer()
   renderer.setSize(1000, 1000)
 
   camera.position.z = TRAY_HALF_HEIGHT
 
-  dbg_lines = new THREE.LineSegments(
-    new THREE.BufferGeometry(),
-    new THREE.LineBasicMaterial({
+  dbg_lines = new LineSegments(
+    new BufferGeometry(),
+    new LineBasicMaterial({
       color: 0xffffff,
       vertexColors: true,
     })
@@ -699,15 +712,15 @@ function tickPhys() {
 function createPhysWorld() {
   if (!isReady()) return
 
-  PHYS_WORLD = new RAPIER.World({
+  PHYS_WORLD = new PhysWorld({
     x: 0,
     y: 0,
     z: GRAVITY,
   })
 
-  const FLOOR_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
-  const WALL_LR_COL_SHAPE = RAPIER.ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
-  const WALL_TB_COL_SHAPE = RAPIER.ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
+  const FLOOR_SHAPE = ColliderDesc.cuboid(TRAY_SIDE, TRAY_BUMPER_SIZE, 1)
+  const WALL_LR_COL_SHAPE = ColliderDesc.cuboid(1, TRAY_BUMPER_SIZE, TRAY_HALF_HEIGHT * 2)
+  const WALL_TB_COL_SHAPE = ColliderDesc.cuboid(TRAY_SIDE, 1, TRAY_HALF_HEIGHT * 2)
   PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, -TRAY_HALF_HEIGHT))
   PHYS_WORLD.createCollider(FLOOR_SHAPE.setTranslation(0, 0, TRAY_HALF_HEIGHT))
   PHYS_WORLD.createCollider(WALL_LR_COL_SHAPE.setTranslation(TRAY_SIDE, 0, 0)).setCollisionGroups(
@@ -724,9 +737,10 @@ function createPhysWorld() {
   )
 }
 
-function initialize(dom_parent) {
-  DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
-  DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
+async function initialize(dom_parent) {
+  await RapierInit()
+  DICE_BODY_PARAMS = RigidBodyDesc.dynamic()
+  DICE_COL_SHAPE = ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
 
   phys_ready = true
   createPhysWorld()

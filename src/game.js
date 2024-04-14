@@ -3,9 +3,6 @@ import * as Components from "./components.js"
 import * as Roster from "./roster.js"
 import * as Multiplayer from "./multiplayer.js"
 
-window.MY_PLR_ID = -1
-window.d6t = {}
-
 const PROMPT_MAP = {
   "pmt-arbitrary": {
     title: "Build Dice Pool",
