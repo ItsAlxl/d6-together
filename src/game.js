@@ -299,7 +299,7 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
 }
 
 function isPlrPromptAuthority(plr_id) {
-  return prompt_owner == plr_id || Multiplayer.isHost(plr_id)
+  return prompt_owner == plr_id || Multiplayer.isHost(plr_id) || prompt_owner < 0
 }
 
 window.d6t.applyPrompt = function () {
@@ -313,8 +313,8 @@ function isPromptOpen(p) {
   return p == current_prompt
 }
 
-window.d6t.openPrompt = function (id, extra_data) {
-  if (!isPromptOpen(id) && prompt_owner < 0) {
+window.d6t.openPrompt = function (id, extra_data, allow_reopen = false) {
+  if (allow_reopen ? isPlrPromptAuthority(MY_PLR_ID) : !isPromptOpen(id) && prompt_owner < 0) {
     let syncData = { id: id }
     if (extra_data) syncData.extra = extra_data
     Multiplayer.send("syncPromptOpen", syncData, Multiplayer.SEND_ALL)
@@ -322,7 +322,7 @@ window.d6t.openPrompt = function (id, extra_data) {
 }
 
 Multiplayer.cb.syncPromptOpen = function (data, sender) {
-  if (prompt_owner < 0 || sender == prompt_owner) {
+  if (isPlrPromptAuthority(sender)) {
     const prompts_par = document.getElementById("prompt-list")
     current_prompt = data.id
     for (let i = 0; i < prompts_par.children.length; i++) {
@@ -370,7 +370,11 @@ window.d6t.onActionClicked = function (act_id) {
       act_id
     )
   } else {
-    d6t.openPrompt("pmt-action", { act_id: act_id, toon_id: current_toon_id })
+    d6t.openPrompt(
+      "pmt-action",
+      { act_id: act_id, toon_id: current_toon_id },
+      act_id != action_act_id || current_toon_id != action_toon
+    )
   }
 }
 
