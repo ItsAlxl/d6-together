@@ -482,6 +482,7 @@ function poolRoll(boss_id, plr_dice_counts, seed) {
 
 function prepRoll(seed) {
   seedRNG(seed)
+  if (phys_timeout) clearTimeout(phys_timeout)
   roll_ticks = 0
   resetSoftTimeout()
 }
@@ -508,6 +509,7 @@ function addDice(plr_dice_counts, seed) {
   requested_dice.sort((a, b) => {
     return a.p == roll_boss_id ? -1 : b.p == roll_boss_id ? 1 : a.p - b.p
   })
+  tickPhys()
 }
 
 function getNextDiceRequestIdx() {
@@ -523,7 +525,7 @@ function popDiceRequest(req_idx = getNextDiceRequestIdx()) {
 }
 
 function isDiceRequestFinished() {
-  return requested_dice.length == 0 || requested_dice.length == 1 && requested_dice[0].n == 0
+  return requested_dice.length == 0 || (requested_dice.length == 1 && requested_dice[0].n == 0)
 }
 
 function reroll(seed) {
@@ -537,6 +539,7 @@ function reroll(seed) {
     d.lock(false)
     d.fullReroll()
   }
+  tickPhys()
 }
 
 function clear() {
@@ -556,7 +559,7 @@ let num_finished = 0
 function dieFinished() {
   num_finished++
 
-  if (num_finished == dice.length) {
+  if (!areDicePhysing()) {
     dice.sort((a, b) => {
       if (a.final_value == b.final_value) {
         if (a.owner_id == b.owner_id) {
@@ -614,7 +617,35 @@ function dieFinished() {
   }
 }
 
-async function create(dom_parent) {
+function areDicePhysing() {
+  return num_finished < dice.length
+}
+
+let phys_timeout
+function tickPhys() {
+  PHYS_WORLD.step()
+
+  if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0 && !isDiceRequestFinished()) {
+    popDiceRequest(0)
+    popDiceRequest()
+  }
+
+  for (let d of dice) {
+    d.tickPhys()
+  }
+
+  roll_ticks++
+  if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
+    for (let d of dice) {
+      d.endRoll(true)
+    }
+  }
+
+  if (areDicePhysing()) phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
+}
+
+let takeSnapshot, restoreSnapshot
+async function create(dom_parent, snap) {
   const RAPIER = await import("@dimforge/rapier3d")
 
   RENDER_SCENE = new THREE.Scene()
@@ -623,11 +654,15 @@ async function create(dom_parent) {
   sun.position.set(TRAY_SIDE, 0, TRAY_HALF_HEIGHT)
   RENDER_SCENE.add(sun)
 
-  PHYS_WORLD = new RAPIER.World({
-    x: 0,
-    y: 0,
-    z: GRAVITY,
-  })
+  if (snap) {
+    restoreSnapshot(snap)
+  } else {
+    PHYS_WORLD = new RAPIER.World({
+      x: 0,
+      y: 0,
+      z: GRAVITY,
+    })
+  }
   DICE_BODY_PARAMS = RAPIER.RigidBodyDesc.dynamic()
   DICE_COL_SHAPE = RAPIER.ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
 
@@ -673,29 +708,6 @@ async function create(dom_parent) {
     })
   )
   RENDER_SCENE.add(dbg_lines)
-
-  function tickPhys() {
-    PHYS_WORLD.step()
-
-    if (roll_ticks % DICE_SPAWN_STAGGER_TICKS == 0 && !isDiceRequestFinished()) {
-      popDiceRequest(0)
-      popDiceRequest()
-    }
-
-    for (let d of dice) {
-      d.tickPhys()
-    }
-
-    roll_ticks++
-    if (roll_ticks > roll_soft_target || roll_ticks > ROLL_HARD_TIMEOUT_TICKS) {
-      for (let d of dice) {
-        d.endRoll(true)
-      }
-    }
-
-    setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
-  }
-  tickPhys()
   phys_ready = true
 
   function tickRender() {
@@ -718,4 +730,29 @@ async function create(dom_parent) {
   renderer.domElement.style = ""
 }
 
-export { create, isReady, updatePlayerMats, actionRoll, poolRoll, addDice, reroll, clear }
+takeSnapshot = function () {
+  return PHYS_WORLD ? PHYS_WORLD.takeSnapshot() : null
+}
+
+restoreSnapshot = function (snap) {
+  const converted_snap = []
+  let i = 0
+  while (snap[i] != null) {
+    converted_snap.push(snap[i])
+    i++
+  }
+  PHYS_WORLD = RAPIER.World.restoreSnapshot(new Uint8Array(converted_snap))
+}
+
+export {
+  create,
+  isReady,
+  updatePlayerMats,
+  actionRoll,
+  poolRoll,
+  addDice,
+  reroll,
+  clear,
+  takeSnapshot,
+  restoreSnapshot,
+}
