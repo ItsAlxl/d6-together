@@ -49,12 +49,12 @@ function getActionRatingHTML(act_id, max) {
 }
 
 Action.getName = function (act_text) {
-  let space_idx = act_text.indexOf(" ")
+  const space_idx = act_text.indexOf(" ")
   return space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
 }
 
 Action.getHTML = function (act_id, act_text, max) {
-  let space_idx = act_text.indexOf(" ")
+  const space_idx = act_text.indexOf(" ")
   // TODO: replace tooltips
   return `
   <div class="flex flex-col" id="${getActionId(act_id)}">
@@ -89,7 +89,7 @@ function getToonTab(toon_id) {
 }
 
 ToonTab.setSelected = function (toon_id, sel) {
-  let t = toon_id >= 0 ? getToonTab(toon_id) : null
+  const t = toon_id >= 0 ? getToonTab(toon_id) : null
   if (t == null) return false
   sel ? t.classList.add("tab-active") : t.classList.remove("tab-active")
   return true
@@ -152,22 +152,22 @@ function getCondNumberElement(cond_id) {
 }
 
 ToonCond.getValue = function (cond_id) {
-  let number_elm = getCondNumberElement(cond_id)
+  const number_elm = getCondNumberElement(cond_id)
   return parseInt((number_elm && number_elm.value) ?? getPipsValue(getCondValueName(cond_id)))
 }
 
 ToonCond.setValue = function (cond_id, value) {
-  let number_elm = getCondNumberElement(cond_id)
+  const number_elm = getCondNumberElement(cond_id)
   number_elm ? (number_elm.value = value) : setPipsValue(getCondValueName(cond_id), value)
 }
 
 ToonCond.getText = function (cond_id) {
-  let elm = document.getElementById(getCondTextName(cond_id))
+  const elm = document.getElementById(getCondTextName(cond_id))
   return (elm && elm.value) ?? ""
 }
 
 ToonCond.setText = function (cond_id, text) {
-  let elm = document.getElementById(getCondTextName(cond_id))
+  const elm = document.getElementById(getCondTextName(cond_id))
   if (elm) {
     elm.value = text
   }
@@ -206,22 +206,23 @@ ToonCond.getHTML = function (cond_id, cond_data) {
 */
 export const Prompt = {}
 
-let arbitraryOwnerAttr = "data-d6t-arb-own"
+function getArbNudTag(key) {
+  return "data-d6t-arb-own" + (key == null ? "" : '="' + key + '"')
+}
+const arbitraryOwnerAttr = "data-d6t-arb-own"
 
 Prompt.getArbitraryNudHTML = function (prompt_key, plr, editable) {
-  return `<input type="number" min="0" max="10" value="0" ${arbitraryOwnerAttr}=${plr.id} ${
+  return `<input type="number" min="0" max="10" value="0" ${getArbNudTag(plr.id)} ${
     editable ? "" : "disabled"
   } onchange="d6t.applyArbNud('${prompt_key}', '${plr.id}')"/>`
 }
 
 Prompt.getArbitraryNudElement = function (prompt_key, plr_id) {
-  return document
-    .getElementById(prompt_key)
-    .querySelector("[" + arbitraryOwnerAttr + "='" + plr_id + "']")
+  return document.getElementById(prompt_key).querySelector("[" + getArbNudTag(plr_id) + "]")
 }
 
 Prompt.getAllArbitraryNudElements = function (prompt_key) {
-  return document.getElementById(prompt_key).querySelectorAll("[" + arbitraryOwnerAttr + "]")
+  return document.getElementById(prompt_key).querySelectorAll("[" + getArbNudTag() + "]")
 }
 
 Prompt.enableActionCbox = function (id, enable) {
@@ -313,7 +314,7 @@ Clock.getData = function (clock_root) {
 }
 
 function findNumberEnd(text) {
-  let dot_idx = text.indexOf(".")
+  const dot_idx = text.indexOf(".")
   for (let i = text.length - 1; i > dot_idx; i--) {
     if (text.charAt(i) != "0") return i + 1
   }
@@ -321,7 +322,7 @@ function findNumberEnd(text) {
 }
 
 function shortenNumber(n) {
-  let txt = n.toFixed(2)
+  const txt = n.toFixed(2)
   return txt.substring(0, findNumberEnd(txt))
 }
 
@@ -444,7 +445,7 @@ function getCfgActListRoot() {
 }
 
 CfgMenu.setActionCount = function (n) {
-  let list_root = getCfgActListRoot()
+  const list_root = getCfgActListRoot()
   if (list_root.childElementCount == n) return
 
   let new_acts = ""
@@ -462,10 +463,9 @@ function takeCfgActs(act_list) {
   CfgMenu.setActionCount(act_list.length)
   document.getElementById("config-act-count").value = act_list.length
 
-  let nodes = getCfgActListRoot().children
+  const nodes = getCfgActListRoot().children
   for (let i = 0; i < nodes.length; i++) {
-    let s = act_list[i] ?? ""
-    nodes[i].value = s
+    nodes[i].value = act_list[i] ?? ""
   }
 }
 
@@ -474,8 +474,8 @@ function takeCfgActMax(act_max) {
 }
 
 function buildActList() {
-  let nodes = getCfgActListRoot().children
-  let act_list = []
+  const nodes = getCfgActListRoot().children
+  const act_list = []
   for (let i = 0; i < nodes.length; i++) {
     let s = nodes[i].value ?? ""
     if (s.length == 0) {
@@ -550,7 +550,7 @@ function setCondNumber(cond_root, cond, key) {
 }
 
 function takeCfgCond(conds) {
-  let list_root = getCfgCondListRoot()
+  const list_root = getCfgCondListRoot()
   if (list_root.childElementCount != conds.length) {
     CfgMenu.addCond(conds.length - list_root.childElementCount)
     while (list_root.childElementCount > conds.length) {
@@ -558,7 +558,7 @@ function takeCfgCond(conds) {
     }
   }
 
-  let cond_elms = list_root.children
+  const cond_elms = list_root.children
   for (let i = 0; i < conds.length; i++) {
     setCondString(cond_elms[i], conds[i], "name")
     setCondString(cond_elms[i], conds[i], "text")
@@ -570,21 +570,21 @@ function takeCfgCond(conds) {
 }
 
 function addCondString(cond_root, cond, key) {
-  let s = findCfgDescendant(cond_root, "cond-" + key).value ?? ""
+  const s = findCfgDescendant(cond_root, "cond-" + key).value ?? ""
   if (s.length > 0) {
     cond[key] = s
   }
 }
 
 function addCondNumber(cond_root, cond, key) {
-  let v = Math.min(Math.max(findCfgDescendant(cond_root, "cond-" + key).value, -100), 100) ?? 0
+  const v = Math.min(Math.max(findCfgDescendant(cond_root, "cond-" + key).value, -100), 100) ?? 0
   if (v != 0) {
     cond[key] = v
   }
 }
 
 function buildCond(cond_root) {
-  let cond = {}
+  const cond = {}
   addCondString(cond_root, cond, "name")
   addCondString(cond_root, cond, "text")
   addCondNumber(cond_root, cond, "min")
@@ -597,8 +597,8 @@ function buildCond(cond_root) {
 }
 
 function buildCondList() {
-  let nodes = getCfgCondListRoot().children
-  let cond_list = []
+  const nodes = getCfgCondListRoot().children
+  const cond_list = []
   for (let i = 0; i < nodes.length; i++) {
     cond_list.push(buildCond(nodes[i]))
   }

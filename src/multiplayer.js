@@ -15,7 +15,7 @@ const DBG_OUTPUTS = false
 window.d6t.WS_ADDRESS = getDefaultWsAddress()
 
 export function send(key, data, target) {
-  let o = { k: key }
+  const o = { k: key }
   if (data != null) o.d = data
   if (target != null) o.t = target
 
@@ -44,7 +44,7 @@ export function send(key, data, target) {
 
 function rpcFromMessage(msg, local = false) {
   if (local) msg.s = MY_PLR_ID
-  let f = cb[msg.k]
+  const f = cb[msg.k]
   if (DBG_OUTPUTS) {
     console.log("<< IN : '%s' from %s", msg.k, local ? "LOCAL" : msg.s == -1 ? "SERVER" : msg.s)
     console.log(msg.d)
@@ -72,7 +72,7 @@ function openConnection(join_data = null) {
   }
 
   ws.onmessage = (message) => {
-    let msg = JSON.parse(message.data)
+    const msg = JSON.parse(message.data)
     if (!msg || msg.k == null) return
     rpcFromMessage(msg)
   }

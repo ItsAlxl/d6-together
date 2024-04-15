@@ -428,7 +428,7 @@ class Dice3D {
     this.moveMeshToBody()
 
     if (this.offscreen) {
-      let pos = this.body.translation()
+      const pos = this.body.translation()
       if (pos.y > -TRAY_BUFFER_SIZE && pos.y < TRAY_BUFFER_SIZE) {
         this.offscreen = false
         this.body.collider(0).setCollisionGroups(COL_LAYER_DICE_ONSCREEN)

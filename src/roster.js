@@ -110,7 +110,7 @@ export function syncToons(t) {
 }
 
 function resizeArray(array, new_length, fill_value) {
-  let prev_length = array.length
+  const prev_length = array.length
   array.length = new_length
   if (prev_length < new_length) {
     array.fill(fill_value, prev_length)
@@ -134,7 +134,7 @@ function getFirstFreeIdx(array) {
 }
 
 export function addPlayer(pdata = {}) {
-  let p = new Player(pdata)
+  const p = new Player(pdata)
   setAtRoster(p, pdata.id, players)
   return p
 }
@@ -151,7 +151,7 @@ export function deletePlayer(id) {
 }
 
 export function addToon(tdata = {}) {
-  let t = new Toon(tdata)
+  const t = new Toon(tdata)
   setAtRoster(t, tdata.id, toons)
   return t
 }
