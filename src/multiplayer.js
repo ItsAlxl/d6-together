@@ -11,6 +11,9 @@ export const cb = {}
 
 const DBG_OUTPUTS = false
 
+// global so that users can change it from the web console
+window.d6t.WS_ADDRESS = getDefaultWsAddress()
+
 export function send(key, data, target) {
   let o = { k: key }
   if (data != null) o.d = data
@@ -52,8 +55,12 @@ function rpcFromMessage(msg, local = false) {
   }
 }
 
-function openConnection(join_data = null, address = "ws://localhost:6462") {
-  ws = new WebSocket(address)
+function getDefaultWsAddress() {
+  return (window.location.protocol == "https:" ? "wss://" : "ws://") + window.location.host
+}
+
+function openConnection(join_data = null) {
+  ws = new WebSocket(window.d6t.WS_ADDRESS)
 
   ws.onopen = (event) => {
     d6t.showDisconnectAlert(false)
@@ -71,6 +78,10 @@ function openConnection(join_data = null, address = "ws://localhost:6462") {
   }
 
   ws.onclose = (ev) => {
+    d6t.showDisconnectAlert(true)
+  }
+
+  ws.onerror = (error) => {
     d6t.showDisconnectAlert(true)
   }
 }
