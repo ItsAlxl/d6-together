@@ -529,7 +529,7 @@ function getNextDiceRequestIdx() {
 
 function popDiceRequest(req_idx = getNextDiceRequestIdx()) {
   if (req_idx >= 0 && requested_dice[req_idx].n > 0) {
-    new Dice3D(req_idx)
+    new Dice3D(requested_dice[req_idx].p)
     requested_dice[req_idx].n--
     if (req_idx > 0 && requested_dice[req_idx].n <= 0) requested_dice.length -= 1
   }

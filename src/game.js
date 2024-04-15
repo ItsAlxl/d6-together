@@ -275,8 +275,9 @@ function requestActionRoll() {
 
 Multiplayer.cb.syncActionRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
+    const boss_id = Roster.getToonOwner(action_toon)
     const pool = {
-      [Roster.getToonOwner(action_toon)]: data.value + (data.push ?? 0),
+      [boss_id]: data.value + (data.push ?? 0),
     }
     if (data.push) {
       Roster.toonSpendCost(action_toon, "push")
@@ -288,7 +289,7 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
     for (let i = 0; i < Roster.game_config.cond.length; i++) {
       refreshToonCondValue(i)
     }
-    DiceTray.actionRoll(sender, pool, data.seed)
+    DiceTray.actionRoll(boss_id, pool, data.seed)
 
     action_toon = -1
     action_act_id = -1
