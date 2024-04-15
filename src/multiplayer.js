@@ -78,10 +78,12 @@ function openConnection(join_data = null) {
   }
 
   ws.onclose = (ev) => {
+    console.error(ev)
     d6t.showDisconnectAlert(true)
   }
 
   ws.onerror = (error) => {
+    console.error(error)
     d6t.showDisconnectAlert(true)
   }
 }

@@ -19,4 +19,7 @@ By default, d6 Together uses port 6462. This can be easily changed at the top of
 
 When deploying to a production environment, you'll need the `dist/` directory (which is created with `npm run build`), `d6-together.js`, and the `package.json` and `package-lock.json` files. Running `npm install --omit=dev` will install the necessary dependencies, and `npm run server` will run the server. For convenience, those two commands are combined in `npm run deploy`.
 
-If you want to host the files locally but connect to a remote d6 Together server, you can easily change the target server using `window.d6t.WS_ADDRESS`. Either edit `multiplayer.js` to change the default assignment or open up your web browser's console and reassign `window.d6t.WS_ADDRESS` before hosting or joining.
+## Local Files with Remote Server
+If you want to host the files locally but connect to a remote d6 Together WebSocket server, you can easily change the target server using `window.d6t.WS_ADDRESS`. Either edit `multiplayer.js` to change the default assignment or open up your web browser's console on d6 Together and reassign `window.d6t.WS_ADDRESS` before hosting or joining. However, **this will not work without some server-side configuration.**
+
+By default, d6 Together WS servers will reject connections where the host (the WS server) and origin (the HTTP server) do not match. This can be changed by editing `d6-together.js`, specifically the variable `REJECT_HOST_ORIGIN_DIFF`. Similarly, you can arbitrarily restrict origins by editing the `allowOrigin(origin)` function.

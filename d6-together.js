@@ -1,11 +1,41 @@
-// Open up the server
+// Server configuration
 
 const PORT = 6462
+const REJECT_HOST_ORIGIN_DIFF = true
+
+function allowOrigin(origin) {
+  return true
+}
+
+// Open up the server
+
 const ws = require("ws")
-const wss = new ws.Server({
-  server: require("connect")()
-    .use(require("serve-static")(__dirname + "/dist"))
-    .listen(PORT, () => console.log("d6 Together open on port :" + PORT)),
+const server = require("connect")()
+  .use(require("serve-static")(__dirname + "/dist"))
+  .listen(PORT, () => console.log("d6 Together open on :" + PORT))
+const wss = new ws.Server({ noServer: true })
+
+function onSocketError(err) {
+  console.error(err)
+}
+
+server.on("upgrade", function (request, socket, head) {
+  socket.on("error", onSocketError)
+
+  if (
+    (!REJECT_HOST_ORIGIN_DIFF ||
+      request.headers.origin.replace(/(^\w+:|^)\/\//, "") == request.headers.host) &&
+    allowOrigin(request.headers.origin)
+  ) {
+    socket.removeListener("error", onSocketError)
+
+    wss.handleUpgrade(request, socket, head, function done(ws) {
+      wss.emit("connection", ws, request)
+    })
+  } else {
+    socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n")
+    socket.destroy()
+  }
 })
 
 // Everything else lol
@@ -131,8 +161,8 @@ function missingComps(msg, comps) {
   return false
 }
 
-wss.on("connection", function connection(ws) {
-  ws.on("error", console.error)
+wss.on("connection", function connection(ws, req) {
+  ws.on("error", onSocketError)
   ws.on("close", function (code, reason) {
     untrackWs(ws)
   })
