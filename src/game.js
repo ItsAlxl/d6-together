@@ -192,7 +192,7 @@ window.d6t.applyActionPush = function () {
 }
 
 Multiplayer.cb.syncActionPush = function (data, sender) {
-  if (isPlrPromptAuthority(sender)) {
+  if (isPlrToonAuthority(sender, action_toon)) {
     Components.Prompt.labelActionCbox("push", data ? "Pushing" : "Not Pushing")
     document.getElementById("action-push").checked = data
   }
