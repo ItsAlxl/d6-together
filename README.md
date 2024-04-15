@@ -16,3 +16,5 @@ npm run build
 npm run server
 ```
 By default, d6 Together uses port 6462. This can be easily changed at the top of `d6-together.js` (changing the port does NOT require re-building the app). Use your browser to connect to the server (e.g. `localhost:6462`), and you're all set!
+
+When deploying to a production environment, you'll need the `dist/` directory (which is created with `npm run build`), `d6-together.js`, and the `package.json` and `package-lock.json` files. Running `npm install --omit=dev` will install the necessary dependencies, and `npm run server` will run the server. For convenience, those two commands are combined in `npm run deploy`.
