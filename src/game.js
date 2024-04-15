@@ -631,7 +631,7 @@ Multiplayer.cb.syncConfig = function (data, sender) {
     }
     replaceChildHTML(document.getElementById("toon-cond"), conds_html)
 
-    refreshToonOwner()
+    refreshToonSheet()
   }
 }
 
