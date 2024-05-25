@@ -197,6 +197,8 @@ function isXyzPhysZeroApprox(xyz, against = 0.001) {
 
 const dice = []
 const requested_dice = []
+let last_pool = {}
+let last_seed = -1
 let roll_boss_id = -1
 let roll_take_lowest = false
 let roll_ticks = 0
@@ -495,6 +497,7 @@ function poolRoll(boss_id, plr_dice_counts, seed) {
 }
 
 function prepRoll(seed) {
+  last_seed = seed
   seedRNG(seed)
   stopPhys()
   roll_ticks = 0
@@ -518,6 +521,7 @@ function addDice(plr_dice_counts, seed) {
         p: pid,
         n: d,
       })
+      last_pool[pid] = (last_pool[pid] ?? 0) + d
     }
   }
   requested_dice.sort((a, b) => {
@@ -535,6 +539,12 @@ function popDiceRequest(req_idx = getNextDiceRequestIdx()) {
     new Dice3D(requested_dice[req_idx].p)
     requested_dice[req_idx].n--
     if (req_idx > 0 && requested_dice[req_idx].n <= 0) requested_dice.length -= 1
+  }
+}
+
+function forceAddPool(pool) {
+  for (let pid in pool) {
+    for (let i = 0; i < pool[pid]; i++) new Dice3D(pid)
   }
 }
 
@@ -561,6 +571,7 @@ function clear() {
   for (let d of dice) {
     d.cleanup()
   }
+  for (let i in last_pool) delete last_pool[i]
   dice.length = 0
   num_finished = 0
 }
@@ -576,10 +587,14 @@ function dieFinished() {
   if (isRollFinished()) {
     dispatchEvent(
       new CustomEvent("roll_done", {
-        detail: { result: dice.map((d) => d.final_value) },
+        detail: { result: getFinalResult() },
       })
     )
   }
+}
+
+function getFinalResult() {
+  return dice.map((d) => d.final_value)
 }
 
 function showFinalResult(result) {
@@ -772,7 +787,7 @@ function createPhysWorld() {
   )
 }
 
-async function initialize(dom_parent) {
+async function initialize(dom_parent, sync_state) {
   await RapierInit()
   DICE_BODY_PARAMS = RigidBodyDesc.dynamic()
   DICE_COL_SHAPE = ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
@@ -784,6 +799,32 @@ async function initialize(dom_parent) {
   dom_parent.appendChild(renderer.domElement)
   renderer.domElement.classList.add("h-full", "w-full")
   renderer.domElement.style = ""
+
+  if (sync_state) {
+    roll_boss_id = sync_state.boss
+    if (sync_state.hasOwnProperty("pool")) {
+      if (sync_state.hasOwnProperty("result")) {
+        seedRNG(0)
+        forceAddPool(sync_state.pool)
+        showFinalResult(sync_state.result)
+      } else {
+        addDice(sync_state.pool, sync_state.seed)
+      }
+    }
+  }
+}
+
+function getSyncState() {
+  const state = { boss: roll_boss_id }
+  if (!isPoolReqEmpty(last_pool)) {
+    state.pool = last_pool
+    if (isRollFinished()) {
+      state.result = getFinalResult()
+    } else {
+      state.seed = last_seed
+    }
+  }
+  return state
 }
 
 export {
@@ -796,5 +837,6 @@ export {
   reroll,
   showFinalResult,
   roll_boss_id,
+  getSyncState,
   clear,
 }

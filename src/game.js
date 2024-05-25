@@ -985,8 +985,8 @@ window.d6t.hostRoom = function () {
   Multiplayer.hostGame()
 }
 
-function finishLobbyTransition() {
-  DiceTray.initialize(document.getElementById("dice-parent"))
+function finishLobbyTransition(tray_state) {
+  DiceTray.initialize(document.getElementById("dice-parent"), tray_state)
   showConfig(Multiplayer.isHost())
   setVisible(document.getElementById("view-join"), false)
 }
@@ -1019,6 +1019,7 @@ Multiplayer.cb.joiner = function (data, sender) {
         toons: Roster.toons,
         cfg: Roster.game_config,
         clocks: getClocksAggregate(),
+        tray_state: DiceTray.getSyncState(),
       },
       data.id
     )
@@ -1038,7 +1039,7 @@ Multiplayer.cb.joined = function (data, sender) {
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
     createClocksFromAggregate(data.clocks)
-    finishLobbyTransition()
+    finishLobbyTransition(data.tray_state)
     updateToonTabs()
   }
 }
