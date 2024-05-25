@@ -6,8 +6,8 @@
   "license": "MIT",
   "scripts": {
     "server": "node d6-together.js",
-    "deploy": "npm install --omit=dev && npm start",
-    "dev": "vite",
+    "deploy": "npm install --omit=dev && npm run server",
+    "dev": "vite build --emptyOutDir --watch --minify=false",
     "build": "vite build --emptyOutDir",
     "preview": "vite preview"
   },
