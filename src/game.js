@@ -1038,6 +1038,7 @@ Multiplayer.cb.joined = function (data, sender) {
     Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
+    DiceTray.updatePlayerMats(Roster.players)
     createClocksFromAggregate(data.clocks)
     finishLobbyTransition(data.tray_state)
     updateToonTabs()
