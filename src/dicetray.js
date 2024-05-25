@@ -496,8 +496,7 @@ function poolRoll(boss_id, plr_dice_counts, seed) {
 
 function prepRoll(seed) {
   seedRNG(seed)
-  if (phys_timeout) clearTimeout(phys_timeout)
-
+  stopPhys()
   roll_ticks = 0
   resetSoftTimeout()
 }
@@ -524,7 +523,7 @@ function addDice(plr_dice_counts, seed) {
   requested_dice.sort((a, b) => {
     return a.p == roll_boss_id ? -1 : b.p == roll_boss_id ? 1 : a.p - b.p
   })
-  tickPhys()
+  startPhys()
 }
 
 function getNextDiceRequestIdx() {
@@ -554,7 +553,7 @@ function reroll(seed) {
     d.lock(false)
     d.fullReroll()
   }
-  tickPhys()
+  startPhys()
 }
 
 function clear() {
@@ -704,7 +703,21 @@ function createRenderScene() {
   tickRender()
 }
 
-let phys_timeout
+let phys_timeout = null
+
+function startPhys() {
+  if (phys_timeout == null) {
+    tickPhys()
+  }
+}
+
+function stopPhys() {
+  if (phys_timeout != null) {
+    clearTimeout(phys_timeout)
+    phys_timeout = null
+  }
+}
+
 function tickPhys() {
   PHYS_WORLD.step()
 
@@ -724,7 +737,11 @@ function tickPhys() {
     }
   }
 
-  if (!isRollFinished()) phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
+  if (isRollFinished()) {
+    stopPhys()
+  } else {
+    phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
+  }
 }
 
 function createPhysWorld() {

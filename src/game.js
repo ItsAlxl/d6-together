@@ -180,6 +180,7 @@ function requestClearDice() {
 Multiplayer.cb.syncClearDice = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
     DiceTray.clear()
+    enableDiceControls(true)
   }
 }
 
@@ -205,6 +206,17 @@ addEventListener("roll_done", (e) => {
 Multiplayer.cb.syncRollResult = function (data, sender) {
   if (sender == DiceTray.roll_boss_id) {
     DiceTray.showFinalResult(data)
+    enableDiceControls(true)
+  }
+}
+
+function enableDiceControls(e) {
+  const ctls_par = document.getElementById("dice-ctls")
+  for (let i = 0; i < ctls_par.children.length; i++) {
+    const btn = ctls_par.children[i]
+    if (btn.classList.contains("btn") && !btn.classList.contains("btn-error")) {
+      enableElement(btn, e)
+    }
   }
 }
 
@@ -356,6 +368,7 @@ Multiplayer.cb.syncPromptOpen = function (data, sender) {
       }
       if (pdata.onOpen) pdata.onOpen()
       setVisible(document.getElementById("prompt-bg"), true)
+      enableDiceControls(false)
     }
   }
 }
@@ -369,6 +382,10 @@ Multiplayer.cb.syncPromptClose = function (data, sender) {
     prompt_owner = -1
     current_prompt = ""
     setVisible(document.getElementById("prompt-bg"), false)
+
+    if (DiceTray.isReady()) {
+      enableDiceControls(true)
+    }
   }
 }
 
