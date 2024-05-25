@@ -13,7 +13,12 @@ import {
   LineBasicMaterial,
 } from "three"
 import { Tween, update as tweenUpdate, Easing } from "@tweenjs/tween.js"
-import { init as RapierInit, World as PhysWorld, ColliderDesc, RigidBodyDesc } from "@dimforge/rapier3d-compat"
+import {
+  init as RapierInit,
+  World as PhysWorld,
+  ColliderDesc,
+  RigidBodyDesc,
+} from "@dimforge/rapier3d-compat"
 
 const DBG_MODE = false
 
@@ -60,7 +65,6 @@ const VALUE_TO_QUAT = {
 }
 
 const TEXTURE_LOADER = new TextureLoader()
-
 const player_mats = {}
 
 function cleanupPlayerMat(idx) {
@@ -563,73 +567,87 @@ function clear() {
 }
 
 function isReady() {
-  return phys_ready
+  return phys_ready && isRollFinished()
 }
 
 let num_finished = 0
 function dieFinished() {
   num_finished++
 
-  if (!areDicePhysing()) {
-    dice.sort((a, b) => {
-      if (a.final_value == b.final_value) {
-        if (a.owner_id == b.owner_id) {
-          return a.idx - b.idx
-        }
-        return a.owner_id == roll_boss_id
-          ? 1
-          : b.owner_id == roll_boss_id
-          ? -1
-          : a.owner_id - b.owner_id
-      }
-      return roll_take_lowest ? b.final_value - a.final_value : a.final_value - b.final_value
-    })
-
-    const num_dice = dice.length
-    const num_result_dice =
-      !roll_take_lowest &&
-      num_dice > 1 &&
-      dice[num_dice - 1].final_value == 6 &&
-      dice[num_dice - 2].final_value == 6
-        ? 2
-        : 1
-    const num_extra_dice = num_dice - num_result_dice
-    const top_y = Math.min(
-      TRAY_SIDE - ARRANGE_RESULT_SPACING - ARRANGE_SPACING,
-      ARRANGE_START_Y + (Math.ceil(num_extra_dice / ARRANGE_MAX_COLS) - 1.0) * ARRANGE_SPACING
+  if (isRollFinished()) {
+    dispatchEvent(
+      new CustomEvent("roll_done", {
+        detail: { result: dice.map((d) => d.final_value) },
+      })
     )
-
-    for (let i = 0; i < num_result_dice; i++) {
-      dice[num_dice - i - 1].moveToFinalSpot(
-        (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
-        top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
-        ARRANGE_Z
-      )
-    }
-
-    let col = -1
-    let row = -1
-    let row_size = -1
-    let left_x = -1
-    for (let i = num_extra_dice - 1; i >= 0; i--) {
-      if (col >= row_size) {
-        col = 0
-        row += 1
-        row_size = Math.min(ARRANGE_MAX_COLS, i + 1)
-        left_x = -0.5 * ARRANGE_SPACING * (row_size - 1)
-      }
-      dice[i].moveToFinalSpot(
-        left_x + ARRANGE_SPACING * col,
-        top_y - ARRANGE_SPACING * row,
-        ARRANGE_Z
-      )
-      col += 1
-    }
   }
 }
 
-function areDicePhysing() {
-  return num_finished < dice.length
+function showFinalResult(result) {
+  num_finished = dice.length
+
+  for (let i = 0; i < result.length; i++) {
+    dice[i].final_value = result[i]
+  }
+
+  dice.sort((a, b) => {
+    if (a.final_value == b.final_value) {
+      if (a.owner_id == b.owner_id) {
+        return a.idx - b.idx
+      }
+      return a.owner_id == roll_boss_id
+        ? 1
+        : b.owner_id == roll_boss_id
+        ? -1
+        : a.owner_id - b.owner_id
+    }
+    return roll_take_lowest ? b.final_value - a.final_value : a.final_value - b.final_value
+  })
+
+  const num_dice = dice.length
+  const num_result_dice =
+    !roll_take_lowest &&
+    num_dice > 1 &&
+    dice[num_dice - 1].final_value == 6 &&
+    dice[num_dice - 2].final_value == 6
+      ? 2
+      : 1
+  const num_extra_dice = num_dice - num_result_dice
+  const top_y = Math.min(
+    TRAY_SIDE - ARRANGE_RESULT_SPACING - ARRANGE_SPACING,
+    ARRANGE_START_Y + (Math.ceil(num_extra_dice / ARRANGE_MAX_COLS) - 1.0) * ARRANGE_SPACING
+  )
+
+  for (let i = 0; i < num_result_dice; i++) {
+    dice[num_dice - i - 1].moveToFinalSpot(
+      (-0.5 * (num_result_dice - 1) + i) * ARRANGE_SPACING,
+      top_y > -ARRANGE_RESULT_SPACING ? top_y + ARRANGE_RESULT_SPACING : 0.0,
+      ARRANGE_Z
+    )
+  }
+
+  let col = -1
+  let row = -1
+  let row_size = -1
+  let left_x = -1
+  for (let i = num_extra_dice - 1; i >= 0; i--) {
+    if (col >= row_size) {
+      col = 0
+      row += 1
+      row_size = Math.min(ARRANGE_MAX_COLS, i + 1)
+      left_x = -0.5 * ARRANGE_SPACING * (row_size - 1)
+    }
+    dice[i].moveToFinalSpot(
+      left_x + ARRANGE_SPACING * col,
+      top_y - ARRANGE_SPACING * row,
+      ARRANGE_Z
+    )
+    col += 1
+  }
+}
+
+function isRollFinished() {
+  return num_finished == dice.length
 }
 
 let phys_ready = false
@@ -706,7 +724,7 @@ function tickPhys() {
     }
   }
 
-  if (areDicePhysing()) phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
+  if (!isRollFinished()) phys_timeout = setTimeout(tickPhys, PHYS_TICK_PERIOD_MS)
 }
 
 function createPhysWorld() {
@@ -751,4 +769,15 @@ async function initialize(dom_parent) {
   renderer.domElement.style = ""
 }
 
-export { initialize, isReady, updatePlayerMats, actionRoll, poolRoll, addDice, reroll, clear }
+export {
+  initialize,
+  isReady,
+  updatePlayerMats,
+  actionRoll,
+  poolRoll,
+  addDice,
+  reroll,
+  showFinalResult,
+  roll_boss_id,
+  clear,
+}

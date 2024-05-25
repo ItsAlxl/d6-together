@@ -116,6 +116,7 @@ ToonSheet.getBioExtraElement = function (extra_id) {
   return document.getElementById(getBioExtraID(extra_id))
 }
 
+// TODO: shorter bios by default, default config includes an Abilities section
 ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
   return `
 <div class="label pb-1 pt-2 w-full">
@@ -173,6 +174,7 @@ ToonCond.setText = function (cond_id, text) {
   }
 }
 
+// TODO: conditions without numeric value; change default config to have 3 harm text conds
 ToonCond.getHTML = function (cond_id, cond_data) {
   return `
 <div id="toon-cond-${cond_id}-par" class="grow">

@@ -198,6 +198,16 @@ Multiplayer.cb.syncActionPush = function (data, sender) {
   }
 }
 
+addEventListener("roll_done", (e) => {
+  Multiplayer.send("syncRollResult", e.detail.result, Multiplayer.SEND_ALL)
+})
+
+Multiplayer.cb.syncRollResult = function (data, sender) {
+  if (sender == DiceTray.roll_boss_id) {
+    DiceTray.showFinalResult(data)
+  }
+}
+
 function getMyToonId() {
   return current_toon_id >= 0 && isPlrToonAuthority(MY_PLR_ID, current_toon_id)
     ? current_toon_id
