@@ -65,6 +65,7 @@ const VALUE_TO_QUAT = {
 }
 
 const TEXTURE_LOADER = new TextureLoader()
+let FALLBACK_DICE_MAT = null
 const player_mats = {}
 
 function cleanupPlayerMat(idx) {
@@ -76,27 +77,39 @@ function deletePlayerMat(idx) {
   delete player_mats[idx]
 }
 
+function createDiceMat(val_id, val_clr, bg_id, bg_clr) {
+  return [
+    new MeshPhongMaterial({
+      color: bg_clr,
+      map: TEXTURE_LOADER.load(window.d6t.getDiceImage(bg_id)),
+    }),
+    new MeshPhongMaterial({
+      color: val_clr,
+      map: TEXTURE_LOADER.load(window.d6t.getDiceImage(val_id)),
+      alphaTest: 0.5,
+    }),
+  ]
+}
+
 function updatePlayerMats(players) {
   for (let i = 0; i < players.length; i++) {
     if (players[i] == null && player_mats[i]) deletePlayerMat(i)
-    else if (players[i] != null) {
-      if (player_mats[i]) cleanupPlayerMat(i)
-      player_mats[i] = [
-        new MeshPhongMaterial({
-          color: players[i].dice.bg_clr,
-          map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.bg_id)),
-        }),
-        new MeshPhongMaterial({
-          color: players[i].dice.val_clr,
-          map: TEXTURE_LOADER.load(window.d6t.getDiceImage(players[i].dice.val_id)),
-          alphaTest: 0.5,
-        }),
-      ]
+    else if (players[i] != null && !player_mats[i]) {
+      player_mats[i] = createDiceMat(
+        players[i].dice.val_id,
+        players[i].dice.val_clr,
+        players[i].dice.bg_id,
+        players[i].dice.bg_clr
+      )
     }
   }
   for (let i in player_mats) {
     if (i < 0 || i > players.length) deletePlayerMat(i)
   }
+}
+
+function getPlayerMat(pid) {
+  return player_mats[pid] ?? FALLBACK_DICE_MAT
 }
 
 function createDiceGeom(length) {
@@ -241,7 +254,7 @@ class Dice3D {
       COL_LAYER_DICE_OFFSCREEN
     )
 
-    this.mesh = new Mesh(DICE_GEOM, player_mats[owner_id])
+    this.mesh = new Mesh(DICE_GEOM, getPlayerMat(owner_id))
     this.moveMeshToBody()
     RENDER_SCENE.add(this.mesh)
 
@@ -791,6 +804,7 @@ async function initialize(dom_parent, sync_state) {
   await RapierInit()
   DICE_BODY_PARAMS = RigidBodyDesc.dynamic()
   DICE_COL_SHAPE = ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
+  FALLBACK_DICE_MAT = createDiceMat("/gimp/marble", "#ffffff", "/plain/pips", "#ffffff")
 
   phys_ready = true
   createPhysWorld()

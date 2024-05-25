@@ -989,6 +989,7 @@ window.d6t.hostRoom = function () {
 }
 
 function finishLobbyTransition(tray_state) {
+  DiceTray.updatePlayerMats(Roster.players)
   DiceTray.initialize(document.getElementById("dice-parent"), tray_state)
   showConfig(Multiplayer.isHost())
   setVisible(document.getElementById("view-join"), false)
@@ -1041,7 +1042,6 @@ Multiplayer.cb.joined = function (data, sender) {
     Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
-    DiceTray.updatePlayerMats(Roster.players)
     createClocksFromAggregate(data.clocks)
     finishLobbyTransition(data.tray_state)
     updateToonTabs()
