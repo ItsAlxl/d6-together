@@ -804,7 +804,7 @@ async function initialize(dom_parent, sync_state) {
   await RapierInit()
   DICE_BODY_PARAMS = RigidBodyDesc.dynamic()
   DICE_COL_SHAPE = ColliderDesc.cuboid(DICE_SIDE, DICE_SIDE, DICE_SIDE)
-  FALLBACK_DICE_MAT = createDiceMat("/gimp/marble", "#ffffff", "/plain/pips", "#ffffff")
+  FALLBACK_DICE_MAT = createDiceMat("/plain/pips", "#000000", "/gimp/marble", "#ffffff")
 
   phys_ready = true
   createPhysWorld()
