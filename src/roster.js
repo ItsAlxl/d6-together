@@ -150,6 +150,10 @@ export function deletePlayer(id) {
   }
 }
 
+export function hasPlayer(id) {
+  return id >= 0 && id < players.length && players[id] != null
+}
+
 export function addToon(tdata = {}) {
   const t = new Toon(tdata)
   setAtRoster(t, tdata.id, toons)

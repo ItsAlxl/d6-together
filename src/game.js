@@ -204,7 +204,10 @@ addEventListener("roll_done", (e) => {
 })
 
 Multiplayer.cb.syncRollResult = function (data, sender) {
-  if (sender == DiceTray.roll_boss_id) {
+  if (
+    (!Roster.hasPlayer(DiceTray.roll_boss_id) && Multiplayer.isHost(sender)) ||
+    sender == DiceTray.roll_boss_id
+  ) {
     DiceTray.showFinalResult(data)
     enableDiceControls(true)
   }
