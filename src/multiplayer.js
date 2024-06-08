@@ -4,6 +4,7 @@ export const SERVER_SENDER_ID = -1
 export let HOST_SENDER_ID = 0
 
 export const SEND_ALL = -1
+export const SEND_ALL_FORCE_NET = -10
 export const SEND_OTHERS = -2
 export const SEND_SERVER = null
 

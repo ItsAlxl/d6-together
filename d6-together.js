@@ -175,7 +175,7 @@ wss.on("connection", function connection(ws, req) {
       if (msg.t >= 0) {
         send(room.plrs[msg.t], msg.k, msg.d, ws.d6t_room_id)
       } else {
-        sendToRoom(room, msg.k, msg.d, ws.d6t_room_id)
+        sendToRoom(room, msg.k, msg.d, msg.t == -10 ? -1 : ws.d6t_room_id)
       }
       return
     }

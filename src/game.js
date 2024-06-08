@@ -136,12 +136,13 @@ function requestPoolRoll() {
       pool: buildArbitraryPool("pmt-arbitrary"),
       seed: generateSeed(),
     },
-    Multiplayer.SEND_ALL
+    Multiplayer.SEND_ALL_FORCE_NET
   )
 }
 
 Multiplayer.cb.syncPoolRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
+    closePromptLocally(false)
     DiceTray.poolRoll(sender, data.pool, data.seed)
   }
 }
@@ -153,34 +154,36 @@ function requestAddDice() {
       pool: buildArbitraryPool("pmt-add"),
       seed: generateSeed(),
     },
-    Multiplayer.SEND_ALL
+    Multiplayer.SEND_ALL_FORCE_NET
   )
 }
 
 Multiplayer.cb.syncAddDice = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
+    closePromptLocally(false)
     DiceTray.addDice(data.pool, data.seed)
   }
 }
 
 function requestRerollDice() {
-  Multiplayer.send("syncRerollDice", generateSeed(), Multiplayer.SEND_ALL)
+  Multiplayer.send("syncRerollDice", generateSeed(), Multiplayer.SEND_ALL_FORCE_NET)
 }
 
 Multiplayer.cb.syncRerollDice = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
+    closePromptLocally(false)
     DiceTray.reroll(data)
   }
 }
 
 function requestClearDice() {
-  Multiplayer.send("syncClearDice", null, Multiplayer.SEND_ALL)
+  Multiplayer.send("syncClearDice", null, Multiplayer.SEND_ALL_FORCE_NET)
 }
 
 Multiplayer.cb.syncClearDice = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
     DiceTray.clear()
-    enableDiceControls(true)
+    closePromptLocally(true)
   }
 }
 
@@ -295,11 +298,13 @@ function requestActionRoll() {
     data.push = 1
   }
 
-  Multiplayer.send("syncActionRoll", data, Multiplayer.SEND_ALL)
+  Multiplayer.send("syncActionRoll", data, Multiplayer.SEND_ALL_FORCE_NET)
 }
 
 Multiplayer.cb.syncActionRoll = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
+    closePromptLocally(false)
+
     const boss_id = Roster.getToonOwner(action_toon)
     const pool = {
       [boss_id]: data.value + (data.push ?? 0),
@@ -330,7 +335,7 @@ window.d6t.applyPrompt = function () {
   if (PROMPT_MAP[current_prompt] != null) {
     PROMPT_MAP[current_prompt].onApply()
   }
-  d6t.closePrompt()
+  closePromptLocally(false)
 }
 
 function isPromptOpen(p) {
@@ -380,15 +385,19 @@ window.d6t.closePrompt = function () {
   Multiplayer.send("syncPromptClose", null, Multiplayer.SEND_ALL)
 }
 
+function closePromptLocally(dice_ctls) {
+  prompt_owner = -1
+  current_prompt = ""
+  setVisible(document.getElementById("prompt-bg"), false)
+
+  if (dice_ctls != null) {
+    enableDiceControls(dice_ctls)
+  }
+}
+
 Multiplayer.cb.syncPromptClose = function (data, sender) {
   if (isPlrPromptAuthority(sender)) {
-    prompt_owner = -1
-    current_prompt = ""
-    setVisible(document.getElementById("prompt-bg"), false)
-
-    if (DiceTray.isReady()) {
-      enableDiceControls(true)
-    }
+    closePromptLocally(DiceTray.isReady() ? true : null)
   }
 }
 
