@@ -38,11 +38,7 @@ class Toon {
   applyGameConfig() {
     resizeArray(this.acts, game_config.act_list.length, 0)
     resizeArray(this.bio_extras, game_config.bio_extras.length, "")
-
-    while (this.cond.length < game_config.cond.length) {
-      this.cond.push({})
-    }
-    this.cond.length = game_config.cond.length
+    resizeResourceArray(this.cond, game_config.cond.length)
   }
 
   getExportData() {
@@ -106,10 +102,12 @@ export let game_config = {
       text: "Unscarred.",
     },
   ],
+  pool: [],
 }
 
 export const players = []
 export const toons = []
+export const pools = []
 
 export function syncPlayers(p) {
   players.length = p.length
@@ -125,12 +123,24 @@ export function syncToons(t) {
   }
 }
 
+export function syncPools(p) {
+  pools.length = 0
+  for (let i = 0; i < p.length; i++) pools.push(p[i])
+}
+
 function resizeArray(array, new_length, fill_value) {
   const prev_length = array.length
   array.length = new_length
   if (prev_length < new_length) {
     array.fill(fill_value, prev_length)
   }
+}
+
+function resizeResourceArray(array, new_length) {
+  while (array.length < new_length) {
+    array.push({})
+  }
+  array.length = new_length
 }
 
 function setAtRoster(value, idx, array) {
@@ -211,17 +221,53 @@ export function setToonBio(id, key, value) {
   toons[id].bio_extras[key] = value
 }
 
+function setResourceValue(res, rtype, rid, value) {
+  const cfg_res = game_config[rtype][rid]
+  res.v = Math.min(cfg_res.max ?? 0, Math.max(value, cfg_res.min ?? 0))
+}
+
 export function setToonCondValue(id, key, value) {
-  const cond = game_config.cond[key]
-  toons[id].cond[key].v = Math.min(cond.max ?? 0, Math.max(value, cond.min ?? 0))
+  setResourceValue(toons[id].cond[key], "cond", key, value)
+}
+
+export function setPoolValue(key, value) {
+  setResourceValue(pools[key], "pool", key, value)
+}
+
+function getResourceValue(res) {
+  return res.v ?? 0
 }
 
 export function getToonCondValue(id, key) {
-  return toons[id].cond[key].v ?? 0
+  return getResourceValue(toons[id].cond[key])
+}
+
+export function getPoolValue(key) {
+  return getResourceValue(pools[key])
+}
+
+function setResourceText(res, text) {
+  res.t = text
 }
 
 export function setToonCondText(id, key, text) {
-  toons[id].cond[key].t = text
+  setResourceText(toons[id].cond[key], text)
+}
+
+export function setPoolText(key, text) {
+  setResourceText(pools[key], text)
+}
+
+function getResourceText(res) {
+  return res.t ?? ""
+}
+
+export function getToonCondText(id, key) {
+  return getResourceText(toons[id].cond[key])
+}
+
+export function getPoolText(key) {
+  return getResourceText(pools[key])
 }
 
 export function setToonAct(id, key, value) {
@@ -268,4 +314,5 @@ export function applyGameConfig(gc) {
       t.applyGameConfig()
     }
   }
+  resizeResourceArray(pools, game_config.pool.length)
 }

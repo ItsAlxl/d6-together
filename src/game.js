@@ -671,11 +671,18 @@ Multiplayer.cb.syncConfig = function (data, sender) {
 
     let conds_html = ""
     for (let i = 0; i < Roster.game_config.cond.length; i++) {
-      conds_html += Components.ToonCond.getHTML(i, Roster.game_config.cond[i])
+      conds_html += Components.Resource.getHTML("cond", i, Roster.game_config.cond[i])
     }
     replaceChildHTML(document.getElementById("toon-cond"), conds_html)
 
+    let pools_html = ""
+    for (let i = 0; i < Roster.game_config.pool.length; i++) {
+      pools_html += Components.Resource.getHTML("pool", i, Roster.game_config.pool[i])
+    }
+    replaceChildHTML(document.getElementById("pool-list"), pools_html)
+
     refreshToonSheet()
+    refreshPools()
   }
 }
 
@@ -706,14 +713,22 @@ function refreshToonBio(bio_id, toon) {
 
 function refreshToonCondValue(cond_id, toon = Roster.toons[current_toon_id]) {
   if (toon != null && toon.id == current_toon_id) {
-    Components.ToonCond.setValue(cond_id, Roster.getToonCondValue(toon.id, cond_id))
+    Components.Resource.setValue("cond", cond_id, Roster.getToonCondValue(toon.id, cond_id))
   }
+}
+
+function refreshPoolValue(pool_id) {
+  Components.Resource.setValue("pool", pool_id, Roster.getPoolValue(pool_id))
 }
 
 function refreshToonCondText(cond_id, toon) {
   if (toon != null && toon.id == current_toon_id) {
-    Components.ToonCond.setText(cond_id, toon.cond[cond_id].t ?? "")
+    Components.Resource.setText("cond", cond_id, Roster.getToonCondText(toon.id, cond_id))
   }
+}
+
+function refreshPoolText(pool_id) {
+  Components.Resource.setText("pool", pool_id, Roster.getPoolText(pool_id))
 }
 
 function enableElement(elm, enable) {
@@ -742,6 +757,16 @@ function refreshToonSheet() {
     }
     refreshToonName(toon)
     refreshToonOwner(toon)
+  }
+}
+
+function refreshPools() {
+  const show_pools = Roster.pools.length > 0
+  setVisible(document.getElementById("pool-divider"), show_pools)
+  setVisible(document.getElementById("pool-list"), show_pools)
+  for (let pool_id in Roster.pools) {
+    refreshPoolValue(pool_id)
+    refreshPoolText(pool_id)
   }
 }
 
@@ -811,43 +836,62 @@ Multiplayer.cb.syncToonOwner = function (data, sender) {
   }
 }
 
-window.d6t.applyCondValue = function (cond_id) {
-  const val = Components.ToonCond.getValue(cond_id)
-  Multiplayer.send(
-    "syncCondVal",
-    {
-      toon_id: current_toon_id,
-      cond_id: cond_id,
-      value: Roster.getToonCondValue(current_toon_id, cond_id) == val ? 0 : val,
-    },
-    Multiplayer.SEND_ALL
-  )
-}
-
-Multiplayer.cb.syncCondVal = function (data, sender) {
-  if (isPlrToonAuthority(sender, data.toon_id)) {
-    Roster.setToonCondValue(data.toon_id, data.cond_id, data.value)
-    refreshToonCondValue(data.cond_id, Roster.toons[data.toon_id])
+window.d6t.applyResourceValue = function (rtype, rid) {
+  const assigned_val = Components.Resource.getValue(rtype, rid)
+  const data = {
+    rid: rid,
+  }
+  if (rtype == "cond") {
+    data.toon = current_toon_id
+    data.val = Roster.getToonCondValue(current_toon_id, rid) == assigned_val ? 0 : assigned_val,
+    Multiplayer.send("syncCondVal", data, Multiplayer.SEND_ALL)
+  } else {
+    data.val = Roster.getPoolValue(rid) == assigned_val ? 0 : assigned_val,
+    Multiplayer.send("syncPoolVal", data, Multiplayer.SEND_ALL)
   }
 }
 
-window.d6t.applyCondText = function (cond_id) {
-  Multiplayer.send(
-    "syncCondText",
-    {
-      toon_id: current_toon_id,
-      cond_id: cond_id,
-      value: Components.ToonCond.getText(cond_id),
-    },
-    Multiplayer.SEND_ALL
-  )
+Multiplayer.cb.syncCondVal = function (data, sender) {
+  if (isPlrToonAuthority(sender, data.toon)) {
+    Roster.setToonCondValue(data.toon, data.rid, data.val)
+    refreshToonCondValue(data.rid, Roster.toons[data.toon])
+  }
+}
+
+Multiplayer.cb.syncPoolVal = function (data, sender) {
+  if (Multiplayer.isHost(sender)) {
+    Roster.setPoolValue(data.rid, data.val)
+    refreshPoolValue(data.rid)
+  }
+}
+
+window.d6t.applyResourceText = function (rtype, rid) {
+  const data = {
+    rid: rid,
+    val: Components.Resource.getText(rtype, rid),
+  }
+  if (rtype == "cond") {
+    data.toon = current_toon_id
+    Multiplayer.send("syncCondText", data, Multiplayer.SEND_ALL)
+  } else {
+    Multiplayer.send("syncPoolText", data, Multiplayer.SEND_ALL)
+  }
 }
 
 Multiplayer.cb.syncCondText = function (data, sender) {
-  if (isPlrToonAuthority(sender, data.toon_id)) {
-    Roster.setToonCondText(data.toon_id, data.cond_id, data.value)
+  if (isPlrToonAuthority(sender, data.toon)) {
+    Roster.setToonCondText(data.toon, data.rid, data.val)
     if (sender != MY_PLR_ID) {
-      refreshToonCondText(data.cond_id, Roster.toons[data.toon_id])
+      refreshToonCondText(data.rid, Roster.toons[data.toon])
+    }
+  }
+}
+
+Multiplayer.cb.syncPoolText = function (data, sender) {
+  if (Multiplayer.isHost(sender)) {
+    Roster.setPoolText(data.rid, data.val)
+    if (sender != MY_PLR_ID) {
+      refreshPoolText(data.rid)
     }
   }
 }
@@ -874,12 +918,12 @@ window.d6t.cfgUpdateNumActs = function (nud) {
   Components.CfgMenu.setActionCount(nud.value)
 }
 
-window.d6t.cfgAddCond = function () {
-  Components.CfgMenu.addCond()
+window.d6t.cfgAddResource = function (rtype) {
+  Components.CfgMenu.addResource(rtype)
 }
 
-window.d6t.cfgDeleteCond = function (button) {
-  Components.CfgMenu.deleteCond(button)
+window.d6t.cfgDeleteResource = function (rtype, button) {
+  Components.CfgMenu.deleteResource(rtype, button)
 }
 
 Multiplayer.cb.syncToonImport = function (data, sender) {
@@ -980,6 +1024,13 @@ function updateHostVis(root) {
   }
 }
 
+function enablePoolControls(en) {
+  const pool_list = document.getElementById("pool-list").querySelectorAll("input, textarea, button")
+  for (let i = 0; i < pool_list.length; i++) {
+    enableElement(pool_list[i], en)
+  }
+}
+
 function getProfData() {
   return {
     name: document.getElementById("prof-name").value,
@@ -1036,6 +1087,7 @@ Multiplayer.cb.joiner = function (data, sender) {
         id: data.id,
         players: Roster.players,
         toons: Roster.toons,
+        pools: Roster.pools,
         cfg: Roster.game_config,
         clocks: getClocksAggregate(),
         tray_state: DiceTray.getSyncState(),
@@ -1057,9 +1109,12 @@ Multiplayer.cb.joined = function (data, sender) {
     Multiplayer.cb.syncConfig(data.cfg, sender)
     Roster.syncPlayers(data.players)
     Roster.syncToons(data.toons)
+    Roster.syncPools(data.pools)
     createClocksFromAggregate(data.clocks)
     finishLobbyTransition(data.tray_state)
     updateToonTabs()
+    refreshPools()
+    enablePoolControls(Multiplayer.isHost())
   }
 }
 
@@ -1088,6 +1143,7 @@ Multiplayer.cb.crown = function (data, sender) {
     updateHostVis(document)
     enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
     refreshToonSheet()
+    enablePoolControls(Multiplayer.isHost())
   }
 }
 

@@ -344,6 +344,8 @@
             </div>
           </div>
         </div>
+        <div class="bg-base-300 min-h-1 mt-2 mb-2" id="pool-divider"></div>
+        <div class="flex flex-row flex-wrap justify-center gap-4" id="pool-list"></div>
         <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
         <div class="flex flex-col gap-4">
           <div class="flex flex-row flex-wrap justify-center" id="clock-menu" data-d6t-host="true">
@@ -518,6 +520,19 @@
         <div class="flex flex-col">
           <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
             <input type="checkbox" />
+            <div class="collapse-title">Biography</div>
+            <div class="collapse-content">
+              <textarea
+                id="config-bio"
+                spellcheck="false"
+                class="textarea textarea-bordered w-full h-36 leading-relaxed"
+                placeholder="Each section goes on its own line"
+                data-d6t-cfg="bio"
+              ></textarea>
+            </div>
+          </div>
+          <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
+            <input type="checkbox" />
             <div class="collapse-title">Actions</div>
             <div class="collapse-content flex flex-col gap-3">
               <div class="flex flex-row justify-center gap-8">
@@ -548,23 +563,20 @@
             <input type="checkbox" />
             <div class="collapse-title">Condition</div>
             <div class="collapse-content flex flex-col items-center gap-3">
-              <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddCond()">
+              <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddResource('cond')">
                 <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
               </button>
-              <div id="config-cond" class="flex flex-row flex-wrap justify-center gap-4"></div>
+              <div id="config-res-cond" class="flex flex-row flex-wrap justify-center gap-4"></div>
             </div>
           </div>
           <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
             <input type="checkbox" />
-            <div class="collapse-title">Biography</div>
-            <div class="collapse-content">
-              <textarea
-                id="config-bio"
-                spellcheck="false"
-                class="textarea textarea-bordered w-full h-36 leading-relaxed"
-                placeholder="Each section goes on its own line"
-                data-d6t-cfg="bio"
-              ></textarea>
+            <div class="collapse-title">Party Resources</div>
+            <div class="collapse-content flex flex-col items-center gap-3">
+              <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddResource('pool')">
+                <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
+              </button>
+              <div id="config-res-pool" class="flex flex-row flex-wrap justify-center gap-4"></div>
             </div>
           </div>
           <!--

@@ -35,7 +35,7 @@ function setPipsValue(name, val) {
 function getPipsOrNudHTML(name, min, max, cb_text) {
   min = min ?? 0
   max = max ?? 0
-  return max < 6 && min == 0
+  return max <= 6 && min == 0
     ? getPipsHTML(name, max, cb_text)
     : `
 <input type="number" onchange="${cb_text}" min="${min}" max="${max}" value="0" id="${name}" class="w-full" />`
@@ -152,64 +152,70 @@ ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
 }
 
 /*
-  Toon Cond
+  Resource
 */
-export const ToonCond = {}
+export const Resource = {}
 
-function getCondValueName(cond_id) {
-  return "cond-" + cond_id
+function getResourceValueName(rtype, rid) {
+  return rtype + "-" + rid
 }
 
-function getCondTextName(cond_id) {
-  return getCondValueName(cond_id) + "-text"
+function getResourceTextName(rtype, rid) {
+  return getResourceValueName(rtype, rid) + "-text"
 }
 
-function getCondRatingHTML(cond_id, min, max) {
+function getResourceRatingHTML(rtype, rid, min, max) {
   min = min ?? 0
   max = max ?? 0
   return max == 0 && min == 0
     ? ""
-    : getPipsOrNudHTML(getCondValueName(cond_id), min, max, "d6t.applyCondValue(" + cond_id + ")")
+    : getPipsOrNudHTML(
+        getResourceValueName(rtype, rid),
+        min,
+        max,
+        "d6t.applyResourceValue('" + rtype + "'," + rid + ")"
+      )
 }
 
-ToonCond.getValue = function (act_id) {
-  return getPipsOrNudValue(getCondValueName(act_id))
+Resource.getValue = function (rtype, rid) {
+  return getPipsOrNudValue(getResourceValueName(rtype, rid))
 }
 
-ToonCond.setValue = function (act_id, value) {
-  setPipsOrNudValue(getCondValueName(act_id), value)
+Resource.setValue = function (rtype, rid, value) {
+  setPipsOrNudValue(getResourceValueName(rtype, rid), value)
 }
 
-ToonCond.getText = function (cond_id) {
-  const elm = document.getElementById(getCondTextName(cond_id))
+Resource.getText = function (rtype, rid) {
+  const elm = document.getElementById(getResourceTextName(rtype, rid))
   return (elm && elm.value) ?? ""
 }
 
-ToonCond.setText = function (cond_id, text) {
-  const elm = document.getElementById(getCondTextName(cond_id))
+Resource.setText = function (rtype, rid, text) {
+  const elm = document.getElementById(getResourceTextName(rtype, rid))
   if (elm) {
     elm.value = text
   }
 }
 
-ToonCond.getHTML = function (cond_id, cond_data) {
+Resource.getHTML = function (rtype, rid, res_data) {
   return `
-<div id="toon-cond-${cond_id}-par" class="grow">
-  <div class="flex flex-${cond_data.text ? "row" : "col"} justify-center w-full">
-    <div class="text-center whitespace-nowrap">${cond_data.name}</div>${getCondRatingHTML(
-    cond_id,
-    cond_data.min,
-    cond_data.max
+<div class="grow">
+  <div class="flex flex-${res_data.text ? "row" : "col"} justify-center w-full">
+    <div class="text-center whitespace-nowrap">${res_data.name}</div>${getResourceRatingHTML(
+    rtype,
+    rid,
+    res_data.min,
+    res_data.max
   )}
   </div>${
-    cond_data.text
+    res_data.text
       ? `
   <textarea
     spellcheck="false"
-    id="${getCondTextName(cond_id)}"
-    onchange="d6t.applyCondText('${cond_id}')"
+    id="${getResourceTextName(rtype, rid)}"
+    onchange="d6t.applyResourceText('${rtype}',${rid})"
     class="textarea textarea-bordered leading-none min-h-10 h-10 p-0 w-full"
-    placeholder="${cond_data.text}"
+    placeholder="${res_data.text}"
   ></textarea>`
       : ""
   }
@@ -224,7 +230,6 @@ export const Prompt = {}
 function getArbNudTag(key) {
   return "data-d6t-arb-own" + (key == null ? "" : '="' + key + '"')
 }
-const arbitraryOwnerAttr = "data-d6t-arb-own"
 
 Prompt.getArbitraryNudHTML = function (prompt_key, plr, editable) {
   return `<input type="number" min="0" max="10" value="0" ${getArbNudTag(plr.id)} ${
@@ -505,123 +510,124 @@ function buildActList() {
   return act_list
 }
 
-function getDefaultCondName() {
-  return "COND"
+function getDefaultResourceName(rtype) {
+  return rtype.toUpperCase()
 }
 
-CfgMenu.getCondHTML = function () {
+function getResourceHTML(rtype) {
   return `
-<div class="grid grid-cols-3 gap-1" ${getCfgTagEq("cond")} >
+<div class="grid grid-cols-3 gap-1" ${getCfgTagEq(rtype)} >
   <div class="flex flex-row col-span-3 w-full">
     <input type="text" class="input input-bordered grow" ${getCfgTagEq(
-      "cond-name"
-    )} placeholder="${getDefaultCondName()}" />
-    <button class="btn btn-square btn-lxs" onclick="d6t.cfgDeleteCond(this)">
+      rtype + "-name"
+    )} placeholder="${getDefaultResourceName(rtype)}" />
+    <button class="btn btn-square btn-lxs" onclick="d6t.cfgDeleteResource('${rtype}', this)">
       <svg class="w-[75%] h-[75%]" data-lucide-late="trash"></svg>
     </button>
   </div>
   <textarea
     spellcheck="false"
     class="textarea textarea-bordered resize-none col-span-2 leading-relaxed"
-    placeholder="<no player description>"
-    ${getCfgTagEq("cond-text")}
+    placeholder="<no text value>"
+    ${getCfgTagEq(rtype + "-text")}
   ></textarea>
   <div class="flex flex-col items-end gap-1">
     <div>Min <input type="number" min="-100" max="100" value="0" class="w-14" ${getCfgTagEq(
-      "cond-min"
+      rtype + "-min"
     )} /></div>
     <div>Max <input type="number" min="-100" max="100" value="0" class="w-14" ${getCfgTagEq(
-      "cond-max"
+      rtype + "-max"
     )} /></div>
     <div>Push <input type="number" min="-100" max="100" value="0" class="w-14" ${getCfgTagEq(
-      "cond-push"
+      rtype + "-push"
     )} /></div>
     <div>Assist <input type="number" min="-100" max="100" value="0" class="w-14" ${getCfgTagEq(
-      "cond-assist"
+      rtype + "-assist"
     )} /></div>
   </div>
 </div>`
 }
 
-function getCfgCondListRoot() {
-  return document.getElementById("config-cond")
+function getCfgResourceListRoot(rtype) {
+  return document.getElementById("config-res-" + rtype)
 }
 
-CfgMenu.addCond = function (count = 1) {
+CfgMenu.addResource = function (rtype, count = 1) {
   let html = ""
   for (let i = 0; i < count; i++) {
-    html += CfgMenu.getCondHTML()
+    html += getResourceHTML(rtype)
   }
-  getCfgCondListRoot().insertAdjacentHTML("beforeend", html)
+  getCfgResourceListRoot(rtype).insertAdjacentHTML("beforeend", html)
   window.lucide.refresh()
 }
 
-CfgMenu.deleteCond = function (start_in) {
-  findCfgAncestor(start_in, "cond").remove()
+CfgMenu.deleteResource = function (rtype, start_in) {
+  findCfgAncestor(start_in, rtype).remove()
 }
 
-function setCondString(cond_root, cond, key) {
-  findCfgDescendant(cond_root, "cond-" + key).value = cond[key] ?? ""
+function setResourceString(rtype, res_root, res, key) {
+  findCfgDescendant(res_root, rtype + "-" + key).value = res[key] ?? ""
 }
 
-function setCondNumber(cond_root, cond, key) {
-  findCfgDescendant(cond_root, "cond-" + key).value = cond[key] ?? 0
+function setResourceNumber(rtype, res_root, res, key) {
+  findCfgDescendant(res_root, rtype + "-" + key).value = res[key] ?? 0
 }
 
-function takeCfgCond(conds) {
-  const list_root = getCfgCondListRoot()
-  if (list_root.childElementCount != conds.length) {
-    CfgMenu.addCond(conds.length - list_root.childElementCount)
-    while (list_root.childElementCount > conds.length) {
+function takeCfgResources(rtype, res) {
+  const list_root = getCfgResourceListRoot(rtype)
+  if (list_root.childElementCount != res.length) {
+    CfgMenu.addResource(rtype, res.length - list_root.childElementCount)
+    while (list_root.childElementCount > res.length) {
       list_root.removeChild(list_root.lastElementChild)
     }
   }
 
-  const cond_elms = list_root.children
-  for (let i = 0; i < conds.length; i++) {
-    setCondString(cond_elms[i], conds[i], "name")
-    setCondString(cond_elms[i], conds[i], "text")
-    setCondNumber(cond_elms[i], conds[i], "min")
-    setCondNumber(cond_elms[i], conds[i], "max")
-    setCondNumber(cond_elms[i], conds[i], "push")
-    setCondNumber(cond_elms[i], conds[i], "assist")
+  const res_elms = list_root.children
+  for (let i = 0; i < res.length; i++) {
+    setResourceString(rtype, res_elms[i], res[i], "name")
+    setResourceString(rtype, res_elms[i], res[i], "text")
+    setResourceNumber(rtype, res_elms[i], res[i], "min")
+    setResourceNumber(rtype, res_elms[i], res[i], "max")
+    setResourceNumber(rtype, res_elms[i], res[i], "push")
+    setResourceNumber(rtype, res_elms[i], res[i], "assist")
   }
 }
 
-function addCondString(cond_root, cond, key) {
-  const s = findCfgDescendant(cond_root, "cond-" + key).value ?? ""
+function addResourceString(rtype, res_root, res, key) {
+  const s = findCfgDescendant(res_root, rtype + "-" + key).value ?? ""
   if (s.length > 0) {
-    cond[key] = s
+    res[key] = s
   }
 }
 
-function addCondNumber(cond_root, cond, key) {
-  const v = Math.min(Math.max(findCfgDescendant(cond_root, "cond-" + key).value, -100), 100) ?? 0
+function addResourceNumber(rtype, res_root, res, key) {
+  const v =
+    Math.min(Math.max(findCfgDescendant(res_root, rtype + "-" + key).value, -100), 100) ?? 0
   if (v != 0) {
-    cond[key] = v
+    res[key] = v
   }
 }
 
-function buildCond(cond_root) {
-  const cond = {}
-  addCondString(cond_root, cond, "name")
-  addCondString(cond_root, cond, "text")
-  addCondNumber(cond_root, cond, "min")
-  addCondNumber(cond_root, cond, "max")
-  addCondNumber(cond_root, cond, "push")
-  addCondNumber(cond_root, cond, "assist")
+function buildResource(rtype, res_root) {
+  const res = {}
+  addResourceString(rtype, res_root, res, "name")
+  addResourceString(rtype, res_root, res, "text")
+  addResourceNumber(rtype, res_root, res, "min")
+  addResourceNumber(rtype, res_root, res, "max")
+  addResourceNumber(rtype, res_root, res, "push")
+  addResourceNumber(rtype, res_root, res, "assist")
 
-  cond.name = cond.name ?? getDefaultCondName()
-  return cond
+  res.name = res.name ?? getDefaultResourceName(rtype)
+  return res
 }
 
-function buildCondList() {
-  const nodes = getCfgCondListRoot().children
-  const cond_list = []
+function buildResourceList(rtype) {
+  const nodes = getCfgResourceListRoot(rtype).children
+  const res = []
   for (let i = 0; i < nodes.length; i++) {
-    cond_list.push(buildCond(nodes[i]))
+    res.push(buildResource(rtype, nodes[i]))
   }
-  return cond_list
+  return res
 }
 
 function takeCfgBio(bio) {
@@ -638,14 +644,16 @@ CfgMenu.buildConfig = function () {
     act_min: document.getElementById("config-act-min").value,
     act_max: document.getElementById("config-act-max").value,
     bio_extras: buildBioList(),
-    cond: buildCondList(),
+    cond: buildResourceList("cond"),
+    pool: buildResourceList("pool"),
   }
 }
 
 CfgMenu.takeConfig = function (cfg) {
-  takeCfgActs(cfg.act_list)
-  takeCfgActMin(cfg.act_min)
-  takeCfgActMax(cfg.act_max)
-  takeCfgBio(cfg.bio_extras)
-  takeCfgCond(cfg.cond)
+  takeCfgActs(cfg.act_list ?? [])
+  takeCfgActMin(cfg.act_min ?? 0)
+  takeCfgActMax(cfg.act_max ?? 0)
+  takeCfgBio(cfg.bio_extras ?? [])
+  takeCfgResources("cond", cfg.cond ?? [])
+  takeCfgResources("pool", cfg.pool ?? [])
 }
