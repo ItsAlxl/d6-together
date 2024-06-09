@@ -657,6 +657,7 @@ Multiplayer.cb.syncConfig = function (data, sender) {
       acts_html += Components.Action.getHTML(
         i,
         Roster.game_config.act_list[i],
+        Roster.game_config.act_min,
         Roster.game_config.act_max
       )
     }
@@ -770,13 +771,14 @@ function isPlrToonAuthority(plr_id, toon_id) {
   return Roster.isToonOwner(plr_id, toon_id) || Multiplayer.isHost(plr_id)
 }
 
-window.d6t.setActionValue = function (act_id, value) {
+window.d6t.applyActionValue = function (act_id) {
+  const val = Components.Action.getValue(act_id)
   Multiplayer.send(
     "syncActionVal",
     {
       toon_id: current_toon_id,
       act_id: act_id,
-      value: Roster.getToonAct(current_toon_id, act_id) == value ? 0 : value,
+      value: Roster.getToonAct(current_toon_id, act_id) == val ? 0 : val,
     },
     Multiplayer.SEND_ALL
   )

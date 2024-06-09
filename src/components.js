@@ -10,12 +10,12 @@ function getPipHTML(name, value, hidden, cb_text = "") {
   } />`
 }
 
-function getPipsHTML(id, max, pip_create_func = getPipHTML) {
-  let inner = pip_create_func(id, 0, true)
+function getPipsHTML(name, max, cb_text = "") {
+  let inner = getPipHTML(name, 0, true, cb_text)
   for (let i = 0; i < max; i++) {
-    inner += "\n" + pip_create_func(id, i + 1)
+    inner += "\n" + getPipHTML(name, i + 1, false, cb_text)
   }
-  inner += "\n" + pip_create_func(id, max, true)
+  inner += "\n" + getPipHTML(name, max, true, cb_text)
 
   return `
 <div class="rating gap-1 justify-center mt-1">
@@ -32,6 +32,29 @@ function setPipsValue(name, val) {
   if (pip) pip.checked = true
 }
 
+function getPipsOrNudHTML(name, min, max, cb_text) {
+  min = min ?? 0
+  max = max ?? 0
+  return max < 6 && min == 0
+    ? getPipsHTML(name, max, cb_text)
+    : `
+<input type="number" onchange="${cb_text}" min="${min}" max="${max}" value="0" id="${name}" class="w-full" />`
+}
+
+function getNumberElement(name) {
+  return document.getElementById(name)
+}
+
+function getPipsOrNudValue(name) {
+  const number_elm = getNumberElement(name)
+  return parseInt((number_elm && number_elm.value) ?? getPipsValue(name))
+}
+
+function setPipsOrNudValue(name, value) {
+  const number_elm = getNumberElement(name)
+  number_elm ? (number_elm.value = value) : setPipsValue(name, value)
+}
+
 /*
   Action Values
 */
@@ -41,12 +64,8 @@ function getActionId(act_id) {
   return "act-rating-" + act_id
 }
 
-function getActionValueHTML(act_id, value, hidden = false) {
-  return getPipHTML(getActionId(act_id), value, hidden, `d6t.setActionValue(${act_id}, ${value})`)
-}
-
-function getActionRatingHTML(act_id, max) {
-  return getPipsHTML(act_id, max, getActionValueHTML)
+function getActionRatingHTML(act_id, min, max) {
+  return getPipsOrNudHTML(getActionId(act_id), min, max, "d6t.applyActionValue(" + act_id + ")")
 }
 
 Action.getName = function (act_text) {
@@ -54,26 +73,26 @@ Action.getName = function (act_text) {
   return space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
 }
 
-Action.getHTML = function (act_id, act_text, max) {
+Action.getHTML = function (act_id, act_text, min, max) {
   const space_idx = act_text.indexOf(" ")
   // TODO: replace tooltips
   return `
-  <div class="flex flex-col" id="${getActionId(act_id)}">
-    <button class="btn btn-neutral btn-sm w-full"${
-      space_idx >= 0 ? 'title="' + act_text + '" ' : ""
-    } onclick="d6t.onActionClicked('${act_id}')">${
+<div class="flex flex-col">
+  <button class="btn btn-neutral btn-sm w-full"${
+    space_idx >= 0 ? 'title="' + act_text + '" ' : ""
+  } onclick="d6t.onActionClicked('${act_id}')">${
     space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
   }</button>
-    ${getActionRatingHTML(act_id, max)}
-  </div>`
+  ${getActionRatingHTML(act_id, min, max)}
+</div>`
 }
 
 Action.getValue = function (act_id) {
-  return getPipsValue(getActionId(act_id))
+  return getPipsOrNudValue(getActionId(act_id))
 }
 
-Action.setValue = function (act_id, val) {
-  setPipsValue(getActionId(act_id), val)
+Action.setValue = function (act_id, value) {
+  setPipsOrNudValue(getActionId(act_id), value)
 }
 
 /*
@@ -141,36 +160,20 @@ function getCondTextName(cond_id) {
   return getCondValueName(cond_id) + "-text"
 }
 
-function getCondValueHTML(cond_id, value, hidden = false) {
-  return getPipHTML(getCondValueName(cond_id), value, hidden, `d6t.applyCondValue(${cond_id})`)
-}
-
 function getCondRatingHTML(cond_id, min, max) {
   min = min ?? 0
   max = max ?? 0
   return max == 0 && min == 0
     ? ""
-    : max < 6 && min == 0
-    ? getPipsHTML(cond_id, max, getCondValueHTML)
-    : `
-  <input type="number" onchange="d6t.applyCondValue(${cond_id})" min="0" max="${max}" value="0" id="${getCondValueName(
-        cond_id
-      )}" class="w-full" />
-  `
+    : getPipsOrNudHTML(getCondValueName(cond_id), min, max, "d6t.applyCondValue(" + cond_id + ")")
 }
 
-function getCondNumberElement(cond_id) {
-  return document.getElementById(getCondValueName(cond_id))
+ToonCond.getValue = function (act_id) {
+  return getPipsOrNudValue(getCondValueName(act_id))
 }
 
-ToonCond.getValue = function (cond_id) {
-  const number_elm = getCondNumberElement(cond_id)
-  return parseInt((number_elm && number_elm.value) ?? getPipsValue(getCondValueName(cond_id)))
-}
-
-ToonCond.setValue = function (cond_id, value) {
-  const number_elm = getCondNumberElement(cond_id)
-  number_elm ? (number_elm.value = value) : setPipsValue(getCondValueName(cond_id), value)
+ToonCond.setValue = function (act_id, value) {
+  setPipsOrNudValue(getCondValueName(act_id), value)
 }
 
 ToonCond.getText = function (cond_id) {
@@ -477,6 +480,10 @@ function takeCfgActs(act_list) {
   }
 }
 
+function takeCfgActMin(act_min) {
+  document.getElementById("config-act-min").value = act_min
+}
+
 function takeCfgActMax(act_max) {
   document.getElementById("config-act-max").value = act_max
 }
@@ -624,6 +631,7 @@ function buildBioList() {
 CfgMenu.buildConfig = function () {
   return {
     act_list: buildActList(),
+    act_min: document.getElementById("config-act-min").value,
     act_max: document.getElementById("config-act-max").value,
     bio_extras: buildBioList(),
     cond: buildCondList(),
@@ -632,6 +640,7 @@ CfgMenu.buildConfig = function () {
 
 CfgMenu.takeConfig = function (cfg) {
   takeCfgActs(cfg.act_list)
+  takeCfgActMin(cfg.act_min)
   takeCfgActMax(cfg.act_max)
   takeCfgBio(cfg.bio_extras)
   takeCfgCond(cfg.cond)

@@ -70,6 +70,7 @@ export let game_config = {
     "WRECK with brute force",
     "SWAY someone's thinking",
   ],
+  act_min: 0,
   act_max: 4,
   bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
   cond: [
