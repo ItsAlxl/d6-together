@@ -319,6 +319,7 @@ Multiplayer.cb.syncActionRoll = function (data, sender) {
     for (let i = 0; i < Roster.game_config.cond.length; i++) {
       refreshToonCondValue(i)
     }
+    refreshPools()
     DiceTray.actionRoll(boss_id, pool, data.seed)
 
     action_toon = -1
@@ -652,34 +653,42 @@ Multiplayer.cb.syncConfig = function (data, sender) {
     Components.CfgMenu.takeConfig(data)
     Roster.applyGameConfig(data)
 
-    let acts_html = ""
-    for (let i = 0; i < Roster.game_config.act_list.length; i++) {
-      acts_html += Components.Action.getHTML(
-        i,
-        Roster.game_config.act_list[i],
-        Roster.game_config.act_min,
-        Roster.game_config.act_max
-      )
+    if (Roster.game_config.act_list) {
+      let acts_html = ""
+      for (let i = 0; i < Roster.game_config.act_list.length; i++) {
+        acts_html += Components.Action.getHTML(
+          i,
+          Roster.game_config.act_list[i],
+          Roster.game_config.act_min,
+          Roster.game_config.act_max
+        )
+      }
+      replaceChildHTML(document.getElementById("toon-actions"), acts_html)
     }
-    replaceChildHTML(document.getElementById("toon-actions"), acts_html)
 
-    let bio_extras_html = ""
-    for (let i = 0; i < Roster.game_config.bio_extras.length; i++) {
-      bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
+    if (Roster.game_config.bio_extras) {
+      let bio_extras_html = ""
+      for (let i = 0; i < Roster.game_config.bio_extras.length; i++) {
+        bio_extras_html += Components.ToonSheet.getBioExtraHTML(i, Roster.game_config.bio_extras[i])
+      }
+      replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
     }
-    replaceChildHTML(document.getElementById("toon-bio-extras"), bio_extras_html)
 
-    let conds_html = ""
-    for (let i = 0; i < Roster.game_config.cond.length; i++) {
-      conds_html += Components.Resource.getHTML("cond", i, Roster.game_config.cond[i])
+    if (Roster.game_config.cond) {
+      let conds_html = ""
+      for (let i = 0; i < Roster.game_config.cond.length; i++) {
+        conds_html += Components.Resource.getHTML("cond", i, Roster.game_config.cond[i])
+      }
+      replaceChildHTML(document.getElementById("toon-cond"), conds_html)
     }
-    replaceChildHTML(document.getElementById("toon-cond"), conds_html)
 
-    let pools_html = ""
-    for (let i = 0; i < Roster.game_config.pool.length; i++) {
-      pools_html += Components.Resource.getHTML("pool", i, Roster.game_config.pool[i])
+    if (Roster.game_config.pool) {
+      let pools_html = ""
+      for (let i = 0; i < Roster.game_config.pool.length; i++) {
+        pools_html += Components.Resource.getHTML("pool", i, Roster.game_config.pool[i])
+      }
+      replaceChildHTML(document.getElementById("pool-list"), pools_html)
     }
-    replaceChildHTML(document.getElementById("pool-list"), pools_html)
 
     refreshToonSheet()
     refreshPools()
@@ -843,11 +852,11 @@ window.d6t.applyResourceValue = function (rtype, rid) {
   }
   if (rtype == "cond") {
     data.toon = current_toon_id
-    data.val = Roster.getToonCondValue(current_toon_id, rid) == assigned_val ? 0 : assigned_val,
-    Multiplayer.send("syncCondVal", data, Multiplayer.SEND_ALL)
+    ;(data.val = Roster.getToonCondValue(current_toon_id, rid) == assigned_val ? 0 : assigned_val),
+      Multiplayer.send("syncCondVal", data, Multiplayer.SEND_ALL)
   } else {
-    data.val = Roster.getPoolValue(rid) == assigned_val ? 0 : assigned_val,
-    Multiplayer.send("syncPoolVal", data, Multiplayer.SEND_ALL)
+    ;(data.val = Roster.getPoolValue(rid) == assigned_val ? 0 : assigned_val),
+      Multiplayer.send("syncPoolVal", data, Multiplayer.SEND_ALL)
   }
 }
 

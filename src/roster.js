@@ -190,30 +190,77 @@ export function deleteToon(id) {
   if (id >= 0 && id < toons.length) toons[id] = null
 }
 
-export function getCondCost(cond_opt) {
+function getCost(purchase) {
   const cost = {}
   for (let i = 0; i < game_config.cond.length; i++) {
-    if (game_config.cond[i][cond_opt]) {
-      cost[i] = game_config.cond[i][cond_opt]
+    if (game_config.cond[i][purchase]) {
+      cost[i] = game_config.cond[i][purchase]
     }
   }
   return cost
 }
 
-export function toonCanAffordCost(toon_id, cond_opt) {
-  const cost = getCondCost(cond_opt)
-  for (let i in cost) {
-    if (getToonCondValue(toon_id, i) + cost[i] < (game_config.cond[i].min ?? 0)) {
-      return false
+function getPoolBank(purchase) {
+  const bank = {}
+  for (let i = 0; i < game_config.pool.length; i++) {
+    if (game_config.pool[i][purchase]) {
+      bank[i] = game_config.pool[i][purchase]
     }
   }
-  return true
+  return bank
 }
 
-export function toonSpendCost(toon_id, cond_opt) {
-  const cost = getCondCost(cond_opt)
+export function toonCanAffordCost(toon_id, purchase) {
+  let balance = 0
+  const cost = getCost(purchase)
   for (let i in cost) {
-    setToonCondValue(toon_id, i, getToonCondValue(toon_id, i) + cost[i])
+    const deficit = getToonCondValue(toon_id, i) + cost[i] - (game_config.cond[i].min ?? 0)
+    if (deficit < 0) {
+      balance += deficit
+    }
+  }
+  if (balance >= 0) return true
+
+  const bank = getPoolBank(purchase)
+  for (let i in bank) {
+    balance += getResourceValue(pools[i])
+    if (balance >= 0) return true
+  }
+  return false
+}
+
+export function toonSpendCost(toon_id, purchase) {
+  let balance = 0
+
+  const cost = getCost(purchase)
+  for (let i in cost) {
+    const new_val = getToonCondValue(toon_id, i) + cost[i]
+    const min = game_config.cond[i].min ?? 0
+    const deficit = new_val - min
+    if (deficit >= 0) {
+      setToonCondValue(toon_id, i, new_val)
+    } else {
+      setToonCondValue(toon_id, i, min)
+      balance += deficit
+    }
+  }
+
+  if (balance < 0) {
+    const bank = getPoolBank(purchase)
+    for (let i in bank) {
+      const new_val = getPoolValue(i) + balance
+      const min = game_config.pool[i].min ?? 0
+      const deficit = new_val - min
+
+      balance += getPoolValue(i) - min
+      if (deficit >= 0) {
+        setPoolValue(i, new_val)
+      } else {
+        setPoolValue(i, min)
+      }
+
+      if (balance >= 0) break
+    }
   }
 }
 
@@ -314,5 +361,5 @@ export function applyGameConfig(gc) {
       t.applyGameConfig()
     }
   }
-  resizeResourceArray(pools, game_config.pool.length)
+  resizeResourceArray(pools, game_config.pool ? game_config.pool.length : 0)
 }
