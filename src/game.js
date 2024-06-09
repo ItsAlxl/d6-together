@@ -335,7 +335,7 @@ window.d6t.applyPrompt = function () {
   if (PROMPT_MAP[current_prompt] != null) {
     PROMPT_MAP[current_prompt].onApply()
   }
-  closePromptLocally(false)
+  enablePromptControls(false)
 }
 
 function isPromptOpen(p) {
@@ -347,6 +347,13 @@ window.d6t.openPrompt = function (id, extra_data, allow_reopen = false) {
     const syncData = { id: id }
     if (extra_data) syncData.extra = extra_data
     Multiplayer.send("syncPromptOpen", syncData, Multiplayer.SEND_ALL)
+  }
+}
+
+function enablePromptControls(en) {
+  const controls = document.getElementById("prompt-controls").children
+  for (let i = 0; i < controls.length; i++) {
+    enableElement(controls[i], en)
   }
 }
 
@@ -370,10 +377,7 @@ Multiplayer.cb.syncPromptOpen = function (data, sender) {
         (pdata.getTitle && pdata.getTitle()) ?? pdata.title ?? ""
       document.getElementById("prompt-confirm-btn").innerText = pdata.act ?? "Confirm"
 
-      const controls = document.getElementById("prompt-controls").children
-      for (let i = 0; i < controls.length; i++) {
-        enableElement(controls[i], isPlrPromptAuthority(MY_PLR_ID))
-      }
+      enablePromptControls(isPlrPromptAuthority(MY_PLR_ID))
       if (pdata.onOpen) pdata.onOpen()
       setVisible(document.getElementById("prompt-bg"), true)
       enableDiceControls(false)

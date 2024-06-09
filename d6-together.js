@@ -120,9 +120,9 @@ function send(ws, key, data, sender = -1) {
   ws.send(JSON.stringify(o))
 }
 
-function sendToRoom(room, key, data, sender = -1) {
+function sendToRoom(room, key, data, sender = -1, incl_sender = false) {
   for (let i = 0; i < room.plrs.length; i++) {
-    if (i != sender && room.plrs[i] != null) {
+    if ((incl_sender || i != sender) && room.plrs[i] != null) {
       send(room.plrs[i], key, data, sender)
     }
   }
@@ -175,7 +175,7 @@ wss.on("connection", function connection(ws, req) {
       if (msg.t >= 0) {
         send(room.plrs[msg.t], msg.k, msg.d, ws.d6t_room_id)
       } else {
-        sendToRoom(room, msg.k, msg.d, msg.t == -10 ? -1 : ws.d6t_room_id)
+        sendToRoom(room, msg.k, msg.d, ws.d6t_room_id, msg.t == -10)
       }
       return
     }
