@@ -962,6 +962,10 @@ Multiplayer.cb.syncImport = function (data, sender) {
       }
       updateToonTabs()
     }
+
+    if (data.pools) {
+      Roster.syncPools(data.pools)
+    }
   }
 }
 
@@ -988,6 +992,8 @@ function getExportJson() {
     }
   }
   if (toon_data.length > 0) exp_data.toons = toon_data
+
+  exp_data.pools = Roster.pools
 
   const clocks_data = getClocksAggregate()
   if (clocks_data.length > 0) exp_data.clocks = clocks_data
