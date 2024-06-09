@@ -72,7 +72,12 @@ export let game_config = {
   ],
   act_min: 0,
   act_max: 4,
-  bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
+  bio_extras: [
+    "LOOK:Your appearance",
+    "BACKGROUND:Heritage & Background",
+    "VICE:Vice & Purveyor",
+    "ABILITIES",
+  ],
   cond: [
     {
       name: "Harm 1",

@@ -79,7 +79,7 @@ Action.getHTML = function (act_id, act_text, min, max) {
   return `
 <div class="flex flex-col">
   <button class="btn btn-neutral btn-sm w-full"${
-    space_idx >= 0 ? 'title="' + act_text + '" ' : ""
+    space_idx >= 0 ? ' title="' + act_text + '"' : ""
   } onclick="d6t.onActionClicked('${act_id}')">${
     space_idx >= 0 ? act_text.substring(0, space_idx) : act_text
   }</button>
@@ -136,15 +136,19 @@ ToonSheet.getBioExtraElement = function (extra_id) {
   return document.getElementById(getBioExtraID(extra_id))
 }
 
-// TODO: shorter bios by default, default config includes an Abilities section
 ToonSheet.getBioExtraHTML = function (extra_id, extra_lbl) {
+  const colon_idx = extra_lbl.indexOf(":")
   return `
 <div class="label pb-1 pt-2 w-full">
-  <span class="label-text w-full">${extra_lbl}</span>
+  <span class="label-text w-full">${
+    colon_idx >= 0 ? extra_lbl.substring(0, colon_idx) : extra_lbl
+  }</span>
 </div>
 <textarea spellcheck="false" onchange="d6t.applyToonBio('${extra_id}')" id="${getBioExtraID(
     extra_id
-  )}" class="textarea textarea-bordered leading-normal h-24 p-0 w-full" placeholder="${extra_lbl}"></textarea>`
+  )}" class="textarea textarea-bordered leading-normal h-16 p-0 w-full""${
+    colon_idx >= 0 ? ' placeholder="' + extra_lbl.substring(colon_idx + 1) + '"' : ""
+  }></textarea>`
 }
 
 /*
