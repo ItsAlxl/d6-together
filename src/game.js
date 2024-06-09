@@ -692,6 +692,7 @@ Multiplayer.cb.syncConfig = function (data, sender) {
 
     refreshToonSheet()
     refreshPools()
+    updatePoolControls()
   }
 }
 
@@ -1039,10 +1040,10 @@ function updateHostVis(root) {
   }
 }
 
-function enablePoolControls(en) {
+function updatePoolControls() {
   const pool_list = document.getElementById("pool-list").querySelectorAll("input, textarea, button")
   for (let i = 0; i < pool_list.length; i++) {
-    enableElement(pool_list[i], en)
+    enableElement(pool_list[i], Multiplayer.isHost())
   }
 }
 
@@ -1129,7 +1130,7 @@ Multiplayer.cb.joined = function (data, sender) {
     finishLobbyTransition(data.tray_state)
     updateToonTabs()
     refreshPools()
-    enablePoolControls(Multiplayer.isHost())
+    updatePoolControls()
   }
 }
 
@@ -1158,7 +1159,7 @@ Multiplayer.cb.crown = function (data, sender) {
     updateHostVis(document)
     enableElement(document.getElementById("toon-owner"), Multiplayer.isHost())
     refreshToonSheet()
-    enablePoolControls(Multiplayer.isHost())
+    updatePoolControls()
   }
 }
 
