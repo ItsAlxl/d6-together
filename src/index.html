@@ -507,57 +507,73 @@
             <svg class="w-[75%] h-[75%]" data-lucide="upload"></svg>
           </button>
         </div>
+        <div class="font-bold text-lg self-center">Configure Game</div>
         <div class="grow flex flex-row gap-2 justify-end" data-d6t-host="true">
           <button class="btn btn-outline btn-error" onclick="d6t.cancelConfig()">Cancel</button>
           <button class="btn btn-outline btn-primary" onclick="d6t.applyConfig()">Apply</button>
         </div>
       </div>
       <div class="bg-base-300 min-h-1 mt-2 mb-2"></div>
-      <div class="grow grid grid-cols-[6fr_1.2rem_4fr_1.2rem_3fr]">
-        <div class="flex flex-col items-center gap-3">
-          <div class="font-bold text-lg">Actions</div>
-          <div class="flex flex-row items-center gap-8">
-            <div>
-              Count
-              <input
-                id="config-act-count"
-                type="number"
-                min="1"
-                max="48"
-                class="w-14"
-                onchange="d6t.cfgUpdateNumActs(this)"
-              />
-            </div>
-            <div>
-              Min Rating <input id="config-act-min" type="number" min="-100" max="100" class="w-14" />
-            </div>
-            <div>
-              Max Rating <input id="config-act-max" type="number" min="-100" max="100" class="w-14" />
+      <div class="overflow-y-auto">
+        <div class="flex flex-col">
+          <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
+            <input type="checkbox" />
+            <div class="collapse-title">Actions</div>
+            <div class="collapse-content flex flex-col gap-3">
+              <div class="flex flex-row justify-center gap-8">
+                <div>
+                  Count
+                  <input
+                    id="config-act-count"
+                    type="number"
+                    min="1"
+                    max="48"
+                    class="w-14"
+                    onchange="d6t.cfgUpdateNumActs(this)"
+                  />
+                </div>
+                <div>
+                  Min Rating
+                  <input id="config-act-min" type="number" min="-100" max="100" class="w-14" />
+                </div>
+                <div>
+                  Max Rating
+                  <input id="config-act-max" type="number" min="-100" max="100" class="w-14" />
+                </div>
+              </div>
+              <div id="config-acts" class="grid grid-cols-3 content-start gap-3"></div>
             </div>
           </div>
-          <div
-            id="config-acts"
-            class="grid grid-cols-3 content-start gap-3 scrollable-y min-h-[85%]"
-          ></div>
-        </div>
-        <div class="bg-base-300 ml-2 mr-2"></div>
-        <div class="flex flex-col items-center gap-3">
-          <div class="font-bold text-lg">Condition</div>
-          <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddCond()">
-            <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
-          </button>
-          <div id="config-cond" class="flex flex-col w-full gap-3 scrollable-y min-h-[85%]"></div>
-        </div>
-        <div class="bg-base-300 ml-2 mr-2"></div>
-        <div class="flex flex-col items-center gap-3">
-          <div class="font-bold text-lg">Biography</div>
-          <textarea
-            id="config-bio"
-            spellcheck="false"
-            class="textarea textarea-bordered resize-none w-full h-full leading-relaxed"
-            placeholder="Each section goes on its own line"
-            data-d6t-cfg="bio"
-          ></textarea>
+          <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
+            <input type="checkbox" />
+            <div class="collapse-title">Condition</div>
+            <div class="collapse-content flex flex-col items-center gap-3">
+              <button class="btn btn-square btn-lxs" onclick="d6t.cfgAddCond()">
+                <svg class="w-[75%] h-[75%]" data-lucide="circle-plus"></svg>
+              </button>
+              <div id="config-cond" class="flex flex-row flex-wrap justify-center gap-4"></div>
+            </div>
+          </div>
+          <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
+            <input type="checkbox" />
+            <div class="collapse-title">Biography</div>
+            <div class="collapse-content">
+              <textarea
+                id="config-bio"
+                spellcheck="false"
+                class="textarea textarea-bordered w-full h-36 leading-relaxed"
+                placeholder="Each section goes on its own line"
+                data-d6t-cfg="bio"
+              ></textarea>
+            </div>
+          </div>
+          <!--
+          <div class="collapse bg-base-200 collapse-arrow border border-neutral min-h-14">
+            <input type="checkbox" />
+            <div class="collapse-title">Config Section</div>
+            <div class="collapse-content">Content</div>
+          </div>
+          -->
         </div>
       </div>
     </div>
