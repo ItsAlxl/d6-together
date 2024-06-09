@@ -74,9 +74,19 @@ export let game_config = {
   bio_extras: ["LOOK", "BACKGROUND", "VICE/PURVEYOR"],
   cond: [
     {
-      name: "Harm",
-      max: 5,
-      text: "Unharmed.",
+      name: "Lesser Harm",
+      max: 2,
+      text: "-",
+    },
+    {
+      name: "Moderate Harm",
+      max: 2,
+      text: "-",
+    },
+    {
+      name: "Severe Harm",
+      max: 1,
+      text: "-",
     },
     {
       name: "Trauma",

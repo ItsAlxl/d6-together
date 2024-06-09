@@ -28,7 +28,8 @@ function getPipsValue(name) {
 }
 
 function setPipsValue(name, val) {
-  return (document.querySelector("input[name='" + name + "'][value='" + val + "']").checked = true)
+  const pip = document.querySelector("input[name='" + name + "'][value='" + val + "']")
+  if (pip) pip.checked = true
 }
 
 /*
@@ -144,8 +145,18 @@ function getCondValueHTML(cond_id, value, hidden = false) {
   return getPipHTML(getCondValueName(cond_id), value, hidden, `d6t.applyCondValue(${cond_id})`)
 }
 
-function getCondRatingHTML(cond_id, max) {
-  return getPipsHTML(cond_id, max, getCondValueHTML)
+function getCondRatingHTML(cond_id, min, max) {
+  min = min ?? 0
+  max = max ?? 0
+  return max == 0 && min == 0
+    ? ""
+    : max < 6 && min == 0
+    ? getPipsHTML(cond_id, max, getCondValueHTML)
+    : `
+  <input type="number" onchange="d6t.applyCondValue(${cond_id})" min="0" max="${max}" value="0" id="${getCondValueName(
+        cond_id
+      )}" class="w-full" />
+  `
 }
 
 function getCondNumberElement(cond_id) {
@@ -174,20 +185,15 @@ ToonCond.setText = function (cond_id, text) {
   }
 }
 
-// TODO: conditions without numeric value; change default config to have 3 harm text conds
 ToonCond.getHTML = function (cond_id, cond_data) {
   return `
 <div id="toon-cond-${cond_id}-par" class="grow">
   <div class="flex flex-${cond_data.text ? "row" : "col"} justify-center w-full">
-    <div class="text-center">${cond_data.name}</div>${
-    (cond_data.max ?? 0) < 6 && (cond_data.min ?? 0) == 0
-      ? getCondRatingHTML(cond_id, cond_data.max)
-      : `
-      <input type="number" onchange="d6t.applyCondValue(${cond_id})" min="0" max="${
-          cond_data.max
-        }" value="0" id="${getCondValueName(cond_id)}" class="w-full" />
-      `
-  }
+    <div class="text-center whitespace-nowrap">${cond_data.name}</div>${getCondRatingHTML(
+    cond_id,
+    cond_data.min,
+    cond_data.max
+  )}
   </div>${
     cond_data.text
       ? `
