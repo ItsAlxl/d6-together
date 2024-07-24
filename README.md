@@ -1,5 +1,5 @@
 # d6 Together
-A web app for playing [Forged in the Dark](https://bladesinthedark.com/forged-dark) games online. d6 Together uses ws for networking, Rapier 3D for phsyics, and three.js for 3D rendering.
+A web app for playing [Forged in the Dark](https://bladesinthedark.com/forged-dark) games online. d6 Together uses ws for networking, Rapier 3D for physics, and three.js for 3D rendering.
 
 ## Running the Server
 You can build and run your own server from the source code; all you strictly need is [NodeJS](https://nodejs.org/) (v18.20 or later). You can get the source code from [GitHub](https://github.com/ItsAlxl/d6-together).
@@ -9,7 +9,7 @@ Once you have the code, execute the following commands within the project root t
 # Get dependencies (only needed the first time)
 npm install
 
-# Build the application from source (only needed the first time)
+# Build the application from source (only needed the first time and after changes to the source)
 npm run build
 
 # Run server
