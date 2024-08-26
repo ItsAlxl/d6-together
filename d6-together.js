@@ -4,7 +4,7 @@ const PORT = 6462
 const REJECT_HOST_ORIGIN_DIFF = true
 
 function allowOrigin(origin) {
-  return true
+  return Boolean(origin)
 }
 
 // Open up the server
@@ -23,9 +23,9 @@ server.on("upgrade", function (request, socket, head) {
   socket.on("error", onSocketError)
 
   if (
+    allowOrigin(request.headers.origin) &&
     (!REJECT_HOST_ORIGIN_DIFF ||
-      request.headers.origin.replace(/(^\w+:|^)\/\//, "") == request.headers.host) &&
-    allowOrigin(request.headers.origin)
+      request.headers.origin.replace(/(^\w+:|^)\/\//, "") == request.headers.host)
   ) {
     socket.removeListener("error", onSocketError)
 
